@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+
+# Next.js build output
+/.next
+/out
+
+# production output
+/build
+
+# local environment files (the safe template remains tracked)
+.env*
+!.env.example
+
+# test and tooling output
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editor and operating system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Vercel
+.vercel
