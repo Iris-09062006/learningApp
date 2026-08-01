@@ -1,7 +1,7 @@
 # ACTIVE TASK
 
 - Task: TASK-012
-- Status: VERIFIED
+- Status: DONE
 - Task packet: tasks/TASK-012.md
 - Implementation report: reports/TASK-012-implementation.md
 - Test report: reports/TASK-012-test.md
