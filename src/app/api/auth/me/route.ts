@@ -1,6 +1,6 @@
 import { authService } from "@/features/auth/auth.service";
 
-export async function GET(_request: Request) {
+export async function GET() {
   try {
     const user = await authService.getCurrentUser();
 

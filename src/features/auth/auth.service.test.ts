@@ -7,6 +7,14 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: vi.fn(),
 }));
 
+type ServerSupabaseClient = Awaited<
+  ReturnType<typeof createServerSupabaseClient>
+>;
+
+function asServerSupabaseClient(mock: unknown): ServerSupabaseClient {
+  return mock as ServerSupabaseClient;
+}
+
 describe("AuthService Unit Tests", () => {
   const service = new AuthService();
 
@@ -22,7 +30,9 @@ describe("AuthService Unit Tests", () => {
         }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     const result = await service.register({
       email: "test@example.com",
@@ -80,7 +90,9 @@ describe("AuthService Unit Tests", () => {
       }),
     };
 
-    vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValue(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     const result = await service.login({
       email: "test@example.com",
@@ -102,7 +114,9 @@ describe("AuthService Unit Tests", () => {
         signOut: vi.fn().mockResolvedValue({ error: null }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     await service.logout();
     expect(mockSupabase.auth.signOut).toHaveBeenCalled();
@@ -114,7 +128,9 @@ describe("AuthService Unit Tests", () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     const user = await service.getCurrentUser();
     expect(user).toBeNull();

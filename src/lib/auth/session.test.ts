@@ -8,6 +8,14 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+type ServerSupabaseClient = Awaited<
+  ReturnType<typeof createServerSupabaseClient>
+>;
+
+function asServerSupabaseClient(mock: unknown): ServerSupabaseClient {
+  return mock as ServerSupabaseClient;
+}
+
 describe("Session Helper Tests", () => {
   it("getOptionalUser returns user when session is valid", async () => {
     const mockUser = { id: "usr_123", email: "user@example.com" };
@@ -16,7 +24,9 @@ describe("Session Helper Tests", () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     const user = await getOptionalUser();
     expect(user).toEqual(mockUser);
@@ -28,7 +38,9 @@ describe("Session Helper Tests", () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     const user = await getOptionalUser();
     expect(user).toBeNull();
@@ -41,7 +53,9 @@ describe("Session Helper Tests", () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     const user = await requireUser();
     expect(user).toEqual(mockUser);
@@ -53,7 +67,9 @@ describe("Session Helper Tests", () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
       },
     };
-    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(mockSupabase as any);
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
 
     await expect(requireUser()).rejects.toThrow(UnauthenticatedError);
   });

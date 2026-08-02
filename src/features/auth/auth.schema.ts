@@ -1,5 +1,3 @@
-import { CurrentUser, UserRole } from "./auth.types";
-
 export interface RegisterInput {
   email: string;
   password: string;

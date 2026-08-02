@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  handleApiError,
-  login,
-  logout,
-  me,
-  register,
-} from "./auth-routes.test.helpers";
 
-// Mock auth service
-vi.mock("@/features/auth/auth.service", () => ({
-  authService: {
-    register: vi.fn(),
-    login: vi.fn(),
-    logout: vi.fn(),
-    getCurrentUser: vi.fn(),
-  },
-}));
+vi.mock("@/features/auth/auth.service", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/features/auth/auth.service")>();
+
+  return {
+    authService: {
+      register: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+      handleRouteError: actual.authService.handleRouteError.bind(
+        actual.authService,
+      ),
+    },
+  };
+});
 
 import { authService } from "@/features/auth/auth.service";
 
@@ -119,12 +119,8 @@ describe("Auth Route Handlers Contract Verification", () => {
   it("POST /api/auth/logout clears session", async () => {
     vi.mocked(authService.logout).mockResolvedValueOnce();
 
-    const mockRequest = new Request("http://localhost:3000/api/auth/logout", {
-      method: "POST",
-    });
-
     const { POST } = await import("./logout/route");
-    const response = await POST(mockRequest);
+    const response = await POST();
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -145,12 +141,8 @@ describe("Auth Route Handlers Contract Verification", () => {
       isActive: true,
     });
 
-    const mockRequest = new Request("http://localhost:3000/api/auth/me", {
-      method: "GET",
-    });
-
     const { GET } = await import("./me/route");
-    const response = await GET(mockRequest);
+    const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -169,12 +161,8 @@ describe("Auth Route Handlers Contract Verification", () => {
   it("GET /api/auth/me returns 401 UNAUTHENTICATED when unauthenticated", async () => {
     vi.mocked(authService.getCurrentUser).mockResolvedValueOnce(null);
 
-    const mockRequest = new Request("http://localhost:3000/api/auth/me", {
-      method: "GET",
-    });
-
     const { GET } = await import("./me/route");
-    const response = await GET(mockRequest);
+    const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(401);
