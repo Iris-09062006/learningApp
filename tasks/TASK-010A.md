@@ -1,13 +1,13 @@
 # Task Packet: TASK-010A — Repair Project Baseline
 
 ## Status
-`READY_FOR_REVIEW`
+`VERIFIED`
 
 ## Owner
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex (self-review; agent duy nhất)
 
 ## Feature ID
 System Foundation / Baseline Repair
@@ -19,13 +19,13 @@ Khôi phục tính hợp lệ của project baseline (Quality Gates) bằng các
 - `TASK-001` (Bootstrap Next.js & Project Config)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [architecture.md](file:///c:/Users/iris/docs/architecture.md)
+- `AGENTS.md` (repository root)
+- `CODEX.md` (repository root)
+- `docs/architecture.md`
 
 ## Current State
 - `npm run typecheck` và `npm run build` đang thất bại do `src/lib/supabase/admin.ts`, `client.ts`, `server.ts` import `@/generated/database.types` (file chưa tồn tại, theo lộ trình nằm ở TASK-028).
-- Các Supabase client này được tạo ở TASK-012 nhưng hiện chưa được bất kỳ component, page hay service nào trong `src/` import hay sử dụng.
+- Các Supabase client này được tạo trong giai đoạn phân mảnh database (task đã retired) nhưng hiện chưa được bất kỳ component, page hay service nào trong `src/` import hay sử dụng.
 - Cần dọn dẹp các file client bị lỗi typecheck khỏi baseline để tháo gỡ điểm nghẽn cho các task tiếp theo.
 
 ## In Scope

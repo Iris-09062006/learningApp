@@ -7,7 +7,7 @@
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex (self-review; agent duy nhất)
 
 ## Feature ID
 UI System / Primitive Components
@@ -20,11 +20,11 @@ Xây dựng bộ Primitive UI Components cơ bản (`Button`, `Input`, `Card`, `
 - `TASK-002` (Configure Testing Setup)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [docs/ui.md](file:///c:/Users/iris/docs/ui.md)
-- [docs/coding_standards.md](file:///c:/Users/iris/docs/coding_standards.md)
-- [docs/architecture.md](file:///c:/Users/iris/docs/architecture.md)
+- `AGENTS.md` (repository root)
+- `CODEX.md` (repository root)
+- `docs/ui.md`
+- `docs/coding_standards.md`
+- `docs/architecture.md`
 
 ## Current State
 - Dự án đã hoàn tất setup Next.js 15, Tailwind CSS, TypeScript strict mode, Vitest và Playwright testing setup.

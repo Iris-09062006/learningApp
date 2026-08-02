@@ -7,7 +7,7 @@
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex (self-review; agent duy nhất)
 
 ## Feature ID
 System Foundation / CI Quality Gates
@@ -21,11 +21,11 @@ Cấu hình GitHub Actions CI Workflow (`.github/workflows/ci.yml`) tự động
 - `TASK-003` (Primitive UI Components Foundation)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [docs/testing.md](file:///c:/Users/iris/docs/testing.md)
-- [docs/coding_standards.md](file:///c:/Users/iris/docs/coding_standards.md)
-- [docs/project.md](file:///c:/Users/iris/docs/project.md)
+- `AGENTS.md` (repository root)
+- `CODEX.md` (repository root)
+- `docs/testing.md`
+- `docs/coding_standards.md`
+- `docs/project.md`
 
 ## Current State
 - Dự án đã hoàn tất setup Next.js 15, Vitest, Playwright, Primitive UI Components và các npm test scripts (`lint`, `typecheck`, `test`, `build`).

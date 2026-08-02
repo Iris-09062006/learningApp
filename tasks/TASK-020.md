@@ -1,13 +1,13 @@
 # Task Packet: TASK-020 — Authentication Service & API Handlers
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Owner
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex (self-review; agent duy nhất)
 
 ## Feature ID
 Auth & User Foundation / Authentication API Handlers
@@ -16,16 +16,15 @@ Auth & User Foundation / Authentication API Handlers
 Triển khai Auth Feature Service (`src/features/auth/auth.service.ts`), Session helper (`src/lib/auth/session.ts`), và 4 Next.js Route Handlers (`/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`) tuân thủ đúng `docs/architecture.md` (Mục 3.3 feature modules layout), `docs/api_contract.md` (Mục 8) và `docs/security.md`, kèm theo đầy đủ Unit Tests.
 
 ## Dependencies
-- `TASK-014` (Supabase SSR Clients & Database Types Integration)
 - `TASK-015` (Apply & Verify Supabase Database via Supabase MCP)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [docs/api_contract.md](file:///c:/Users/iris/docs/api_contract.md)
-- [docs/architecture.md](file:///c:/Users/iris/docs/architecture.md)
-- [docs/security.md](file:///c:/Users/iris/docs/security.md)
-- [docs/coding_standards.md](file:///c:/Users/iris/docs/coding_standards.md)
+- `AGENTS.md` (repository root)
+- `CODEX.md` (repository root)
+- `docs/api_contract.md`
+- `docs/architecture.md`
+- `docs/security.md`
+- `docs/coding_standards.md`
 
 ## Current State
 - Phase 2 (Database Foundation) đã hoàn tất: 11 bảng Core MVP, 7 enums, RLS policies, RPC functions đã được apply và verify live qua Supabase MCP.
@@ -112,12 +111,12 @@ Triển khai Auth Feature Service (`src/features/auth/auth.service.ts`), Session
 - `npm run build`
 
 ## Acceptance Criteria
-- [ ] Auth Feature Service (`src/features/auth/auth.service.ts`) được xây dựng hoàn chỉnh với đủ phương thức `register`, `login`, `logout`, `getCurrentUser`.
-- [ ] Session helper (`src/lib/auth/session.ts`) triển khai hàm `requireUser()` và `getOptionalUser()` từ Supabase SSR Server Client.
-- [ ] 4 Route Handlers (`/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`) hoạt động chuẩn theo API contract.
-- [ ] Reponse dạng JSON tuân thủ chuẩn `ApiSuccess<T>` / `ApiFailure` và map đúng error codes (`VALIDATION_ERROR`, `UNAUTHENTICATED`, etc.).
-- [ ] 100% Unit tests mới cho service, session helper và routes pass.
-- [ ] Quality gates (`npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`) pass 100%.
+- [x] Auth Feature Service (`src/features/auth/auth.service.ts`) được xây dựng hoàn chỉnh với đủ phương thức `register`, `login`, `logout`, `getCurrentUser`.
+- [x] Session helper (`src/lib/auth/session.ts`) triển khai hàm `requireUser()` và `getOptionalUser()` từ Supabase SSR Server Client.
+- [x] 4 Route Handlers (`/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`) hoạt động chuẩn theo API contract.
+- [x] Reponse dạng JSON tuân thủ chuẩn `ApiSuccess<T>` / `ApiFailure` và map đúng error codes (`VALIDATION_ERROR`, `UNAUTHENTICATED`, etc.).
+- [x] 100% Unit tests mới cho service, session helper và routes pass.
+- [x] Quality gates (`npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`) pass 100%.
 
 ## Required Commands
 - `npm run lint`

@@ -7,7 +7,7 @@
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex (self-review; agent duy nhất)
 
 ## Feature ID
 System Foundation / Testing Infrastructure
@@ -19,10 +19,10 @@ Cấu hình khung kiểm thử đơn vị/tích hợp (Vitest + React Testing Li
 - `TASK-001` (Bootstrap Next.js & Project Config)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [docs/testing.md](file:///c:/Users/iris/docs/testing.md)
-- [docs/coding_standards.md](file:///c:/Users/iris/docs/coding_standards.md)
+- `AGENTS.md` (repository root)
+- `CODEX.md` (repository root)
+- `docs/testing.md`
+- `docs/coding_standards.md`
 
 ## Current State
 - Dự án đã hoàn tất `TASK-001` (Next.js 15, TypeScript, Tailwind) và `TASK-010`, `TASK-010A`, `TASK-011`, `TASK-012` (Database Foundation & Clean Baseline).

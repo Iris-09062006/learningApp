@@ -1,13 +1,13 @@
 # Task Packet: TASK-015 — Apply and Verify Supabase Core Database via Supabase MCP
 
 ## Status
-`READY_FOR_REVIEW`
+`DONE`
 
 ## Owner
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex (self-review; agent duy nhất)
 
 ## Feature ID
 Database Foundation / Supabase MCP Execution & Verification
@@ -22,11 +22,11 @@ Sử dụng Supabase MCP kết nối tới dự án Supabase Development (tuyệ
 - `TASK-014` (Supabase SSR Clients & Database Types Integration)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [docs/database.md](file:///c:/Users/iris/docs/database.md)
-- [docs/security.md](file:///c:/Users/iris/docs/security.md)
-- [docs/architecture.md](file:///c:/Users/iris/docs/architecture.md)
+- `AGENTS.md` (repository root)
+- `CODEX.md` (repository root)
+- `docs/database.md`
+- `docs/security.md`
+- `docs/architecture.md`
 
 ## Current State
 - Toàn bộ 9 file SQL migrations (`001_create_enums.sql` đến `009_create_rpc_functions.sql`) đã được tạo và lưu trong `supabase/migrations/`.
