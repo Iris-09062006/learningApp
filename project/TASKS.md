@@ -13,7 +13,7 @@
 | `TASK-012` | Core Database RPC Functions & Supabase Types | `READY` | Codex | Gemini | Phase 2 |
 | `TASK-020` | Authentication Service & API Handlers | `READY` | Codex | Gemini | Phase 3 |
 | `TASK-021` | Auth Pages UI (Login & Register) | `VERIFIED` | Codex | Codex | Phase 3 |
-| `TASK-022` | Course Catalog & Course Detail Feature | `READY` | Codex | Gemini | Phase 3 |
+| `TASK-022` | Course Catalog & Course Detail Feature | `IN_PROGRESS` | Codex | Codex | Phase 3 |
 | `TASK-023` | Course Enrollment Feature | `READY` | Codex | Gemini | Phase 3 |
 | `TASK-024` | Visual Learning Roadmap Page | `READY` | Codex | Gemini | Phase 3 |
 | `TASK-030` | Lesson Content Viewer Feature | `READY` | Codex | Gemini | Phase 4 |
