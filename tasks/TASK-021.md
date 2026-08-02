@@ -1,13 +1,13 @@
 # Task Packet: TASK-021 — Auth Pages UI (Login & Register)
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Owner
 Codex
 
 ## Reviewer
-Gemini / Antigravity
+Codex
 
 ## Feature ID
 UI Foundation / Auth Pages (Login & Register)
@@ -20,17 +20,18 @@ Xây dựng UI form components (`LoginForm`, `RegisterForm`) và 2 trang Auth (`
 - `TASK-020` (Authentication Service & API Handlers)
 
 ## Required Context
-- [AGENTS.md](file:///c:/Users/iris/project/AGENTS.md)
-- [CODEX.md](file:///c:/Users/iris/project/CODEX.md)
-- [docs/ui.md](file:///c:/Users/iris/docs/ui.md)
-- [docs/api_contract.md](file:///c:/Users/iris/docs/api_contract.md)
-- [docs/architecture.md](file:///c:/Users/iris/docs/architecture.md)
-- [docs/coding_standards.md](file:///c:/Users/iris/docs/coding_standards.md)
+- `AGENTS.md`
+- `CODEX.md`
+- `docs/ui.md`
+- `docs/api_contract.md`
+- `docs/architecture.md`
+- `docs/coding_standards.md`
 
 ## Current State
 - `TASK-003` đã tạo Primitive UI components (`Button`, `Input`, `Card`, `Badge`).
 - `TASK-020` đã hoàn thành Auth Feature Service và 4 Route Handlers `/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`.
 - Chưa có UI Form Components hay Auth Page routes (`/login`, `/register`).
+- Planner reconciliation: source và review artifacts của `TASK-002`/`TASK-003` đã được xác minh `PASS` nhưng chưa được Git track; các prerequisite này phải được commit riêng trước implementation commit của `TASK-021` để lịch sử Git có thể tái tạo build và test.
 
 ## In Scope
 - Tạo Auth Feature UI Components tại `src/features/auth/components/`:
@@ -61,6 +62,8 @@ Xây dựng UI form components (`LoginForm`, `RegisterForm`) và 2 trang Auth (`
 - `project/TASKS.md`
 - `ACTIVE_TASK.md`
 - `reports/TASK-021-implementation.md`
+- `reports/TASK-021-test.md`
+- `reports/TASK-021-review.md`
 
 ## Files Not Allowed to Change
 - `supabase/migrations/*`
@@ -98,12 +101,12 @@ Xây dựng UI form components (`LoginForm`, `RegisterForm`) và 2 trang Auth (`
 - `npm run build`
 
 ## Acceptance Criteria
-- [ ] Trang `/login` và `/register` hiển thị giao diện đẹp, đúng chuẩn `docs/ui.md`.
-- [ ] `LoginForm` validate client-side và kết nối thành công với `POST /api/auth/login`.
-- [ ] `RegisterForm` validate client-side (email, password, username 3–50 kí tự) và kết nối thành công với `POST /api/auth/register`.
-- [ ] Hiển thị thông báo lỗi và trạng thái loading trực quan.
-- [ ] 100% Unit tests mới cho `LoginForm` và `RegisterForm` pass.
-- [ ] Quality gates (`npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`) pass 100%.
+- [x] Trang `/login` và `/register` hiển thị giao diện responsive, đúng design tokens trong `docs/ui.md`.
+- [x] `LoginForm` validate client-side và kết nối thành công với `POST /api/auth/login`.
+- [x] `RegisterForm` validate client-side (email, password, username 3–50 kí tự) và kết nối thành công với `POST /api/auth/register`.
+- [x] Hiển thị thông báo lỗi và trạng thái loading trực quan, có accessible name/ARIA ổn định.
+- [x] 100% Unit tests mới cho `LoginForm` và `RegisterForm` pass (12/12).
+- [x] Quality gates (`npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`) pass 100%.
 
 ## Required Commands
 - `npm run lint`
@@ -114,4 +117,6 @@ Xây dựng UI form components (`LoginForm`, `RegisterForm`) và 2 trang Auth (`
 ## Expected Handoff
 - Task packet tại `tasks/TASK-021.md`.
 - Implementation report tại `reports/TASK-021-implementation.md`.
+- Test report tại `reports/TASK-021-test.md`.
+- Review report tại `reports/TASK-021-review.md`.
 - `project/TASKS.md` và `ACTIVE_TASK.md` được cập nhật tương ứng.

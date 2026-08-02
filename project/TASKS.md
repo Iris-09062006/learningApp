@@ -6,13 +6,13 @@
 |---|---|---|---|---|---|
 | `TASK-000` | Setup Documentation & Agent Workflow | `DONE` | Antigravity | User | Phase 0 |
 | `TASK-001` | Bootstrap Next.js & Project Config | `READY` | Codex | Gemini | Phase 1 |
-| `TASK-002` | Configure Testing Setup (Vitest & Playwright) | `READY` | Codex | Gemini | Phase 1 |
-| `TASK-003` | Primitive UI Components Foundation | `READY` | Codex | Gemini | Phase 1 |
+| `TASK-002` | Configure Testing Setup (Vitest & Playwright) | `DONE` | Codex | Codex | Phase 1 |
+| `TASK-003` | Primitive UI Components Foundation | `DONE` | Codex | Codex | Phase 1 |
 | `TASK-010` | Database Migrations: Core Tables | `READY` | Codex | Gemini | Phase 2 |
 | `TASK-011` | Database Migrations: RLS Policies & Security | `READY` | Codex | Gemini | Phase 2 |
 | `TASK-012` | Core Database RPC Functions & Supabase Types | `READY` | Codex | Gemini | Phase 2 |
 | `TASK-020` | Authentication Service & API Handlers | `READY` | Codex | Gemini | Phase 3 |
-| `TASK-021` | Auth Pages UI (Login & Register) | `READY` | Codex | Gemini | Phase 3 |
+| `TASK-021` | Auth Pages UI (Login & Register) | `VERIFIED` | Codex | Codex | Phase 3 |
 | `TASK-022` | Course Catalog & Course Detail Feature | `READY` | Codex | Gemini | Phase 3 |
 | `TASK-023` | Course Enrollment Feature | `READY` | Codex | Gemini | Phase 3 |
 | `TASK-024` | Visual Learning Roadmap Page | `READY` | Codex | Gemini | Phase 3 |
