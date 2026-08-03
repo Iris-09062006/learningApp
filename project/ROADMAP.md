@@ -40,8 +40,8 @@
 
 - `TASK-020` — Authentication service and API handlers — **VERIFIED**
 - `TASK-021` — Auth pages UI — **VERIFIED**
-- `TASK-022` — Course catalog and course detail — **IN_PROGRESS** (partial implementation)
-- `TASK-023` — Course enrollment feature and API integration — **READY**
+- `TASK-022` — Course catalog and course detail —  **VERIFIED**
+- `TASK-023` — Course enrollment feature and API integration —  **VERIFIED**
 - `TASK-024` — Visual learning roadmap page — **READY**
 
 ## Phase 4 — Learning Execution

@@ -4,18 +4,21 @@ import {
   fetchCourseDetail,
   fetchCourseSummaries,
   enrollUserInCourse,
+  fetchCourseRoadmap,
 } from "@/features/courses/repositories/course-repository";
 import {
   enrollInCourse,
   getCourseById,
   getPublishedCourses,
   normalizePagination,
+  getCourseRoadmap,
 } from "@/features/courses/services/course-service";
 
 vi.mock("@/features/courses/repositories/course-repository", () => ({
   fetchCourseSummaries: vi.fn(),
   fetchCourseDetail: vi.fn(),
   enrollUserInCourse: vi.fn(),
+  fetchCourseRoadmap: vi.fn(),
 }));
 
 describe("course service", () => {
@@ -167,5 +170,98 @@ describe("course service", () => {
     vi.mocked(enrollUserInCourse).mockRejectedValueOnce(unexpected);
 
     await expect(enrollInCourse(7)).rejects.toBe(unexpected);
+  });
+
+  it("rejects invalid course IDs before fetching a roadmap", async () => {
+    await expect(getCourseRoadmap(0)).rejects.toMatchObject({
+      code: "INVALID_ID",
+      statusCode: 400,
+    });
+    expect(fetchCourseRoadmap).not.toHaveBeenCalled();
+  });
+
+  it("returns NOT_FOUND for missing or unpublished roadmap courses", async () => {
+    vi.mocked(fetchCourseRoadmap).mockResolvedValueOnce({
+      courseExists: false,
+      isPublished: false,
+      isAuthenticated: false,
+      isEnrolled: false,
+      roadmap: null,
+    });
+
+    await expect(getCourseRoadmap(7)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+    });
+  });
+
+  it("returns UNAUTHENTICATED when a roadmap learner is not signed in", async () => {
+    vi.mocked(fetchCourseRoadmap).mockResolvedValueOnce({
+      courseExists: true,
+      isPublished: true,
+      isAuthenticated: false,
+      isEnrolled: false,
+      roadmap: null,
+    });
+
+    await expect(getCourseRoadmap(7)).rejects.toMatchObject({
+      code: "UNAUTHENTICATED",
+      statusCode: 401,
+    });
+  });
+
+  it("returns COURSE_NOT_ENROLLED for an unenrolled learner", async () => {
+    vi.mocked(fetchCourseRoadmap).mockResolvedValueOnce({
+      courseExists: true,
+      isPublished: true,
+      isAuthenticated: true,
+      isEnrolled: false,
+      roadmap: null,
+    });
+
+    await expect(getCourseRoadmap(7)).rejects.toMatchObject({
+      code: "COURSE_NOT_ENROLLED",
+      statusCode: 403,
+    });
+  });
+
+  it("returns an enrolled learner's formatted roadmap", async () => {
+    const roadmap = {
+      course: { id: 7, title: "Python Foundations" },
+      completionPercentage: 50,
+      chapters: [
+        {
+          id: 11,
+          title: "Basics",
+          order: 1,
+          lessons: [
+            {
+              id: 21,
+              title: "Variables",
+              order: 1,
+              estimatedMinutes: 15,
+              status: "completed" as const,
+            },
+            {
+              id: 22,
+              title: "Conditions",
+              order: 2,
+              estimatedMinutes: 20,
+              status: "inProgress" as const,
+            },
+          ],
+        },
+      ],
+    };
+    vi.mocked(fetchCourseRoadmap).mockResolvedValueOnce({
+      courseExists: true,
+      isPublished: true,
+      isAuthenticated: true,
+      isEnrolled: true,
+      roadmap,
+    });
+
+    await expect(getCourseRoadmap(7)).resolves.toEqual(roadmap);
+    expect(fetchCourseRoadmap).toHaveBeenCalledWith(7);
   });
 });

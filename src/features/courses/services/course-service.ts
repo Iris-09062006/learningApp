@@ -2,11 +2,13 @@ import {
   fetchCourseSummaries,
   fetchCourseDetail,
   enrollUserInCourse,
+  fetchCourseRoadmap,
 } from "@/features/courses/repositories/course-repository";
 import type {
   CourseListResult,
   CourseDetail,
   EnrollCourseResult,
+  RoadmapResponse,
 } from "@/features/courses/types";
 
 const DEFAULT_PAGE = 1;
@@ -97,4 +99,36 @@ export async function enrollInCourse(
 
     throw err;
   }
+}
+
+export async function getCourseRoadmap(
+  courseId: number
+): Promise<RoadmapResponse> {
+  if (!Number.isFinite(courseId) || courseId < 1) {
+    throw new ServiceError("INVALID_ID", "Invalid course ID.", 400);
+  }
+
+  const res = await fetchCourseRoadmap(courseId);
+
+  if (!res.courseExists || !res.isPublished) {
+    throw new ServiceError(
+      "NOT_FOUND",
+      "Course not found or not published.",
+      404
+    );
+  }
+
+  if (!res.isAuthenticated) {
+    throw new ServiceError("UNAUTHENTICATED", "Authentication required.", 401);
+  }
+
+  if (!res.isEnrolled) {
+    throw new ServiceError(
+      "COURSE_NOT_ENROLLED",
+      "You must be enrolled to view this course roadmap.",
+      403
+    );
+  }
+
+  return res.roadmap!;
 }

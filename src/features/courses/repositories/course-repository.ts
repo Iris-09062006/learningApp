@@ -5,6 +5,8 @@ import type {
   CourseChapterSummary,
   EnrollCourseResult,
   EnrollCourseRpcRaw,
+  RoadmapResponse,
+  ProgressStatus,
 } from "@/features/courses/types";
 
 export async function fetchCourseSummaries(
@@ -143,5 +145,176 @@ export async function enrollUserInCourse(
     courseId: raw.course_id,
     enrolledAt: raw.enrolled_at,
     firstLessonId: raw.first_lesson_id ?? null,
+  };
+}
+
+function toProgressStatus(status: string): ProgressStatus {
+  if (status === "unlocked") return "unlocked";
+  if (status === "in_progress") return "inProgress";
+  if (status === "completed") return "completed";
+  return "locked";
+}
+
+export async function fetchCourseRoadmap(courseId: number): Promise<{
+  courseExists: boolean;
+  isPublished: boolean;
+  isAuthenticated: boolean;
+  isEnrolled: boolean;
+  roadmap: RoadmapResponse | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: course, error: courseError } = await supabase
+    .from("courses")
+    .select("id, title, is_published")
+    .eq("id", courseId)
+    .maybeSingle();
+
+  if (courseError || !course) {
+    return {
+      courseExists: false,
+      isPublished: false,
+      isAuthenticated: false,
+      isEnrolled: false,
+      roadmap: null,
+    };
+  }
+
+  if (!course.is_published) {
+    return {
+      courseExists: true,
+      isPublished: false,
+      isAuthenticated: false,
+      isEnrolled: false,
+      roadmap: null,
+    };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      courseExists: true,
+      isPublished: true,
+      isAuthenticated: false,
+      isEnrolled: false,
+      roadmap: null,
+    };
+  }
+
+  const { data: enrollment } = await supabase
+    .from("course_enrollments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("course_id", courseId)
+    .maybeSingle();
+
+  if (!enrollment) {
+    return {
+      courseExists: true,
+      isPublished: true,
+      isAuthenticated: true,
+      isEnrolled: false,
+      roadmap: null,
+    };
+  }
+
+  const { data: chaptersData, error: chaptersError } = await supabase
+    .from("chapters")
+    .select("id, title, chapter_order, is_published")
+    .eq("course_id", courseId)
+    .eq("is_published", true)
+    .order("chapter_order", { ascending: true });
+
+  if (chaptersError) {
+    throw new Error(`Failed to fetch roadmap chapters: ${chaptersError.message}`);
+  }
+
+  const chapterIds = (chaptersData || []).map((c) => c.id);
+
+  let lessonsData: Array<{
+    id: number;
+    chapter_id: number;
+    title: string;
+    lesson_order: number;
+    estimated_minutes: number | null;
+  }> = [];
+
+  if (chapterIds.length > 0) {
+    const { data: lessons, error: lessonsError } = await supabase
+      .from("lessons")
+      .select("id, chapter_id, title, lesson_order, estimated_minutes, is_published")
+      .in("chapter_id", chapterIds)
+      .eq("is_published", true)
+      .order("lesson_order", { ascending: true });
+
+    if (lessonsError) {
+      throw new Error(`Failed to fetch roadmap lessons: ${lessonsError.message}`);
+    }
+    lessonsData = lessons || [];
+  }
+
+  const lessonIds = lessonsData.map((l) => l.id);
+  const progressMap = new Map<number, ProgressStatus>();
+
+  if (lessonIds.length > 0) {
+    const { data: progressData } = await supabase
+      .from("user_progress")
+      .select("lesson_id, status")
+      .eq("user_id", user.id)
+      .in("lesson_id", lessonIds);
+
+    (progressData || []).forEach((p) => {
+      progressMap.set(p.lesson_id, toProgressStatus(p.status));
+    });
+  }
+
+  let totalLessons = 0;
+  let completedLessons = 0;
+
+  const chapters = (chaptersData || []).map((ch) => {
+    const chapterLessons = lessonsData
+      .filter((l) => l.chapter_id === ch.id)
+      .map((l) => {
+        totalLessons += 1;
+        const status = progressMap.get(l.id) || "locked";
+        if (status === "completed") {
+          completedLessons += 1;
+        }
+        return {
+          id: l.id,
+          title: l.title,
+          order: l.lesson_order,
+          status,
+          estimatedMinutes: l.estimated_minutes ?? null,
+        };
+      });
+
+    return {
+      id: ch.id,
+      title: ch.title,
+      order: ch.chapter_order,
+      lessons: chapterLessons,
+    };
+  });
+
+  const completionPercentage =
+    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+  return {
+    courseExists: true,
+    isPublished: true,
+    isAuthenticated: true,
+    isEnrolled: true,
+    roadmap: {
+      course: {
+        id: course.id,
+        title: course.title,
+      },
+      completionPercentage,
+      chapters,
+    },
   };
 }

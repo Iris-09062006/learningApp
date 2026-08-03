@@ -61,3 +61,33 @@ export interface EnrollCourseRpcRaw {
   enrolled_at: string;
   first_lesson_id: number | null;
 }
+
+export type ProgressStatus =
+  | "locked"
+  | "unlocked"
+  | "inProgress"
+  | "completed";
+
+export interface RoadmapLesson {
+  id: number;
+  title: string;
+  order: number;
+  status: ProgressStatus;
+  estimatedMinutes: number | null;
+}
+
+export interface RoadmapChapter {
+  id: number;
+  title: string;
+  order: number;
+  lessons: RoadmapLesson[];
+}
+
+export interface RoadmapResponse {
+  course: {
+    id: number;
+    title: string;
+  };
+  completionPercentage: number;
+  chapters: RoadmapChapter[];
+}
