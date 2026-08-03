@@ -12,6 +12,8 @@
 
 Không có task đang ở trạng thái `IN_PROGRESS`.
 
+Task sẵn sàng triển khai tiếp theo: `TASK-025` — Lesson Content API and Viewer.
+
 ## Verified and Completed Tasks
 
 | Task ID | Title | Status | Phase | Evidence |
@@ -24,12 +26,7 @@ Không có task đang ở trạng thái `IN_PROGRESS`.
 | `TASK-010A` | Repair Project Baseline | VERIFIED | Phase 1 | `reports/TASK-010A-implementation.md`, `reports/TASK-010A-review.md` |
 | `TASK-015` | Apply and Verify Supabase Core Database | VERIFIED | Phase 2 | `reports/TASK-015-implementation.md`, `reports/TASK-015-review.md` |
 | `TASK-020` | Authentication Service and API Handlers | VERIFIED | Phase 3 | `reports/TASK-020-implementation.md`, `reports/TASK-020-review.md` |
-| `TASK-021` | Auth Pages UI (Login and Register) | VERIFIED | Phase 3 | Git commits (`5f4b7c8`), `src/app/(auth)/`, 12 tests PASS |
-
-## Verified and Completed Tasks
-
-| Task ID | Title | Status | Phase | Evidence |
-|---|---|---|---|---|
+| `TASK-021` | Auth Pages UI (Login and Register) | VERIFIED | Phase 3 | Git commit (`5f4b7c8`), `src/app/(auth)/`, 12 tests PASS |
 | `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 | `reports/TASK-022-implementation.md`, `reports/TASK-022-review.md` |
 | `TASK-023` | Course Enrollment Feature & API Integration | VERIFIED | Phase 3 | `reports/TASK-023-implementation.md`, `reports/TASK-023-review.md` |
 | `TASK-024` | Visual Learning Roadmap Page | VERIFIED | Phase 3 | `reports/TASK-024-implementation.md`, `reports/TASK-024-review.md` |
@@ -38,12 +35,15 @@ Không có task đang ở trạng thái `IN_PROGRESS`.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+| `TASK-025` | Lesson Content API and Viewer | READY | Phase 4 | `TASK-024` |
+| `TASK-026` | Exercise API, Evaluation, and Submissions | READY | Phase 4 | `TASK-025` |
+| `TASK-027` | Progress Tracking API and Learner Progress Engine | READY | Phase 4 | `TASK-026` |
 
 ## Planned Work
 
 | Phase | Scope |
 |---|---|
-| Phase 4 | Lesson content viewer, exercises, submissions, grading, and progress engine |
+| Phase 4 | Implement `TASK-025`–`TASK-027`: lesson content/start flow, exercises/submissions/grading, and progress engine |
 | Phase 5 | AI integration and explanation/mentor experience |
 | Phase 6 | Learner dashboards and administration |
 | Phase 7 | Security regression, accessibility/performance review, and deployment |
