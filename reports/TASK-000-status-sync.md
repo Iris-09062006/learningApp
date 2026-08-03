@@ -4,7 +4,7 @@
 Thực hiện tổng rà soát toàn bộ project để chẩn đoán độ lệch giữa tài liệu theo dõi tiến độ (project tracking docs) và bằng chứng thực tế trên Source Code / Git History.
 
 ## Khảo sát thực tế (Source of Truth)
-- **Git History:** Xác nhận commit dọn dẹp các task cũ ở `ed52915` (chore: clean up project tracking docs).
+- **Git History:** Xác nhận commit dọn dẹp các task cũ ở `ab64225` (docs: clean up task tracking and stale reports).
 - **Test Suite:** `npm run test` pass 61/61 tests bao gồm `features/auth`, `lib/supabase`, `components/ui`. Hoàn toàn không có test nào cho tính năng `Course Catalog & Detail`.
 - **Source Code (`src/`) & Migrations:** 
   - Schema DB (001–009) đã áp dụng (TASK-015).
