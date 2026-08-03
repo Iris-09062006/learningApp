@@ -12,7 +12,7 @@
 
 | Task ID | Title | Status | Phase |
 |---|---|---|---|
-| `TASK-022` | Course Catalog and Course Detail | IN_PROGRESS | Phase 3 |
+| `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 |
 
 ## Verified and Completed Tasks
 
@@ -28,11 +28,11 @@
 | `TASK-020` | Authentication Service and API Handlers | VERIFIED | Phase 3 | `reports/TASK-020-implementation.md`, `reports/TASK-020-review.md` |
 | `TASK-021` | Auth Pages UI (Login and Register) | VERIFIED | Phase 3 | Git commits (`5f4b7c8`), `src/app/(auth)/`, 12 tests PASS |
 
-## In-Progress Tasks
+## Verified and Completed Tasks
 
-| Task ID | Title | Status | Phase | Note |
+| Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
-| `TASK-022` | Course Catalog and Course Detail | IN_PROGRESS | Phase 3 | Repository layer & types created (`src/features/courses/`). API routes, UI components, pages & tests pending. |
+| `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 | `reports/TASK-022-implementation.md`, `reports/TASK-022-review.md` |
 
 ## Ready Queue
 

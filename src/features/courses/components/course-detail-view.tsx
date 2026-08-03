@@ -1,0 +1,82 @@
+import React from "react";
+import type { CourseDetail } from "@/features/courses/types";
+
+interface CourseDetailViewProps {
+  course: CourseDetail;
+}
+
+export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course }) => {
+  return (
+    <div data-testid="course-detail-view" className="space-y-8">
+      {/* Header section */}
+      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3">
+          <span className="rounded bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+            {course.language.toUpperCase()}
+          </span>
+          <span className="text-xs text-slate-500 capitalize dark:text-slate-400">
+            Cấp độ: {course.level}
+          </span>
+        </div>
+
+        <h1 className="mt-4 text-3xl font-extrabold text-slate-900 dark:text-white">
+          {course.title}
+        </h1>
+
+        <p className="mt-4 text-base text-slate-600 dark:text-slate-300">
+          {course.description || "Chưa có mô tả chi tiết cho khóa học này."}
+        </p>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
+          <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-slate-400">
+            <span>{course.chapterCount} chương</span>
+            <span>&bull;</span>
+            <span>{course.lessonCount} bài học</span>
+          </div>
+
+          <span className="inline-flex items-center rounded-lg bg-indigo-100 px-5 py-2.5 text-sm font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+            {course.isEnrolled
+              ? "Bạn đã đăng ký khóa học"
+              : "Đăng ký sẽ sớm khả dụng"}
+          </span>
+        </div>
+      </div>
+
+      {/* Chapters summary */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          Nội dung khóa học
+        </h2>
+
+        {course.chapters.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Nội dung bài học đang được cập nhật.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {course.chapters.map((ch) => (
+              <div
+                key={ch.id}
+                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">
+                    Chương {ch.chapterOrder}: {ch.title}
+                  </h3>
+                  {ch.description && (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {ch.description}
+                    </p>
+                  )}
+                </div>
+                <span className="text-xs text-slate-400">
+                  {ch.lessonCount} bài học
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

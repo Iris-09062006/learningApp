@@ -1,7 +1,7 @@
 # Task Packet: TASK-022 — Course Catalog & Course Detail Feature
 
 ## Status
-`IN_PROGRESS`
+`VERIFIED`
 
 ## Owner
 Codex
@@ -75,9 +75,9 @@ Xây dựng tính năng Danh sách khóa học (`Course Catalog`) và Chi tiết
 
 ## Acceptance Criteria
 - [x] Interfaces/types và Repository layer căn bản cho Course query (`src/features/courses/types/index.ts`, `src/features/courses/repositories/course-repository.ts`).
-- [ ] `GET /api/courses` trả về danh sách khóa học published theo đúng format `CourseSummary[]`, hỗ trợ pagination.
-- [ ] `GET /api/courses/:courseId` trả về thông tin chi tiết khóa học `CourseDetail`.
-- [ ] Trang `/courses` hiển thị giao diện responsive với danh sách khóa học.
-- [ ] Trang `/courses/[courseId]` hiển thị chi tiết khóa học và nút hành động thích hợp.
-- [ ] Unit tests pass 100%.
-- [ ] Quality gates (`lint`, `typecheck`, `test`, `build`) pass 100%.
+- [x] `GET /api/courses` trả về danh sách khóa học published theo đúng format `CourseSummary[]`, hỗ trợ pagination.
+- [x] `GET /api/courses/:courseId` trả về thông tin chi tiết khóa học `CourseDetail`.
+- [x] Trang `/courses` hiển thị giao diện responsive với danh sách khóa học.
+- [x] Trang `/courses/[courseId]` hiển thị chi tiết khóa học và nút hành động thích hợp.
+- [x] Unit tests pass 100%.
+- [x] Quality gates (`lint`, `typecheck`, `test`, `build`) pass 100%.

@@ -1,0 +1,92 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  fetchCourseDetail,
+  fetchCourseSummaries,
+} from "@/features/courses/repositories/course-repository";
+import {
+  getCourseById,
+  getPublishedCourses,
+  normalizePagination,
+} from "@/features/courses/services/course-service";
+
+vi.mock("@/features/courses/repositories/course-repository", () => ({
+  fetchCourseSummaries: vi.fn(),
+  fetchCourseDetail: vi.fn(),
+}));
+
+describe("course service", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("normalizes invalid and oversized pagination values", () => {
+    expect(
+      normalizePagination({ page: "abc", pageSize: "-5" }),
+    ).toEqual({ page: 1, pageSize: 20 });
+
+    expect(normalizePagination({ page: "2.8", pageSize: "200" })).toEqual({
+      page: 2,
+      pageSize: 100,
+    });
+  });
+
+  it("delegates published course listing with normalized pagination", async () => {
+    const result = {
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0,
+      totalPages: 0,
+    };
+    vi.mocked(fetchCourseSummaries).mockResolvedValueOnce(result);
+
+    await expect(
+      getPublishedCourses({ page: "abc", pageSize: "-5" }),
+    ).resolves.toEqual(result);
+    expect(fetchCourseSummaries).toHaveBeenCalledWith(1, 20);
+  });
+
+  it("returns published course details", async () => {
+    const detail = {
+      id: 1,
+      slug: "python-basic",
+      title: "Python Basic",
+      description: "Learn Python.",
+      level: "beginner",
+      language: "python",
+      isPublished: true,
+      chapterCount: 0,
+      lessonCount: 0,
+      isEnrolled: false,
+      chapters: [],
+    };
+    vi.mocked(fetchCourseDetail).mockResolvedValueOnce(detail);
+
+    await expect(getCourseById(1)).resolves.toEqual(detail);
+    expect(fetchCourseDetail).toHaveBeenCalledWith(1);
+  });
+
+  it("returns null for invalid, missing, or unpublished courses", async () => {
+    await expect(getCourseById(0)).resolves.toBeNull();
+    expect(fetchCourseDetail).not.toHaveBeenCalled();
+
+    vi.mocked(fetchCourseDetail).mockResolvedValueOnce(null);
+    await expect(getCourseById(2)).resolves.toBeNull();
+
+    vi.mocked(fetchCourseDetail).mockResolvedValueOnce({
+      id: 3,
+      slug: "draft",
+      title: "Draft",
+      description: null,
+      level: "beginner",
+      language: "python",
+      isPublished: false,
+      chapterCount: 0,
+      lessonCount: 0,
+      isEnrolled: false,
+      chapters: [],
+    });
+    await expect(getCourseById(3)).resolves.toBeNull();
+  });
+});
