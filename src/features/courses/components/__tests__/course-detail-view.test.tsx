@@ -1,6 +1,14 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CourseDetailView } from "../course-detail-view";
+
+const mockPush = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+}));
 import type { CourseDetail } from "@/features/courses/types";
 
 const baseDetail: CourseDetail = {
@@ -21,6 +29,11 @@ const baseDetail: CourseDetail = {
 };
 
 describe("CourseDetailView", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    mockPush.mockClear();
+  });
+
   it("renders course headers and basic stats", () => {
     render(<CourseDetailView course={baseDetail} />);
     expect(screen.getByText("Python Basic")).toBeInTheDocument();
@@ -31,15 +44,72 @@ describe("CourseDetailView", () => {
     expect(screen.getByText(/5 bài học/)).toBeInTheDocument();
   });
 
-  it("renders enrollment status when enrolled", () => {
+  it("renders start-learning action when enrolled", () => {
     const enrolled = { ...baseDetail, isEnrolled: true };
     render(<CourseDetailView course={enrolled} />);
-    expect(screen.getByText(/Bạn đã đăng ký khóa học/i)).toBeInTheDocument();
+
+    const button = screen.getByRole("button", { name: "Bắt đầu học" });
+    fireEvent.click(button);
+
+    expect(mockPush).toHaveBeenCalledWith("/courses/1/roadmap");
   });
 
-  it("renders enrollment status when not enrolled", () => {
+  it("renders enroll button when not enrolled and triggers API call on click", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          enrollmentId: 1,
+          courseId: 1,
+          enrolledAt: "2026-03-08",
+          firstLessonId: 10,
+        },
+      }),
+    } as Response);
+
     render(<CourseDetailView course={baseDetail} />);
-    expect(screen.getByText(/Đăng ký sẽ sớm khả dụng/i)).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Đăng ký khóa học" });
+    expect(button).toBeInTheDocument();
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith("/api/courses/1/enroll", {
+        method: "POST",
+      });
+      expect(
+        screen.getByRole("button", { name: "Bắt đầu học" })
+      ).toBeInTheDocument();
+    });
+
+  });
+
+  it("shows error message when enrollment fails", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({
+        success: false,
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Vui lòng đăng nhập để đăng ký khóa học.",
+        },
+      }),
+    } as Response);
+
+    render(<CourseDetailView course={baseDetail} />);
+    const button = screen.getByRole("button", { name: "Đăng ký khóa học" });
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Vui lòng đăng nhập để đăng ký khóa học.")
+      ).toBeInTheDocument();
+    });
+    expect(fetchSpy).toHaveBeenCalledWith("/api/courses/1/enroll", {
+      method: "POST",
+    });
   });
 
   it("renders chapter lists", () => {

@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchCourseDetail,
   fetchCourseSummaries,
+  enrollUserInCourse,
 } from "@/features/courses/repositories/course-repository";
 import {
+  enrollInCourse,
   getCourseById,
   getPublishedCourses,
   normalizePagination,
@@ -13,6 +15,7 @@ import {
 vi.mock("@/features/courses/repositories/course-repository", () => ({
   fetchCourseSummaries: vi.fn(),
   fetchCourseDetail: vi.fn(),
+  enrollUserInCourse: vi.fn(),
 }));
 
 describe("course service", () => {
@@ -88,5 +91,81 @@ describe("course service", () => {
       chapters: [],
     });
     await expect(getCourseById(3)).resolves.toBeNull();
+  });
+
+  it("rejects invalid course IDs for enrollment", async () => {
+    await expect(enrollInCourse(0)).rejects.toMatchObject({
+      code: "INVALID_ID",
+      statusCode: 400,
+    });
+    expect(enrollUserInCourse).not.toHaveBeenCalled();
+  });
+
+  it("delegates enrollment to the repository", async () => {
+    const result = {
+      enrollmentId: 11,
+      courseId: 7,
+      enrolledAt: "2026-03-08T10:00:00.000Z",
+      firstLessonId: 42,
+    };
+    vi.mocked(enrollUserInCourse).mockResolvedValueOnce(result);
+
+    await expect(enrollInCourse(7)).resolves.toEqual(result);
+    expect(enrollUserInCourse).toHaveBeenCalledWith(7);
+  });
+
+  it("maps PostgreSQL error 23505 to ALREADY_ENROLLED (409)", async () => {
+    vi.mocked(enrollUserInCourse).mockRejectedValueOnce({
+      code: "23505",
+      message: "Course enrollment already exists",
+    });
+
+    await expect(enrollInCourse(7)).rejects.toMatchObject({
+      code: "ALREADY_ENROLLED",
+      statusCode: 409,
+    });
+  });
+
+  it("maps PostgreSQL error 28000 to UNAUTHORIZED (401)", async () => {
+    vi.mocked(enrollUserInCourse).mockRejectedValueOnce({
+      code: "28000",
+      message: "Authentication required",
+    });
+
+    await expect(enrollInCourse(7)).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+      statusCode: 401,
+    });
+  });
+
+  it("maps PostgreSQL error 42501 to FORBIDDEN (403)", async () => {
+    vi.mocked(enrollUserInCourse).mockRejectedValueOnce({
+      code: "42501",
+      message: "Active learner profile required",
+    });
+
+    await expect(enrollInCourse(7)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      statusCode: 403,
+    });
+  });
+
+  it("maps PostgreSQL error P0002 to NOT_FOUND (404)", async () => {
+    vi.mocked(enrollUserInCourse).mockRejectedValueOnce({
+      code: "P0002",
+      message: "Published course not found",
+    });
+
+    await expect(enrollInCourse(7)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+    });
+  });
+
+  it("re-throws unexpected repository errors", async () => {
+    const unexpected = new Error("boom");
+    vi.mocked(enrollUserInCourse).mockRejectedValueOnce(unexpected);
+
+    await expect(enrollInCourse(7)).rejects.toBe(unexpected);
   });
 });

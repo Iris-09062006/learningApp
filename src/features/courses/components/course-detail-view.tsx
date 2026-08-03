@@ -1,4 +1,8 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import type { CourseDetail } from "@/features/courses/types";
 
 interface CourseDetailViewProps {
@@ -6,6 +10,46 @@ interface CourseDetailViewProps {
 }
 
 export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course }) => {
+  const router = useRouter();
+  const [isEnrolled, setIsEnrolled] = useState(course.isEnrolled);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  async function handleEnrollment(): Promise<void> {
+    if (isEnrolling) return;
+
+    if (isEnrolled) {
+      router.push(`/courses/${course.id}/roadmap`);
+      return;
+    }
+
+    setIsEnrolling(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch(`/api/courses/${course.id}/enroll`, {
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        success?: boolean;
+        data?: { firstLessonId: number | null };
+        error?: { message?: string };
+      };
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error?.message || "Không thể đăng ký khóa học.");
+      }
+
+      setIsEnrolled(true);
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Không thể đăng ký khóa học."
+      );
+    } finally {
+      setIsEnrolling(false);
+    }
+  }
+
   return (
     <div data-testid="course-detail-view" className="space-y-8">
       {/* Header section */}
@@ -34,11 +78,25 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course }) =>
             <span>{course.lessonCount} bài học</span>
           </div>
 
-          <span className="inline-flex items-center rounded-lg bg-indigo-100 px-5 py-2.5 text-sm font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-            {course.isEnrolled
-              ? "Bạn đã đăng ký khóa học"
-              : "Đăng ký sẽ sớm khả dụng"}
-          </span>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={handleEnrollment}
+              disabled={isEnrolling}
+              className="inline-flex items-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isEnrolling
+                ? "Đang đăng ký..."
+                : isEnrolled
+                  ? "Bắt đầu học"
+                  : "Đăng ký khóa học"}
+            </button>
+            {errorMessage && (
+              <p role="alert" className="max-w-xs text-right text-xs text-red-600">
+                {errorMessage}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

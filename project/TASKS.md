@@ -10,9 +10,7 @@
 
 ## Active Task
 
-| Task ID | Title | Status | Phase |
-|---|---|---|---|
-| `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 |
+Không có task đang ở trạng thái `IN_PROGRESS`.
 
 ## Verified and Completed Tasks
 
@@ -33,12 +31,12 @@
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
 | `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 | `reports/TASK-022-implementation.md`, `reports/TASK-022-review.md` |
+| `TASK-023` | Course Enrollment Feature & API Integration | VERIFIED | Phase 3 | `reports/TASK-023-implementation.md`, `reports/TASK-023-review.md` |
 
 ## Ready Queue
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-023` | Course Enrollment Feature & API Integration | READY | Phase 3 | `TASK-022` |
 | `TASK-024` | Visual Learning Roadmap Page | READY | Phase 3 | `TASK-022`, `TASK-023` |
 
 ## Planned Work

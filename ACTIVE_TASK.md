@@ -1,27 +1,27 @@
 # Active Task Information
 
 ## Task Identification
-- **Task ID:** TASK-022
-- **Title:** Course Catalog and Course Detail
-- **Phase:** Phase 3 — Authentication & Learning Core
-- **Status:** IN_PROGRESS
-
-## Context & Objectives
-- **In progress:**
-  - Repository layer (`types/index.ts`, `repositories/course-repository.ts`) đã có.
-  - Chưa có: `course.service`/`course-service.ts`, API routes `GET /api/courses`, `GET /api/courses/:courseId`, UI components (`course-card`, `course-list`, `course-detail-view`), pages `/courses` và `/courses/[courseId]`, cùng unit tests.
-- **Sau audit TASK-000 (cleanup):**
-  - Đã gỡ bỏ các task/report không chính xác (TASK-101–105, TASK-011–014, report TASK-022 giả).
-  - `project/ROADMAP.md`, `project/TASKS.md` đã được viết lại theo trạng thái thực tế.
-  - Cảnh báo cấu hình ESLint lỗi thời trong `next build` (`useEslintrc`, `extensions`) còn tồn tại — cần xử lý ở task cấu hình tách biệt.
-
-## Quality Gates (trạng thái repo hiện tại, không phải mới từ task này)
-- `npm run lint` (PASSED - không warning)
-- `npm run typecheck` (PASSED)
-- `npm run test` (PASSED - 61/61)
-- `npm run build` (PASSED; có cảnh báo ESLint option lỗi thời từ Next.js nội bộ)
-
-## Next Queued Task
 - **Task ID:** TASK-023
 - **Title:** Course Enrollment Feature & API Integration
-- **Status:** READY (bắt đầu sau khi TASK-022 hoàn thành)
+- **Phase:** Phase 3 — Authentication & Learning Core
+- **Status:** VERIFIED
+
+## Context & Objectives
+- **VERIFIED:**
+  - Cập nhật types, repository, service, API route `POST /api/courses/:courseId/enroll` gọi Supabase RPC `enroll_course` với server client session-bound.
+  - Cập nhật `CourseDetailView` fetch API và render UI state (isEnrolled, errors).
+  - Test suite (Route, Service, Repository, Component) pass 98/98.
+- **Sau audit TASK-000 (cleanup):**
+  - TASK-022 (Course Catalog/Details) đã commit xong.
+  - Cảnh báo cấu hình ESLint lỗi thời trong `next build` (`useEslintrc`, `extensions`) còn tồn tại — chưa xử lý ở scope này.
+
+## Quality Gates (trạng thái repo hiện tại trước TASK-023)
+- `npm run lint` (PASSED - không warning)
+- `npm run typecheck` (PASSED)
+- `npm run test` (PASSED)
+- `npm run build` (PASSED; có cảnh báo ESLint)
+
+## Next Queued Task
+- **Task ID:** TASK-024
+- **Title:** User Roadmap & Progress Initialization
+- **Status:** DRAFT (Cần plan sau)

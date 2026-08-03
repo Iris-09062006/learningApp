@@ -47,3 +47,17 @@ export interface CourseListResult {
   total: number;
   totalPages: number;
 }
+
+export interface EnrollCourseResult {
+  enrollmentId: number;
+  courseId: number;
+  enrolledAt: string;
+  firstLessonId: number | null;
+}
+
+export interface EnrollCourseRpcRaw {
+  enrollment_id: number;
+  course_id: number;
+  enrolled_at: string;
+  first_lesson_id: number | null;
+}

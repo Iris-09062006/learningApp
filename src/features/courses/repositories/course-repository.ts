@@ -1,5 +1,11 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { CourseSummary, CourseDetail, CourseChapterSummary } from "@/features/courses/types";
+import type {
+  CourseSummary,
+  CourseDetail,
+  CourseChapterSummary,
+  EnrollCourseResult,
+  EnrollCourseRpcRaw,
+} from "@/features/courses/types";
 
 export async function fetchCourseSummaries(
   page: number,
@@ -77,6 +83,24 @@ export async function fetchCourseDetail(
     throw new Error(`Failed to fetch chapters: ${chaptersError.message}`);
   }
 
+  let isEnrolled = false;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: enrollment } = await supabase
+      .from("course_enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("course_id", courseId)
+      .maybeSingle();
+
+    if (enrollment) {
+      isEnrolled = true;
+    }
+  }
+
   const chapters: CourseChapterSummary[] = (chaptersData || []).map((ch) => ({
     id: ch.id,
     title: ch.title,
@@ -96,7 +120,28 @@ export async function fetchCourseDetail(
     isPublished: course.is_published,
     chapterCount: chapters.length,
     lessonCount: chapters.reduce((sum, ch) => sum + ch.lessonCount, 0),
-    isEnrolled: false,
+    isEnrolled,
     chapters,
+  };
+}
+
+export async function enrollUserInCourse(
+  courseId: number
+): Promise<EnrollCourseResult> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("enroll_course", {
+    p_course_id: courseId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const raw = data as unknown as EnrollCourseRpcRaw;
+  return {
+    enrollmentId: raw.enrollment_id,
+    courseId: raw.course_id,
+    enrolledAt: raw.enrolled_at,
+    firstLessonId: raw.first_lesson_id ?? null,
   };
 }
