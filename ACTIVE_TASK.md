@@ -3,7 +3,7 @@
 **Task ID:** TASK-025
 **Title:** Lesson Content API and Viewer
 **Module:** Lesson Content / Learning Execution
-**Status:** `READY`
+**Status:** `VERIFIED`
 **Task Packet:** `tasks/TASK-025.md`
 
 ## Required Context
@@ -31,18 +31,18 @@ Implement end-to-end lesson content access for enrolled learners, including less
 
 ## Current Sub-steps
 
-1. [ ] Confirm current database and API contracts before implementation.
-2. [ ] Set task status to `IN_PROGRESS` when implementation begins.
-3. [ ] Implement lesson types in `src/features/lessons/types/index.ts`.
-4. [ ] Implement lesson repository functions.
-5. [ ] Implement lesson service business rules.
-6. [ ] Create `GET /api/lessons/[lessonId]`.
-7. [ ] Create `POST /api/lessons/[lessonId]/start`.
-8. [ ] Implement `LessonContentView`.
-9. [ ] Build the lesson page at `src/app/(main)/lessons/[lessonId]/page.tsx`.
-10. [ ] Add repository, service, API, and UI tests.
-11. [ ] Run quality gates: `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`.
-12. [ ] Review the actual diff, produce implementation/review reports, and set status to `VERIFIED` only after all gates pass.
+1. [x] Confirm current database and API contracts before implementation.
+2. [x] Set task status to `IN_PROGRESS` when implementation begins.
+3. [x] Implement lesson types in `src/features/lessons/types/index.ts`.
+4. [x] Implement lesson repository functions.
+5. [x] Implement lesson service business rules.
+6. [x] Create `GET /api/lessons/[lessonId]`.
+7. [x] Create `POST /api/lessons/[lessonId]/start`.
+8. [x] Implement `LessonContentView`.
+9. [x] Build the lesson page at `src/app/(main)/lessons/[lessonId]/page.tsx`.
+10. [x] Add repository, service, API, and UI tests.
+11. [x] Run quality gates: `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`.
+12. [x] Review the actual diff, produce implementation/review reports, and set status to `VERIFIED` only after all gates pass.
 
 ## Dependencies
 
