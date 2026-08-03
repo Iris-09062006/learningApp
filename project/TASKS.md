@@ -12,27 +12,33 @@
 
 | Task ID | Title | Status | Phase |
 |---|---|---|---|
-| `TASK-023` | Course Enrollment Feature & API Integration | READY | Phase 3 |
+| `TASK-022` | Course Catalog and Course Detail | IN_PROGRESS | Phase 3 |
 
 ## Verified and Completed Tasks
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
-| `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation |
-| `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git history and project files |
+| `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
+| `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
 | `TASK-002` | Configure Vitest and Playwright | DONE | Phase 1 | `reports/TASK-002-implementation.md`, `reports/TASK-002-review.md` |
 | `TASK-003` | Primitive UI Components Foundation | DONE | Phase 1 | `reports/TASK-003-implementation.md`, `reports/TASK-003-review.md` |
 | `TASK-004` | CI Quality-Gates Workflow | DONE | Phase 1 | `reports/TASK-004-implementation.md`, `reports/TASK-004-review.md` |
 | `TASK-010A` | Repair Project Baseline | VERIFIED | Phase 1 | `reports/TASK-010A-implementation.md`, `reports/TASK-010A-review.md` |
 | `TASK-015` | Apply and Verify Supabase Core Database | VERIFIED | Phase 2 | `reports/TASK-015-implementation.md`, `reports/TASK-015-review.md` |
 | `TASK-020` | Authentication Service and API Handlers | VERIFIED | Phase 3 | `reports/TASK-020-implementation.md`, `reports/TASK-020-review.md` |
-| `TASK-021` | Auth Pages UI (Login and Register) | VERIFIED | Phase 3 | `reports/TASK-021-implementation.md`, `reports/TASK-021-review.md`, `reports/TASK-021-test.md` |
-| `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 | `reports/TASK-022-implementation.md`, `reports/TASK-022-review.md` |
+| `TASK-021` | Auth Pages UI (Login and Register) | VERIFIED | Phase 3 | Git commits (`5f4b7c8`), `src/app/(auth)/`, 12 tests PASS |
+
+## In-Progress Tasks
+
+| Task ID | Title | Status | Phase | Note |
+|---|---|---|---|---|
+| `TASK-022` | Course Catalog and Course Detail | IN_PROGRESS | Phase 3 | Repository layer & types created (`src/features/courses/`). API routes, UI components, pages & tests pending. |
 
 ## Ready Queue
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+| `TASK-023` | Course Enrollment Feature & API Integration | READY | Phase 3 | `TASK-022` |
 | `TASK-024` | Visual Learning Roadmap Page | READY | Phase 3 | `TASK-022`, `TASK-023` |
 
 ## Planned Work

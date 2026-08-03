@@ -1,28 +1,27 @@
 # Active Task Information
 
 ## Task Identification
-- **Task ID:** TASK-023
-- **Title:** Course Enrollment Feature & API Integration
+- **Task ID:** TASK-022
+- **Title:** Course Catalog and Course Detail
 - **Phase:** Phase 3 — Authentication & Learning Core
-- **Status:** READY
+- **Status:** IN_PROGRESS
 
 ## Context & Objectives
-- **Scope:**
-  - Triển khai API Route `POST /api/courses/[id]/enroll` để đăng ký khóa học cho người dùng.
-  - Sử dụng RPC `enroll_course(p_user_id, p_course_id)` nguyên tử đã được xác minh trong Supabase database.
-  - Tự động tạo bản ghi `course_enrollments` và khởi tạo tiến độ học tập `user_progress` cho lesson đầu tiên.
-  - Xây dựng UI button & state xử lý Enroll trên trang chi tiết khóa học `/courses/[id]`.
-- **Primary Objective:** Hoàn thiện luồng đăng ký học (Enrollment) kết nối Frontend với Backend Supabase RPC.
+- **In progress:**
+  - Repository layer (`types/index.ts`, `repositories/course-repository.ts`) đã có.
+  - Chưa có: `course.service`/`course-service.ts`, API routes `GET /api/courses`, `GET /api/courses/:courseId`, UI components (`course-card`, `course-list`, `course-detail-view`), pages `/courses` và `/courses/[courseId]`, cùng unit tests.
+- **Sau audit TASK-000 (cleanup):**
+  - Đã gỡ bỏ các task/report không chính xác (TASK-101–105, TASK-011–014, report TASK-022 giả).
+  - `project/ROADMAP.md`, `project/TASKS.md` đã được viết lại theo trạng thái thực tế.
+  - Cảnh báo cấu hình ESLint lỗi thời trong `next build` (`useEslintrc`, `extensions`) còn tồn tại — cần xử lý ở task cấu hình tách biệt.
 
-## Allowed Files
-- `src/app/api/courses/[id]/enroll/route.ts`
-- `src/features/courses/services/enrollment-service.ts`
-- `src/features/courses/components/enroll-button.tsx`
-- `src/app/courses/[id]/page.tsx`
-- `tests/` (Unit / Integration / E2E tests liên quan)
+## Quality Gates (trạng thái repo hiện tại, không phải mới từ task này)
+- `npm run lint` (PASSED - không warning)
+- `npm run typecheck` (PASSED)
+- `npm run test` (PASSED - 61/61)
+- `npm run build` (PASSED; có cảnh báo ESLint option lỗi thời từ Next.js nội bộ)
 
-## Quality Gates Requirements
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test`
-- `npm run build`
+## Next Queued Task
+- **Task ID:** TASK-023
+- **Title:** Course Enrollment Feature & API Integration
+- **Status:** READY (bắt đầu sau khi TASK-022 hoàn thành)

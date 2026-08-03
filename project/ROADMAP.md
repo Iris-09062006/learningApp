@@ -3,8 +3,9 @@
 ## Current State
 
 - **Current phase:** Phase 3 — Authentication & Learning Core
-- **Completed:** project foundation, testing/CI setup, Supabase core database verification, authentication service/API, authentication pages, course catalog and course detail.
-- **Next task:** `TASK-023` — Course Enrollment Feature & API Integration.
+- **Completed:** project foundation, testing/CI setup, Supabase core database verification, authentication service/API, authentication pages.
+- **In progress:** `TASK-022` — Course Catalog & Course Detail (Repository layer done; API, UI, pages & tests pending).
+- **Next task:** `TASK-023` — Course Enrollment Feature & API Integration (queued after TASK-022 completion).
 - **Queued after enrollment:** `TASK-024` — Visual Learning Roadmap.
 - **Source of truth:** `project/TASKS.md`, task packets in `tasks/`, and implementation/review reports in `reports/`.
 
@@ -39,7 +40,7 @@
 
 - `TASK-020` — Authentication service and API handlers — **VERIFIED**
 - `TASK-021` — Auth pages UI — **VERIFIED**
-- `TASK-022` — Course catalog and course detail — **VERIFIED**
+- `TASK-022` — Course catalog and course detail — **IN_PROGRESS** (partial implementation)
 - `TASK-023` — Course enrollment feature and API integration — **READY**
 - `TASK-024` — Visual learning roadmap page — **READY**
 
