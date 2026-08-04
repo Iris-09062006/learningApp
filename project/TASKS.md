@@ -10,12 +10,13 @@
 
 ## Active Task
 
-Task đang triển khai: `TASK-027` (Progress Tracking API and Learner Progress Engine).
+Task đang triển khai: Không có (Tất cả task Phase 1-5 đã hoàn thành).
 
 ## Verified and Completed Tasks
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md` |
 | `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
 | `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
 | `TASK-002` | Configure Vitest and Playwright | DONE | Phase 1 | `reports/TASK-002-implementation.md`, `reports/TASK-002-review.md` |

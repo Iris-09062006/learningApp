@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { AiExplanationView } from "@/features/ai/components/ai-explanation-view";
 import type {
   GetExerciseResponse,
   SubmitExerciseResponse,
@@ -166,6 +167,7 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({ exercise }) => {
                 {result.isCorrect ? "Chính xác!" : "Chưa chính xác"}
               </p>
               <p className="mt-1 whitespace-pre-wrap">{result.feedback}</p>
+              <AiExplanationView submissionId={result.submissionId} />
             </div>
           )}
         </div>
