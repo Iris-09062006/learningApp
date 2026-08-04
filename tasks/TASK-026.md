@@ -1,7 +1,7 @@
 # TASK-026 — Exercise API, Evaluation, and Submissions
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Required Context
 - `docs/requirements.md`
