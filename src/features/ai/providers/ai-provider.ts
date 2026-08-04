@@ -41,41 +41,60 @@ export class MockAIProvider implements AIProvider {
   }
 }
 
-interface RestProviderPayload {
-  explanation?: unknown;
-  response?: unknown;
-  model?: unknown;
+interface OpenAIChatResponse {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+  model?: string;
 }
 
-export class RestAIProvider implements AIProvider {
+export class OpenAIApiProvider implements AIProvider {
   constructor(
-    private readonly endpoint = process.env.AI_PROVIDER_URL,
-    private readonly apiKey = process.env.AI_PROVIDER_API_KEY,
-    private readonly model = process.env.AI_PROVIDER_MODEL ?? null
+    private readonly apiKey = process.env.AI_API_KEY,
+    private readonly endpoint = process.env.AI_PROVIDER_URL ??
+      "https://api.openai.com/v1/chat/completions",
+    private readonly model = process.env.AI_PROVIDER_MODEL ?? "gpt-4o-mini"
   ) {}
 
   async generateExplanation(
     request: AiProviderRequest
   ): Promise<AiProviderResponse> {
-    if (!this.endpoint) {
+    if (!this.apiKey) {
       throw new Error("AI_PROVIDER_NOT_CONFIGURED");
     }
+
+    const { submission, question } = request;
+
+    const systemPrompt = `Bạn là một gia sư AI thân thiện, chuyên hỗ trợ học viên giải bài tập.
+Thông tin bài tập:
+- Tiêu đề: ${submission.exerciseTitle}
+- Đề bài: ${submission.exercisePrompt}
+
+Học viên đã nộp đáp án: ${JSON.stringify(submission.answer)}
+Kết quả chấm tự động: ${submission.isCorrect ? "Đúng" : "Sai"}
+Giải thích tĩnh của bài (nếu có): ${submission.staticExplanation ?? "Không có"}
+
+Hãy dựa vào các thông tin trên để phân tích ngắn gọn, dễ hiểu vì sao đáp án của học viên đúng hoặc sai. Nếu học viên có câu hỏi, hãy trả lời trực tiếp vào câu hỏi đó. Sử dụng ngôn ngữ tiếng Việt tự nhiên, khuyến khích học viên. Trả về định dạng Markdown.`;
+
+    const userContent = question
+      ? `Học viên hỏi: ${question}`
+      : "Vui lòng giải thích kết quả bài làm giúp tôi.";
 
     const response = await fetch(this.endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
-        question: request.question,
-        submission: {
-          answer: request.submission.answer,
-          isCorrect: request.submission.isCorrect,
-          exerciseTitle: request.submission.exerciseTitle,
-          exercisePrompt: request.submission.exercisePrompt,
-          staticExplanation: request.submission.staticExplanation,
-        },
+        model: this.model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.7,
       }),
     });
 
@@ -83,13 +102,8 @@ export class RestAIProvider implements AIProvider {
       throw new Error("AI_PROVIDER_REQUEST_FAILED");
     }
 
-    const payload = (await response.json()) as RestProviderPayload;
-    const explanation =
-      typeof payload.explanation === "string"
-        ? payload.explanation
-        : typeof payload.response === "string"
-          ? payload.response
-          : null;
+    const payload = (await response.json()) as OpenAIChatResponse;
+    const explanation = payload.choices?.[0]?.message?.content;
 
     if (!explanation?.trim()) {
       throw new Error("AI_RESPONSE_INVALID");
@@ -97,12 +111,12 @@ export class RestAIProvider implements AIProvider {
 
     return {
       explanation: explanation.trim(),
-      provider: "rest",
-      model: typeof payload.model === "string" ? payload.model : this.model,
+      provider: "openai-compatible",
+      model: payload.model ?? this.model,
     };
   }
 }
 
 export function createAIProvider(): AIProvider {
-  return process.env.AI_PROVIDER_URL ? new RestAIProvider() : new MockAIProvider();
+  return process.env.AI_API_KEY ? new OpenAIApiProvider() : new MockAIProvider();
 }

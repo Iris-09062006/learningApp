@@ -12,5 +12,5 @@
   - `GET /api/submissions/[submissionId]/explanations`
 - [x] Tích hợp AI Explanation View vào `exercise-view.tsx`.
 - [x] Cấu hình Vitest server-only alias (`tests/server-only.ts`).
-- [x] 100% tests PASS (228/228 tests).
+- [x] 100% tests PASS (235/235 tests).
 - [x] Quality gates (lint, typecheck, build) PASS.

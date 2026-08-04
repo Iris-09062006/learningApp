@@ -1,7 +1,7 @@
 # TASK-028 — AI Mentor API and Explanation Service
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Required Context
 - `docs/requirements.md`
@@ -40,3 +40,11 @@
 - AI provider failures are gracefully caught, logged as `failed` in DB, and return `502 AI_PROVIDER_ERROR`.
 - The UI allows learners to request an explanation after submission and view it natively.
 - Quality gates (`lint`, `typecheck`, `test`) pass without warnings.
+
+## Result
+- Implemented full AI Mentor feature: types, providers (`MockAIProvider`/`RestAIProvider`), repository, service, API routes, UI component.
+- Provider uses only `AI_API_KEY` with OpenAI-compatible default (`AI_API_BASE_URL`, `AI_MODEL` overrides).
+- Guarded secrets: AI API key stays server-only; API routes rely on `createClient` (ANON) + RLS; `exercise_solutions` never sent to client.
+- Tests added for provider, repository, service, and both API routes (failures returned as `502` and logged as `failed`).
+- Quality gates pass: `lint` ✓, `typecheck` ✓, `test` (235/235) ✓, `build` ✓, `git diff --check` clean.
+- Review verdict: PASS — all findings resolved.
