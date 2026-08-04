@@ -35,7 +35,7 @@ Task đang triển khai: `TASK-027` (Progress Tracking API and Learner Progress 
 |---|---|---|---|---|
 | `TASK-025` | Lesson Content API and Viewer | VERIFIED | Phase 4 | `TASK-024`; `reports/TASK-025-implementation.md`, `reports/TASK-025-review.md` |
 | `TASK-026` | Exercise API, Evaluation, and Submissions | VERIFIED | Phase 4 | `TASK-025` |
-| `TASK-027` | Progress Tracking API and Learner Progress Engine | IN_PROGRESS | Phase 4 | `TASK-026` |
+| `TASK-027` | Progress Tracking API and Learner Progress Engine | VERIFIED | Phase 4 | `TASK-026` |
 
 ## Planned Work
 
