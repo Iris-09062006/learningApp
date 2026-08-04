@@ -10,13 +10,13 @@
 
 ## Active Task
 
-Task đang triển khai: Không có (Tất cả task Phase 1-5 đã hoàn thành).
+Task đang triển khai: Không có. Các task tiếp theo của Phase 5 và Phase 6 đã có packet ở trạng thái `READY`.
 
 ## Verified and Completed Tasks
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
-| `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md` |
+| `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
 | `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
 | `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
 | `TASK-002` | Configure Vitest and Playwright | DONE | Phase 1 | `reports/TASK-002-implementation.md`, `reports/TASK-002-review.md` |
@@ -29,22 +29,27 @@ Task đang triển khai: Không có (Tất cả task Phase 1-5 đã hoàn thành
 | `TASK-022` | Course Catalog and Course Detail | VERIFIED | Phase 3 | `reports/TASK-022-implementation.md`, `reports/TASK-022-review.md` |
 | `TASK-023` | Course Enrollment Feature & API Integration | VERIFIED | Phase 3 | `reports/TASK-023-implementation.md`, `reports/TASK-023-review.md` |
 | `TASK-024` | Visual Learning Roadmap Page | VERIFIED | Phase 3 | `reports/TASK-024-implementation.md`, `reports/TASK-024-review.md` |
+| `TASK-025` | Lesson Content API and Viewer | VERIFIED | Phase 4 | `TASK-024`; `reports/TASK-025-implementation.md`, `reports/TASK-025-review.md` |
+| `TASK-026` | Exercise API, Evaluation, and Submissions | VERIFIED | Phase 4 | `TASK-025` |
+| `TASK-027` | Progress Tracking API and Learner Progress Engine | VERIFIED | Phase 4 | `TASK-026` |
 
 ## Ready Queue
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-025` | Lesson Content API and Viewer | VERIFIED | Phase 4 | `TASK-024`; `reports/TASK-025-implementation.md`, `reports/TASK-025-review.md` |
-| `TASK-026` | Exercise API, Evaluation, and Submissions | VERIFIED | Phase 4 | `TASK-025` |
-| `TASK-027` | Progress Tracking API and Learner Progress Engine | VERIFIED | Phase 4 | `TASK-026` |
+| `TASK-029` | AI Learning Recommendation Experience | READY | Phase 5 | `TASK-028` |
+| `TASK-030` | AI Exercise Generation | READY | Phase 5 | `TASK-028` |
+| `TASK-031` | Content Moderation API and Moderation Queue | READY | Phase 6 | `TASK-030` |
+| `TASK-032` | Learner Dashboard and Profile Management | READY | Phase 6 | `TASK-027`, `TASK-029` |
+| `TASK-033` | User Administration and System Health Dashboard | READY | Phase 6 | `TASK-031` |
 
 ## Planned Work
 
 | Phase | Scope |
 |---|---|
-| Phase 4 | Implement `TASK-025`–`TASK-027`: lesson content/start flow, exercises/submissions/grading, and progress engine |
-| Phase 5 | AI integration and explanation/mentor experience |
-| Phase 6 | Learner dashboards and administration |
+| Phase 4 | `TASK-025`–`TASK-027` verified: lesson content/start flow, exercises/submissions/grading, and progress engine |
+| Phase 5 | `TASK-028` verified; `TASK-029`–`TASK-030` ready: AI explanations, rule-based learning recommendations, and controlled AI exercise generation |
+| Phase 6 | `TASK-031`–`TASK-033` ready: content moderation, learner dashboard/profile, user administration, and system health |
 | Phase 7 | Security regression, accessibility/performance review, and deployment |
 
 ## Retired Task IDs

@@ -11,7 +11,7 @@
 ### AI domain
 - Thêm types cho AI explanation.
 - Thêm repository thao tác với bảng `ai_explanations`.
-- Thêm provider abstraction với Google Gemini và dummy fallback.
+- Thêm provider abstraction dùng REST OpenAI-compatible, cấu hình qua `AI_API_KEY`, cùng dummy fallback an toàn khi chưa cấu hình credential.
 - Thêm service điều phối việc tạo, lưu và truy xuất giải thích.
 
 ### API
@@ -35,11 +35,14 @@
 - `tasks/TASK-028.md`
 - `reports/TASK-028-implementation.md`
 - `reports/TASK-028-review.md`
+- `reports/TASK-028-test.md`
+- `.env.example`
 - `vitest.config.ts`
 - `tests/server-only.ts`
 - `src/features/exercises/components/exercise-view.tsx`
 - `src/features/ai/types/index.ts`
 - `src/features/ai/providers/ai-provider.ts`
+- `src/features/ai/providers/__tests__/ai-provider.test.ts`
 - `src/features/ai/repositories/ai-repository.ts`
 - `src/features/ai/repositories/__tests__/ai-repository.test.ts`
 - `src/features/ai/services/ai-service.ts`
@@ -56,9 +59,10 @@
 |---|---|---|
 | Lint | `npm run lint` | PASS, 0 warnings |
 | Typecheck | `npm run typecheck` | PASS |
-| Tests | `npm test -- --run` | PASS, 37 files and 228/228 tests |
+| Focused tests | `npx vitest run src/features/ai src/app/api/ai/explanations src/app/api/submissions` | PASS, 5 files and 27/27 tests |
+| Tests | `npm run test` | PASS, 38 files and 235/235 tests |
 | Build | `npm run build` | PASS |
-| Diff check | `git diff --check` | PASS; chỉ có cảnh báo LF/CRLF của Git trên Windows |
+| Diff check | `git diff --check` | PASS |
 
 ## 5. Review
 
@@ -66,7 +70,7 @@
 - Không còn finding Critical, High hoặc Medium.
 - Error propagation từ database/AI provider đến REST API đã được kiểm tra.
 - `server-only` vẫn được bảo toàn trong production và chỉ được stub trong Vitest.
-- Chi tiết: `reports/TASK-028-review.md`.
+- Chi tiết: `reports/TASK-028-review.md` và `reports/TASK-028-test.md`.
 
 ## 6. Risks and Limitations
 
