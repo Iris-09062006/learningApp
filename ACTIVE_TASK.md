@@ -1,24 +1,50 @@
-# ACTIVE TASK — TASK-026
+# ACTIVE TASK — TASK-027
 
-**Task ID:** TASK-026
-**Title:** Exercise API, Evaluation, and Submissions
-**Status:** `VERIFIED`
-**Assigned Agent:** Codex (Solo Agent)
+## Task ID
+`TASK-027`
 
-## Objectives
-1. Implement types for exercise data structures (`GetExerciseResponse`, `SubmitExerciseRequest`, `SubmitExerciseResponse`, `SubmissionSummary`).
-2. Add `exercise-repository.ts` in `src/features/exercises/repositories/` to handle secure solution retrieval (server-side ONLY) and submission persistence.
-3. Add `exercise-service.ts` in `src/features/exercises/services/` to perform answer validation, grade submissions (`predictOutput` & `fixTheBug`), update lesson completion status when required exercises pass, and auto-unlock next lesson.
-4. Implement API Route Handlers:
-   - `GET /api/exercises/:exerciseId`
-   - `POST /api/exercises/:exerciseId/submissions`
-   - `GET /api/exercises/:exerciseId/submissions`
-5. Build client component `ExerciseView` supporting `predictOutput` and `fixTheBug` choice selection, submission feedback banner, and next-lesson progression trigger.
-6. Write complete unit tests for repository, evaluation logic, API handlers, and UI components.
+## Title
+Progress Tracking API and Learner Progress Engine
 
-## Quality Gates Status
-- `lint`: PASS
-- `typecheck`: PASS
-- `test`: PASS (27 test files, 168 tests)
-- `build`: PASS
-- `review`: PASS (VERIFIED)
+## Status
+`IN_PROGRESS`
+
+## Required Context
+- `docs/requirements.md`
+- `docs/features.md` (Module 9: Progress tracking — F-PROGRESS-01, F-PROGRESS-02)
+- `docs/database.md` (§7.9 `user_progress`)
+- `docs/api_contract.md` (§14.1 Get course progress, §14.2 Get lesson progress)
+
+## Scope & Objective
+1. Implement types for progress responses (`CourseProgressResponse`, `LessonProgressResponse`).
+2. Add progress querying & calculation methods to `progress-repository.ts` and `progress-service.ts` under `src/features/progress/`.
+3. Implement API Route Handlers:
+   - `GET /api/courses/:courseId/progress`
+   - `GET /api/lessons/:lessonId/progress`
+4. Build `CourseProgressCard` / `ProgressSummaryWidget` UI components to display completion stats, overall progress percentage, and last accessed lesson shortcut.
+5. Write complete unit tests for progress calculation logic, repository methods, API handlers, and UI components.
+
+## File Scope
+- `src/features/progress/types/index.ts`
+- `src/features/progress/repositories/progress-repository.ts`
+- `src/features/progress/services/progress-service.ts`
+- `src/app/api/courses/[courseId]/progress/route.ts`
+- `src/app/api/lessons/[lessonId]/progress/route.ts`
+- `src/features/progress/components/progress-summary-card.tsx`
+- `src/features/progress/repositories/__tests__/progress-repository.test.ts`
+- `src/features/progress/services/__tests__/progress-service.test.ts`
+- `src/app/api/courses/[courseId]/progress/__tests__/route.test.ts`
+- `src/app/api/lessons/[lessonId]/progress/__tests__/route.test.ts`
+- `src/features/progress/components/__tests__/progress-summary-card.test.tsx`
+- `tasks/TASK-027.md`
+- `ACTIVE_TASK.md`
+- `project/TASKS.md`
+- `reports/TASK-027-implementation.md`
+- `reports/TASK-027-review.md`
+
+## Acceptance Criteria
+- `GET /api/courses/:courseId/progress` returns accurate `completedLessons`, `totalLessons`, `completionPercentage`, and `lastAccessedLessonId` for enrolled user.
+- `GET /api/lessons/:lessonId/progress` returns current status and completion timestamp.
+- Requests from unenrolled or unauthenticated users are rejected with `401` or `403`.
+- Progress components render progress bars and metrics accurately.
+- Quality gates `npm run typecheck`, `npm run lint`, `npm run test` pass with 0 errors/warnings.

@@ -1,7 +1,7 @@
 # TASK-027 — Progress Tracking API and Learner Progress Engine
 
 ## Status
-`READY`
+`IN_PROGRESS`
 
 ## Required Context
 - `docs/requirements.md`
