@@ -1,16 +1,12 @@
-# Active Task: TASK-028 (AI Mentor API and Explanation Service)
+# Active Task: TASK-029 (AI Learning Recommendation Experience)
 
 ## Status
 `VERIFIED`
 
 ## Summary
-- [x] Tạo AI Provider layer (`ai-provider.ts`) hỗ trợ Google Gemini hoặc Dummy model fallback.
-- [x] Tạo `AiRepository` thao tác với `ai_explanations`.
-- [x] Tạo `AiService` chịu trách nhiệm tạo giải thích và lưu DB.
-- [x] Tạo các API routes:
-  - `POST /api/ai/explanations`
-  - `GET /api/submissions/[submissionId]/explanations`
-- [x] Tích hợp AI Explanation View vào `exercise-view.tsx`.
-- [x] Cấu hình Vitest server-only alias (`tests/server-only.ts`).
-- [x] 100% tests PASS (235/235 tests).
-- [x] Quality gates (lint, typecheck, build) PASS.
+- [x] Implement rule-based learning recommendations from the current learner's enrollment, progress, and submission history.
+- [x] Prioritize review of a lesson after repeated incorrect attempts.
+- [x] Otherwise recommend the current unfinished lesson, then the next unlocked lesson in curriculum order.
+- [x] Add the authenticated recommendation API endpoint and accessible learner-facing component.
+- [x] Cover authorization, ownership isolation, precedence, empty states, and UI behavior with tests.
+- [x] Run all required quality gates and complete implementation, test, and review reports.

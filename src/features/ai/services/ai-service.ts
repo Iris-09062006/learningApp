@@ -8,10 +8,12 @@ import {
   createAiExplanationRecord,
   fetchAiExplanationHistory,
   fetchSubmissionDetailsForAi,
+  fetchCourseRecommendationData,
 } from "@/features/ai/repositories/ai-repository";
 import type {
   AiExplanationRecord,
   RequestAiExplanationInput,
+  CourseRecommendationResult,
 } from "@/features/ai/types";
 
 export class AiServiceError extends Error {
@@ -135,4 +137,90 @@ export async function getAiExplanationHistory(
 
     throw new AiServiceError("FORBIDDEN", "You cannot access this submission.");
   }
+}
+
+export async function getCourseRecommendation(
+  courseId: number
+): Promise<CourseRecommendationResult> {
+  let data;
+  try {
+    data = await fetchCourseRecommendationData(courseId);
+  } catch {
+    throw new AiServiceError("DATABASE_ERROR", "Unable to load course recommendation data.");
+  }
+
+  if (!data.isAuthenticated) {
+    throw new AiServiceError("UNAUTHENTICATED", "Authentication is required.");
+  }
+
+  if (!data.courseExists) {
+    throw new AiServiceError("NOT_FOUND", "Course not found.");
+  }
+
+  if (!data.isEnrolled) {
+    throw new AiServiceError("FORBIDDEN", "You are not enrolled in this course.");
+  }
+
+  const result: CourseRecommendationResult = {
+    courseId,
+    courseTitle: data.courseTitle || "",
+    recommendation: null,
+  };
+
+  if (!data.orderedLessons || data.orderedLessons.length === 0) {
+    return result;
+  }
+
+  const currentLessonIndex = data.orderedLessons.findIndex((l) => !l.isCompleted);
+
+  if (currentLessonIndex === -1) {
+    result.recommendation = {
+      type: "COURSE_COMPLETED",
+      title: "Khóa học hoàn tất",
+      description: "Chúc mừng bạn đã hoàn thành tất cả bài học trong khóa học này.",
+      targetUrl: `/courses/${courseId}`,
+      lessonId: null,
+      exerciseId: null,
+      reason: "Bạn đã hoàn thành 100% khóa học.",
+    };
+    return result;
+  }
+
+  const currentLesson = data.orderedLessons[currentLessonIndex];
+
+  let needsReview = false;
+  let stuckExercise = null;
+
+  for (const ex of currentLesson.exercises) {
+    if (ex.latestSubmission?.consecutiveIncorrect && ex.latestSubmission.consecutiveIncorrect >= 3) {
+      needsReview = true;
+      stuckExercise = ex;
+      break;
+    }
+  }
+
+  if (needsReview && stuckExercise) {
+    result.recommendation = {
+      type: "REVIEW_LESSON",
+      title: "Ôn tập bài học",
+      description: "Có vẻ bạn đang gặp khó khăn. Hãy xem lại nội dung bài học nhé.",
+      targetUrl: `/lessons/${currentLesson.id}`,
+      lessonId: currentLesson.id,
+      exerciseId: stuckExercise.id,
+      reason: "Gợi ý ôn tập dựa trên kết quả làm bài gần đây.",
+    };
+    return result;
+  }
+
+  result.recommendation = {
+    type: "NEXT_LESSON",
+    title: "Tiếp tục học",
+    description: `Bài học tiếp theo: ${currentLesson.title}`,
+    targetUrl: `/lessons/${currentLesson.id}`,
+    lessonId: currentLesson.id,
+    exerciseId: null,
+    reason: "Đây là bài học tiếp theo trong lộ trình của bạn.",
+  };
+
+  return result;
 }

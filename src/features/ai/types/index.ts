@@ -33,3 +33,21 @@ export interface SubmissionDetailsForAi {
   exercisePrompt: string;
   staticExplanation: string | null;
 }
+
+export type RecommendationType = "NEXT_LESSON" | "RETRY_EXERCISE" | "REVIEW_LESSON" | "COURSE_COMPLETED";
+
+export interface LearningRecommendation {
+  type: RecommendationType;
+  title: string;
+  description: string;
+  targetUrl: string;
+  lessonId: number | null;
+  exerciseId: number | null;
+  reason: string;
+}
+
+export interface CourseRecommendationResult {
+  courseId: number;
+  courseTitle: string;
+  recommendation: LearningRecommendation | null;
+}

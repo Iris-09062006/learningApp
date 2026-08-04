@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { CourseLearningRecommendation } from "@/features/ai/components/course-learning-recommendation";
 import { CourseDetailView } from "@/features/courses/components/course-detail-view";
 import { getCourseById } from "@/features/courses/services/course-service";
 
@@ -36,7 +37,8 @@ export default async function CourseDetailPage({
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12 dark:bg-slate-950 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <CourseLearningRecommendation courseId={course.id} />
         <CourseDetailView course={course} />
       </div>
     </main>

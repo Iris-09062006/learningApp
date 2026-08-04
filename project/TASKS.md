@@ -17,6 +17,7 @@ Task đang triển khai: Không có. Các task tiếp theo của Phase 5 và Pha
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
 | `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
+| `TASK-029` | AI Learning Recommendation Experience | VERIFIED | Phase 5 | `reports/TASK-029-implementation.md`, `reports/TASK-029-review.md`, `reports/TASK-029-test.md` |
 | `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
 | `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
 | `TASK-002` | Configure Vitest and Playwright | DONE | Phase 1 | `reports/TASK-002-implementation.md`, `reports/TASK-002-review.md` |
@@ -37,7 +38,6 @@ Task đang triển khai: Không có. Các task tiếp theo của Phase 5 và Pha
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-029` | AI Learning Recommendation Experience | READY | Phase 5 | `TASK-028` |
 | `TASK-030` | AI Exercise Generation | READY | Phase 5 | `TASK-028` |
 | `TASK-031` | Content Moderation API and Moderation Queue | READY | Phase 6 | `TASK-030` |
 | `TASK-032` | Learner Dashboard and Profile Management | READY | Phase 6 | `TASK-027`, `TASK-029` |
