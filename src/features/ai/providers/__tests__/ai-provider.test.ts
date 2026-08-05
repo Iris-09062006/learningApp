@@ -134,5 +134,119 @@ describe("ai provider", () => {
         })
       ).rejects.toThrow("AI_RESPONSE_INVALID");
     });
+
+    it("throws AI_RESPONSE_INVALID when generating exercise returns invalid JSON", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: "không phải json" } }],
+        }),
+      } as Response);
+
+      const provider = new OpenAIApiProvider("test-key");
+      await expect(
+        provider.generateExercise!({
+          lessonTitle: "Biến",
+          lessonContent: "Nội dung biến",
+          exerciseType: "predict_output",
+          difficulty: "easy",
+          learningObjective: "Hiểu biến",
+          topicHint: null,
+        })
+      ).rejects.toThrow("AI_RESPONSE_INVALID");
+    });
+
+    it("throws AI_RESPONSE_INVALID when generating exercise is missing fields", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: '{"title": "Test"}' } }],
+        }),
+      } as Response);
+
+      const provider = new OpenAIApiProvider("test-key");
+      await expect(
+        provider.generateExercise!({
+          lessonTitle: "Biến",
+          lessonContent: "Nội dung biến",
+          exerciseType: "predict_output",
+          difficulty: "easy",
+          learningObjective: "Hiểu biến",
+          topicHint: null,
+        })
+      ).rejects.toThrow("AI_RESPONSE_INVALID");
+    });
+
+    it("throws AI_RESPONSE_INVALID when correctAnswer is not in options", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  title: "Test",
+                  description: "Desc",
+                  codeSnippet: "",
+                  options: ["A", "B", "C"],
+                  correctAnswer: "D",
+                  explanation: "Exp",
+                }),
+              },
+            },
+          ],
+        }),
+      } as Response);
+
+      const provider = new OpenAIApiProvider("test-key");
+      await expect(
+        provider.generateExercise!({
+          lessonTitle: "Biến",
+          lessonContent: "Nội dung biến",
+          exerciseType: "predict_output",
+          difficulty: "easy",
+          learningObjective: "Hiểu biến",
+          topicHint: null,
+        })
+      ).rejects.toThrow("AI_RESPONSE_INVALID");
+    });
+
+    it("generates exercise successfully", async () => {
+      const mockResult = {
+        title: "Khai báo biến let",
+        description: "Từ khóa nào dùng để khai báo biến có thể thay đổi?",
+        codeSnippet: "",
+        options: ["let", "const", "var"],
+        correctAnswer: "let",
+        explanation: "Từ khóa let cho phép gán lại giá trị.",
+      };
+
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(mockResult),
+              },
+            },
+          ],
+          model: "gpt-4o-mini",
+        }),
+      } as Response);
+
+      const provider = new OpenAIApiProvider("test-key");
+      const result = await provider.generateExercise!({
+        lessonTitle: "Biến",
+        lessonContent: "Nội dung biến",
+        exerciseType: "predict_output",
+        difficulty: "easy",
+        learningObjective: "Hiểu khai báo let",
+        topicHint: null,
+      });
+
+      expect(result.content).toEqual(mockResult);
+      expect(result.provider).toBe("openai-compatible");
+    });
   });
 });

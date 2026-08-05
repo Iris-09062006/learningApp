@@ -1,12 +1,11 @@
-# Active Task: TASK-029 (AI Learning Recommendation Experience)
+# Active Task: TASK-030 (AI Exercise Generation)
 
 ## Status
 `VERIFIED`
 
 ## Summary
-- [x] Implement rule-based learning recommendations from the current learner's enrollment, progress, and submission history.
-- [x] Prioritize review of a lesson after repeated incorrect attempts.
-- [x] Otherwise recommend the current unfinished lesson, then the next unlocked lesson in curriculum order.
-- [x] Add the authenticated recommendation API endpoint and accessible learner-facing component.
-- [x] Cover authorization, ownership isolation, precedence, empty states, and UI behavior with tests.
-- [x] Run all required quality gates and complete implementation, test, and review reports.
+- [x] Implement F-AIGEN-01 to generate new exercises using the AI Provider.
+- [x] Build an internal generation service/API that accepts lesson context, type, difficulty, and objective.
+- [x] Validate AI provider response against a strict schema (MVP exercise types only).
+- [x] Save the generated draft to `generated_exercises` in a `pending` state (never auto-publish).
+- [x] Cover prompt building, response validation, and secure execution with tests.

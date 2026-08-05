@@ -300,6 +300,127 @@ export type Database = {
           },
         ]
       }
+      exercise_reviews: {
+        Row: {
+          comment: string | null
+          edited_snapshot: Json | null
+          generated_exercise_id: number
+          id: number
+          reviewed_at: string
+          reviewer_id: string
+          status: Database["public"]["Enums"]["review_status"]
+        }
+        Insert: {
+          comment?: string | null
+          edited_snapshot?: Json | null
+          generated_exercise_id: number
+          id?: number
+          reviewed_at?: string
+          reviewer_id: string
+          status: Database["public"]["Enums"]["review_status"]
+        }
+        Update: {
+          comment?: string | null
+          edited_snapshot?: Json | null
+          generated_exercise_id?: number
+          id?: number
+          reviewed_at?: string
+          reviewer_id?: string
+          status?: Database["public"]["Enums"]["review_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_reviews_generated_exercise_id_fkey"
+            columns: ["generated_exercise_id"]
+            isOneToOne: false
+            referencedRelation: "generated_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_exercises: {
+        Row: {
+          content: Json
+          created_at: string
+          description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          exercise_type: Database["public"]["Enums"]["exercise_type"]
+          id: number
+          lesson_id: number
+          model: string | null
+          provider: string
+          published_at: string | null
+          published_exercise_id: number | null
+          requested_by: string | null
+          status: Database["public"]["Enums"]["generated_exercise_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          description?: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          exercise_type: Database["public"]["Enums"]["exercise_type"]
+          id?: number
+          lesson_id: number
+          model?: string | null
+          provider: string
+          published_at?: string | null
+          published_exercise_id?: number | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["generated_exercise_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          exercise_type?: Database["public"]["Enums"]["exercise_type"]
+          id?: number
+          lesson_id?: number
+          model?: string | null
+          provider?: string
+          published_at?: string | null
+          published_exercise_id?: number | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["generated_exercise_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_exercises_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_exercises_published_exercise_id_fkey"
+            columns: ["published_exercise_id"]
+            isOneToOne: true
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_exercises_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           chapter_id: number
@@ -491,7 +612,14 @@ export type Database = {
       enrollment_status: "active" | "completed" | "cancelled"
       exercise_source: "manual" | "ai_generated"
       exercise_type: "fix_the_bug" | "predict_output"
+      generated_exercise_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "needs_revision"
+        | "published"
       progress_status: "locked" | "unlocked" | "in_progress" | "completed"
+      review_status: "approved" | "rejected" | "needs_revision"
       user_role: "learner" | "moderator" | "admin"
     }
     CompositeTypes: {
@@ -625,7 +753,15 @@ export const Constants = {
       enrollment_status: ["active", "completed", "cancelled"],
       exercise_source: ["manual", "ai_generated"],
       exercise_type: ["fix_the_bug", "predict_output"],
+      generated_exercise_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "needs_revision",
+        "published",
+      ],
       progress_status: ["locked", "unlocked", "in_progress", "completed"],
+      review_status: ["approved", "rejected", "needs_revision"],
       user_role: ["learner", "moderator", "admin"],
     },
   },

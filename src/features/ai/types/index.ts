@@ -51,3 +51,46 @@ export interface CourseRecommendationResult {
   courseTitle: string;
   recommendation: LearningRecommendation | null;
 }
+
+export type DbExerciseType = Database["public"]["Enums"]["exercise_type"];
+export type DbDifficultyLevel = Database["public"]["Enums"]["difficulty_level"];
+export type DbGeneratedExerciseStatus = Database["public"]["Enums"]["generated_exercise_status"];
+
+export interface GenerateExerciseInput {
+  lessonId: number;
+  exerciseType: DbExerciseType;
+  difficulty: DbDifficultyLevel;
+  learningObjective: string;
+  topicHint?: string;
+}
+
+export interface GeneratedExerciseContent {
+  title: string;
+  description: string;
+  codeSnippet?: string;
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+export interface GeneratedExerciseRecord {
+  id: number;
+  lessonId: number;
+  exerciseType: DbExerciseType;
+  difficulty: DbDifficultyLevel;
+  title: string;
+  description: string | null;
+  content: GeneratedExerciseContent;
+  status: DbGeneratedExerciseStatus;
+  provider: string;
+  model: string | null;
+  requestedBy: string | null;
+  publishedExerciseId: number | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GenerateExerciseResponse {
+  generatedExercise: GeneratedExerciseRecord;
+}

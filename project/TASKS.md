@@ -17,6 +17,7 @@ Task đang triển khai: Không có. Các task tiếp theo của Phase 5 và Pha
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
 | `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
+| `TASK-030` | AI Exercise Generation Backend | VERIFIED | Phase 5 | `reports/TASK-030-implementation.md`, `reports/TASK-030-review.md` |
 | `TASK-029` | AI Learning Recommendation Experience | VERIFIED | Phase 5 | `reports/TASK-029-implementation.md`, `reports/TASK-029-review.md`, `reports/TASK-029-test.md` |
 | `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
 | `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
@@ -38,7 +39,6 @@ Task đang triển khai: Không có. Các task tiếp theo của Phase 5 và Pha
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-030` | AI Exercise Generation | READY | Phase 5 | `TASK-028` |
 | `TASK-031` | Content Moderation API and Moderation Queue | READY | Phase 6 | `TASK-030` |
 | `TASK-032` | Learner Dashboard and Profile Management | READY | Phase 6 | `TASK-027`, `TASK-029` |
 | `TASK-033` | User Administration and System Health Dashboard | READY | Phase 6 | `TASK-031` |
@@ -48,7 +48,7 @@ Task đang triển khai: Không có. Các task tiếp theo của Phase 5 và Pha
 | Phase | Scope |
 |---|---|
 | Phase 4 | `TASK-025`–`TASK-027` verified: lesson content/start flow, exercises/submissions/grading, and progress engine |
-| Phase 5 | `TASK-028` verified; `TASK-029`–`TASK-030` ready: AI explanations, rule-based learning recommendations, and controlled AI exercise generation |
+| Phase 5 | `TASK-028`–`TASK-029` verified; `TASK-030` in progress: AI explanations, rule-based learning recommendations, and controlled AI exercise generation |
 | Phase 6 | `TASK-031`–`TASK-033` ready: content moderation, learner dashboard/profile, user administration, and system health |
 | Phase 7 | Security regression, accessibility/performance review, and deployment |
 

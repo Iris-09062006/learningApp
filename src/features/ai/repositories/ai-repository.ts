@@ -1,6 +1,14 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import type { AiExplanationRecord, SubmissionDetailsForAi } from "@/features/ai/types";
+import type {
+  AiExplanationRecord,
+  SubmissionDetailsForAi,
+  GeneratedExerciseRecord,
+  GeneratedExerciseContent,
+  DbExerciseType,
+  DbDifficultyLevel,
+  DbGeneratedExerciseStatus,
+} from "@/features/ai/types";
 import type { Database } from "@/generated/database.types";
 
 type AiExplanationInsert = Database["public"]["Tables"]["ai_explanations"]["Insert"];
@@ -95,21 +103,21 @@ export interface RecommendationContextData {
   isAuthenticated: boolean;
   isEnrolled: boolean;
   courseTitle?: string;
-    orderedLessons?: Array<{
+  orderedLessons?: Array<{
+    id: number;
+    title: string;
+    orderIndex: number;
+    isCompleted: boolean;
+    exercises: Array<{
       id: number;
       title: string;
       orderIndex: number;
-      isCompleted: boolean;
-      exercises: Array<{
-        id: number;
-        title: string;
-        orderIndex: number;
-        latestSubmission?: {
-          isCorrect: boolean;
-          consecutiveIncorrect: number;
-        };
-      }>;
+      latestSubmission?: {
+        isCorrect: boolean;
+        consecutiveIncorrect: number;
+      };
     }>;
+  }>;
 }
 
 export async function fetchCourseRecommendationData(
@@ -233,7 +241,10 @@ export async function fetchCourseRecommendationData(
   const exerciseIds = exercises.map((e) => e.id);
 
   // Fetch user latest submissions for these exercises
-  const latestSubmissionsMap = new Map<number, { isCorrect: boolean; consecutiveIncorrect: number; stopCounting: boolean }>();
+  const latestSubmissionsMap = new Map<
+    number,
+    { isCorrect: boolean; consecutiveIncorrect: number; stopCounting: boolean }
+  >();
   if (exerciseIds.length > 0) {
     const { data: submissionRows } = await supabase
       .from("submissions")
@@ -248,7 +259,7 @@ export async function fetchCourseRecommendationData(
         stats = {
           isCorrect: sub.is_correct,
           consecutiveIncorrect: sub.is_correct ? 0 : 1,
-          stopCounting: sub.is_correct
+          stopCounting: sub.is_correct,
         };
         latestSubmissionsMap.set(sub.exercise_id, stats);
       } else if (!stats.stopCounting) {
@@ -276,7 +287,9 @@ export async function fetchCourseRecommendationData(
         id: ex.id,
         title: ex.title,
         orderIndex: ex.exercise_order,
-        latestSubmission: stats ? { isCorrect: stats.isCorrect, consecutiveIncorrect: stats.consecutiveIncorrect } : undefined,
+        latestSubmission: stats
+          ? { isCorrect: stats.isCorrect, consecutiveIncorrect: stats.consecutiveIncorrect }
+          : undefined,
       };
     });
 
@@ -349,4 +362,85 @@ export async function createAiExplanationRecord(
   }
 
   return mapAiExplanationRow(data);
+}
+
+export interface CreateGeneratedExercisePayload {
+  lesson_id: number;
+  requested_by: string;
+  title: string;
+  description: string;
+  exercise_type: DbExerciseType;
+  difficulty: DbDifficultyLevel;
+  content: GeneratedExerciseContent;
+  status: DbGeneratedExerciseStatus;
+  provider: string;
+  model: string | null;
+}
+
+export async function createGeneratedExerciseRecord(
+  payload: CreateGeneratedExercisePayload
+): Promise<GeneratedExerciseRecord> {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !authData.user) {
+    throw new Error("UNAUTHENTICATED");
+  }
+
+  if (payload.requested_by !== authData.user.id) {
+    throw new Error("FORBIDDEN");
+  }
+
+  // Check role: must be moderator or admin
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", authData.user.id)
+    .single();
+
+  if (!profile || !["moderator", "admin"].includes(profile.role)) {
+    throw new Error("FORBIDDEN");
+  }
+
+  const { data, error } = await supabase
+    .from("generated_exercises")
+    .insert(payload as unknown as Database["public"]["Tables"]["generated_exercises"]["Insert"])
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error("DATABASE_ERROR");
+  }
+
+  return {
+    id: data.id,
+    lessonId: data.lesson_id,
+    exerciseType: data.exercise_type,
+    difficulty: data.difficulty,
+    title: data.title,
+    description: data.description,
+    content: data.content as unknown as GeneratedExerciseContent,
+    status: data.status,
+    provider: data.provider,
+    model: data.model,
+    requestedBy: data.requested_by,
+    publishedExerciseId: data.published_exercise_id,
+    publishedAt: data.published_at,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+export async function fetchLessonContextForGeneration(lessonId: number) {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("title, content")
+    .eq("id", lessonId)
+    .single();
+
+  if (error || !data) {
+    throw new Error("NOT_FOUND");
+  }
+  return data;
 }

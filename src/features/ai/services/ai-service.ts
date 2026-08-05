@@ -9,12 +9,17 @@ import {
   fetchAiExplanationHistory,
   fetchSubmissionDetailsForAi,
   fetchCourseRecommendationData,
+  createGeneratedExerciseRecord,
+  fetchLessonContextForGeneration,
 } from "@/features/ai/repositories/ai-repository";
 import type {
   AiExplanationRecord,
   RequestAiExplanationInput,
   CourseRecommendationResult,
+  GenerateExerciseInput,
+  GenerateExerciseResponse,
 } from "@/features/ai/types";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export class AiServiceError extends Error {
   constructor(
@@ -223,4 +228,64 @@ export async function getCourseRecommendation(
   };
 
   return result;
+}
+
+export async function generateExercise(
+  input: GenerateExerciseInput,
+  provider: AIProvider = createAIProvider()
+): Promise<GenerateExerciseResponse> {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !authData.user) {
+    throw new AiServiceError("UNAUTHENTICATED", "Authentication is required.");
+  }
+
+  let lessonContext;
+  try {
+    lessonContext = await fetchLessonContextForGeneration(input.lessonId);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "NOT_FOUND") {
+      throw new AiServiceError("NOT_FOUND", "Lesson not found.");
+    }
+    throw new AiServiceError("DATABASE_ERROR", "Unable to load the lesson.");
+  }
+
+  if (!provider.generateExercise) {
+    throw new AiServiceError("AI_PROVIDER_ERROR", "Provider does not support exercise generation.");
+  }
+
+  try {
+    const generated = await provider.generateExercise({
+      lessonTitle: lessonContext.title,
+      lessonContent: lessonContext.content ?? "",
+      exerciseType: input.exerciseType,
+      difficulty: input.difficulty,
+      learningObjective: input.learningObjective,
+      topicHint: input.topicHint ?? null,
+    });
+
+    const record = await createGeneratedExerciseRecord({
+      lesson_id: input.lessonId,
+      requested_by: authData.user.id,
+      title: generated.content.title,
+      description: generated.content.description,
+      exercise_type: input.exerciseType,
+      difficulty: input.difficulty,
+      content: generated.content,
+      status: "pending",
+      provider: generated.provider,
+      model: generated.model,
+    });
+
+    return { generatedExercise: record };
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      throw new AiServiceError("FORBIDDEN", "Moderator or Admin role required.");
+    }
+    if (error instanceof Error && error.message === "AI_RESPONSE_INVALID") {
+      throw new AiServiceError("AI_PROVIDER_ERROR", "Invalid response from AI provider.");
+    }
+    throw new AiServiceError("AI_PROVIDER_ERROR", "Unable to generate exercise at this time.");
+  }
 }
