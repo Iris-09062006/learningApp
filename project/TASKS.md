@@ -11,7 +11,7 @@
 
 ## Active Task
 
-Task đang triển khai: Không có. Task kế tiếp đủ điều kiện bắt đầu là `TASK-034`.
+Task đang triển khai: Không có. Task kế tiếp đủ điều kiện bắt đầu là `TASK-036`.
 
 ## Verified and Completed Tasks
 
@@ -22,6 +22,7 @@ Task đang triển khai: Không có. Task kế tiếp đủ điều kiện bắt
 | `TASK-031` | Content Moderation API and Moderation Queue | VERIFIED | Phase 6 | `reports/TASK-031-implementation.md`, `reports/TASK-031-review.md` |
 | `TASK-032` | Learner Dashboard and Profile Management | VERIFIED | Phase 6 | `reports/TASK-032-implementation.md`, `reports/TASK-032-review.md`, `reports/TASK-032-test.md` |
 | `TASK-033` | User Administration and System Health Dashboard | VERIFIED | Phase 6 | `reports/TASK-033-implementation.md`, `reports/TASK-033-review.md`, `reports/TASK-033-test.md` |
+| `TASK-034` | Course Catalog Search | VERIFIED | Feature completion | `reports/TASK-034-implementation.md`, `reports/TASK-034-review.md`, `reports/TASK-034-test.md` |
 | `TASK-029` | AI Learning Recommendation Experience | VERIFIED | Phase 5 | `reports/TASK-029-implementation.md`, `reports/TASK-029-review.md`, `reports/TASK-029-test.md` |
 | `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
 | `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
@@ -43,7 +44,6 @@ Task đang triển khai: Không có. Task kế tiếp đủ điều kiện bắt
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-034` | Course Catalog Search | READY | Feature completion | `TASK-022` |
 | `TASK-036` | Accessible Fix-the-Bug Drag-and-Drop | READY | Feature completion | `TASK-026` |
 
 ## Draft / Deferred Queue

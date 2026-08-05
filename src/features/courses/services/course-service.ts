@@ -14,6 +14,34 @@ import type {
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f-\u009f]/u;
+
+export class ServiceError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public statusCode: number = 400
+  ) {
+    super(message);
+    this.name = "ServiceError";
+  }
+}
+
+export function normalizeCourseSearch(
+  search?: string | null
+): string | undefined {
+  const normalized = search?.trim();
+
+  if (!normalized) return undefined;
+  if (CONTROL_CHARACTER_PATTERN.test(normalized)) {
+    throw new ServiceError(
+      "VALIDATION_ERROR",
+      "Search must not contain control characters."
+    );
+  }
+
+  return normalized;
+}
 
 export function normalizePagination(params: {
   page?: number | string | null;
@@ -32,9 +60,11 @@ export function normalizePagination(params: {
 export async function getPublishedCourses(params: {
   page?: number | string | null;
   pageSize?: number | string | null;
+  search?: string | null;
 }): Promise<CourseListResult> {
   const { page, pageSize } = normalizePagination(params);
-  return fetchCourseSummaries(page, pageSize);
+  const search = normalizeCourseSearch(params.search);
+  return fetchCourseSummaries(page, pageSize, search);
 }
 
 export async function getCourseById(
@@ -46,17 +76,6 @@ export async function getCourseById(
   // Only return published courses
   if (!detail.isPublished) return null;
   return detail;
-}
-
-export class ServiceError extends Error {
-  constructor(
-    public code: string,
-    message: string,
-    public statusCode: number = 400
-  ) {
-    super(message);
-    this.name = "ServiceError";
-  }
 }
 
 export async function enrollInCourse(

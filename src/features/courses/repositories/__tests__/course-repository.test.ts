@@ -1,9 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { enrollUserInCourse } from "../course-repository";
+import {
+  enrollUserInCourse,
+  escapePostgrestIlikePattern,
+  fetchCourseSummaries,
+} from "../course-repository";
 import type { EnrollCourseRpcRaw } from "@/features/courses/types";
 
 const mockRpc = vi.fn();
+const mockOrder = vi.fn();
+const mockCourseQuery = {
+  select: vi.fn(),
+  eq: vi.fn(),
+  or: vi.fn(),
+  range: vi.fn(),
+  order: mockOrder,
+};
+const mockFrom = vi.fn(() => mockCourseQuery);
+
+mockCourseQuery.select.mockReturnValue(mockCourseQuery);
+mockCourseQuery.eq.mockReturnValue(mockCourseQuery);
+mockCourseQuery.or.mockReturnValue(mockCourseQuery);
+mockCourseQuery.range.mockReturnValue(mockCourseQuery);
 
 vi.mock("@/lib/supabase/server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/supabase/server")>();
@@ -13,10 +31,64 @@ vi.mock("@/lib/supabase/server", async (importOriginal) => {
       Promise.resolve({
         rpc: mockRpc,
         auth: { getUser: vi.fn() },
-        from: vi.fn(),
+        from: mockFrom,
       })
     ),
   };
+});
+
+describe("fetchCourseSummaries", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockOrder.mockResolvedValue({ data: [], count: 0, error: null });
+  });
+
+  it("always filters published courses and applies pagination", async () => {
+    await fetchCourseSummaries(2, 10);
+
+    expect(mockFrom).toHaveBeenCalledWith("courses");
+    expect(mockCourseQuery.eq).toHaveBeenCalledWith("is_published", true);
+    expect(mockCourseQuery.or).not.toHaveBeenCalled();
+    expect(mockCourseQuery.range).toHaveBeenCalledWith(10, 19);
+    expect(mockOrder).toHaveBeenCalledWith("id", { ascending: true });
+  });
+
+  it("searches title or description with an escaped case-insensitive pattern", async () => {
+    mockOrder.mockResolvedValueOnce({
+      data: [
+        {
+          id: 7,
+          slug: "python-100",
+          title: "Python 100%",
+          description: "Special_course",
+          level: "beginner",
+          language: "python",
+          is_published: true,
+        },
+      ],
+      count: 1,
+      error: null,
+    });
+
+    const result = await fetchCourseSummaries(1, 20, '100%_course,(intro)"');
+
+    expect(mockCourseQuery.eq).toHaveBeenCalledWith("is_published", true);
+    expect(mockCourseQuery.or).toHaveBeenCalledWith(
+      'title.ilike."%100\\%\\_course,(intro)\\"%",description.ilike."%100\\%\\_course,(intro)\\"%"'
+    );
+    expect(result.items[0]).toMatchObject({
+      id: 7,
+      isPublished: true,
+      isEnrolled: false,
+      completionPercentage: 0,
+    });
+  });
+
+  it("escapes backslashes and LIKE wildcards", () => {
+    expect(escapePostgrestIlikePattern("a\\b%c_d")).toBe(
+      '"%a\\\\b\\%c\\_d%"'
+    );
+  });
 });
 
 describe("enrollUserInCourse", () => {

@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CourseList } from "@/features/courses/components/course-list";
-import { getPublishedCourses } from "@/features/courses/services/course-service";
+import {
+  CourseSearchForm,
+  createCourseCatalogHref,
+} from "@/features/courses/components/course-search-form";
+import {
+  getPublishedCourses,
+  normalizeCourseSearch,
+} from "@/features/courses/services/course-service";
 
 export const metadata: Metadata = {
   title: "Danh sách khóa học | Python Learning Platform",
@@ -13,6 +20,7 @@ interface CoursesPageProps {
   searchParams: Promise<{
     page?: string;
     pageSize?: string;
+    search?: string;
   }>;
 }
 
@@ -20,7 +28,8 @@ export default async function CoursesPage({
   searchParams,
 }: CoursesPageProps) {
   const query = await searchParams;
-  const result = await getPublishedCourses(query);
+  const search = normalizeCourseSearch(query.search);
+  const result = await getPublishedCourses({ ...query, search });
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12 dark:bg-slate-950 sm:px-6 lg:px-8">
@@ -38,7 +47,9 @@ export default async function CoursesPage({
           </p>
         </header>
 
-        <CourseList courses={result.items} />
+        <CourseSearchForm search={search} pageSize={result.pageSize} />
+
+        <CourseList courses={result.items} search={search} />
 
         {result.totalPages > 1 && (
           <nav
@@ -47,7 +58,11 @@ export default async function CoursesPage({
           >
             {result.page > 1 ? (
               <Link
-                href={`/courses?page=${result.page - 1}&pageSize=${result.pageSize}`}
+                href={createCourseCatalogHref({
+                  page: result.page - 1,
+                  pageSize: result.pageSize,
+                  search,
+                })}
                 className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               >
                 Trang trước
@@ -64,7 +79,11 @@ export default async function CoursesPage({
 
             {result.page < result.totalPages ? (
               <Link
-                href={`/courses?page=${result.page + 1}&pageSize=${result.pageSize}`}
+                href={createCourseCatalogHref({
+                  page: result.page + 1,
+                  pageSize: result.pageSize,
+                  search,
+                })}
                 className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               >
                 Trang sau

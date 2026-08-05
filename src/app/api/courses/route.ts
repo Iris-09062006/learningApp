@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPublishedCourses } from "@/features/courses/services/course-service";
+import {
+  getPublishedCourses,
+  ServiceError,
+} from "@/features/courses/services/course-service";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = request.nextUrl;
     const page = searchParams.get("page");
     const pageSize = searchParams.get("pageSize");
+    const search = searchParams.get("search");
 
-    const result = await getPublishedCourses({ page, pageSize });
+    const result = await getPublishedCourses({ page, pageSize, search });
 
     return NextResponse.json(
       {
@@ -23,6 +27,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { status: 200 }
     );
   } catch (err) {
+    if (err instanceof ServiceError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: err.code,
+            message: err.message,
+          },
+        },
+        { status: err.statusCode }
+      );
+    }
+
     console.error("[GET /api/courses]", err);
     return NextResponse.json(
       {

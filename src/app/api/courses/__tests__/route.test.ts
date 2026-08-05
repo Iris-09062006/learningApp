@@ -3,12 +3,23 @@ import { NextRequest } from "next/server";
 
 import { GET as listCourses } from "../route";
 import { GET as getCourseDetail } from "../[courseId]/route";
-import { getPublishedCourses, getCourseById } from "@/features/courses/services/course-service";
+import {
+  getPublishedCourses,
+  getCourseById,
+  ServiceError,
+} from "@/features/courses/services/course-service";
 
-vi.mock("@/features/courses/services/course-service", () => ({
-  getPublishedCourses: vi.fn(),
-  getCourseById: vi.fn(),
-}));
+vi.mock("@/features/courses/services/course-service", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/features/courses/services/course-service")
+    >();
+  return {
+    ...actual,
+    getPublishedCourses: vi.fn(),
+    getCourseById: vi.fn(),
+  };
+});
 
 function makeRequest(url: string): NextRequest {
   return new NextRequest(url);
@@ -37,7 +48,11 @@ describe("GET /api/courses", () => {
       totalPages: 1,
     });
 
-    const res = await listCourses(makeRequest("http://localhost/api/courses?page=1&pageSize=20"));
+    const res = await listCourses(
+      makeRequest(
+        "http://localhost/api/courses?search=%20Python%20&page=1&pageSize=20"
+      )
+    );
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -46,7 +61,33 @@ describe("GET /api/courses", () => {
       data: items,
       meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
     });
-    expect(getPublishedCourses).toHaveBeenCalledWith({ page: "1", pageSize: "20" });
+    expect(getPublishedCourses).toHaveBeenCalledWith({
+      page: "1",
+      pageSize: "20",
+      search: " Python ",
+    });
+  });
+
+  it("returns 400 for an invalid search query", async () => {
+    vi.mocked(getPublishedCourses).mockRejectedValueOnce(
+      new ServiceError(
+        "VALIDATION_ERROR",
+        "Search must not contain control characters."
+      )
+    );
+
+    const res = await listCourses(
+      makeRequest("http://localhost/api/courses?search=python%0Acourse")
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Search must not contain control characters.",
+      },
+    });
   });
 
   it("returns 500 when service throws", async () => {

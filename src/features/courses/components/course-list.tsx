@@ -4,9 +4,10 @@ import { CourseCard } from "./course-card";
 
 interface CourseListProps {
   courses: CourseSummary[];
+  search?: string;
 }
 
-export const CourseList: React.FC<CourseListProps> = ({ courses }) => {
+export const CourseList: React.FC<CourseListProps> = ({ courses, search }) => {
   if (!courses || courses.length === 0) {
     return (
       <div
@@ -14,7 +15,9 @@ export const CourseList: React.FC<CourseListProps> = ({ courses }) => {
         className="rounded-lg border border-dashed border-slate-300 p-12 text-center dark:border-slate-700"
       >
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Hiện chưa có khóa học nào được phát hành.
+          {search
+            ? `Không tìm thấy khóa học phù hợp với “${search}”.`
+            : "Hiện chưa có khóa học nào được phát hành."}
         </p>
       </div>
     );

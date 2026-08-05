@@ -11,7 +11,8 @@ import type {
 
 export async function fetchCourseSummaries(
   page: number,
-  pageSize: number
+  pageSize: number,
+  search?: string
 ): Promise<{
   items: CourseSummary[];
   page: number;
@@ -22,13 +23,20 @@ export async function fetchCourseSummaries(
   const supabase = await createServerSupabaseClient();
   const from = (page - 1) * pageSize;
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("courses")
     .select(
       "id,slug,title,description,level,language,is_published",
       { count: "exact" }
     )
-    .eq("is_published", true)
+    .eq("is_published", true);
+
+  if (search) {
+    const pattern = escapePostgrestIlikePattern(search);
+    query = query.or(`title.ilike.${pattern},description.ilike.${pattern}`);
+  }
+
+  const { data, count, error } = await query
     .range(from, from + pageSize - 1)
     .order("id", { ascending: true });
 
@@ -56,6 +64,16 @@ export async function fetchCourseSummaries(
     total,
     totalPages: Math.ceil(total / pageSize),
   };
+}
+
+export function escapePostgrestIlikePattern(search: string): string {
+  const escaped = search
+    .replace(/\\/gu, "\\\\")
+    .replace(/%/gu, "\\%")
+    .replace(/_/gu, "\\_")
+    .replace(/"/gu, '\\"');
+
+  return `"%${escaped}%"`;
 }
 
 export async function fetchCourseDetail(

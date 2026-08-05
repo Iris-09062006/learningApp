@@ -22,6 +22,14 @@ describe("CourseList", () => {
     expect(screen.queryByTestId("course-list")).not.toBeInTheDocument();
   });
 
+  it("renders a search-specific empty state", () => {
+    render(<CourseList courses={[]} search="django" />);
+
+    expect(
+      screen.getByText("Không tìm thấy khóa học phù hợp với “django”.")
+    ).toBeInTheDocument();
+  });
+
   it("renders a card for each course", () => {
     render(<CourseList courses={[makeCourse(1), makeCourse(2)]} />);
     expect(screen.getByTestId("course-list")).toBeInTheDocument();

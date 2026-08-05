@@ -10,6 +10,7 @@ import {
   enrollInCourse,
   getCourseById,
   getPublishedCourses,
+  normalizeCourseSearch,
   normalizePagination,
   getCourseRoadmap,
 } from "@/features/courses/services/course-service";
@@ -48,9 +49,48 @@ describe("course service", () => {
     vi.mocked(fetchCourseSummaries).mockResolvedValueOnce(result);
 
     await expect(
-      getPublishedCourses({ page: "abc", pageSize: "-5" }),
+      getPublishedCourses({
+        page: "abc",
+        pageSize: "-5",
+        search: "  Python basics  ",
+      }),
     ).resolves.toEqual(result);
-    expect(fetchCourseSummaries).toHaveBeenCalledWith(1, 20);
+    expect(fetchCourseSummaries).toHaveBeenCalledWith(
+      1,
+      20,
+      "Python basics"
+    );
+  });
+
+  it("treats an empty search query as absent", async () => {
+    vi.mocked(fetchCourseSummaries).mockResolvedValueOnce({
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0,
+      totalPages: 0,
+    });
+
+    await getPublishedCourses({ search: "   " });
+
+    expect(fetchCourseSummaries).toHaveBeenCalledWith(1, 20, undefined);
+  });
+
+  it("rejects control characters without querying the repository", async () => {
+    expect(() => normalizeCourseSearch("python\u0000course")).toThrowError(
+      expect.objectContaining({
+        code: "VALIDATION_ERROR",
+        statusCode: 400,
+      })
+    );
+
+    await expect(
+      getPublishedCourses({ search: "python\ncourse" })
+    ).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      statusCode: 400,
+    });
+    expect(fetchCourseSummaries).not.toHaveBeenCalled();
   });
 
   it("returns published course details", async () => {
