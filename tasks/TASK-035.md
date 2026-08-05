@@ -1,7 +1,7 @@
 # TASK-035 — Self-service Password Recovery
 
 ## Status
-`DRAFT`
+`BLOCKED` — blockers được ghi tại `reports/TASK-035-blocked.md`
 
 ## Feature ID
 `F-AUTH-04`

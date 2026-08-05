@@ -51,7 +51,7 @@ Task đang triển khai: Không có. `TASK-042` đã được verified; task fea
 
 | Task ID | Title | Status | Phase | Blocker or dependency |
 |---|---|---|---|---|
-| `TASK-035` | Self-service Password Recovery | DRAFT | Feature completion | Password recovery API/callback contract chưa được khóa |
+| `TASK-035` | Self-service Password Recovery | BLOCKED | Feature completion | Password recovery API/callback contract chưa được khóa — chi tiết tại `reports/TASK-035-blocked.md` |
 | `TASK-037` | Admin-triggered Password Reset | DRAFT | Feature completion (P2) | Phụ thuộc `TASK-035`; admin endpoint và abuse-control contract chưa có |
 | `TASK-038` | Security and RLS Regression Hardening | PLANNED | Phase 7 | Chạy sau các feature READY được chọn để tránh audit lại |
 | `TASK-039` | Critical-flow E2E and Accessibility | PLANNED | Phase 7 | `TASK-038` |
