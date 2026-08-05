@@ -2,11 +2,10 @@
 
 ## Current State
 
-- **Current phase:** Phase 4 — Learning Execution (Lessons, Exercises, and Progress Engine)
-- **Completed:** project foundation, testing/CI setup, Supabase core database verification, authentication service/API & UI, course catalog & detail, course enrollment API & UI, visual learning roadmap page.
-- **In progress:** `TASK-025` — Lesson Content API and Viewer (Packet created, ready to implement).
-- **Queued next:** `TASK-026` — Exercise API, Evaluation, and Submissions.
-- **Queued after exercises:** `TASK-027` — Progress Tracking API and Learner Progress Engine.
+- **Current phase:** Phase 6 — Operations and Dashboards.
+- **Completed:** Phases 0–5 plus TASK-031 moderation and TASK-032 learner dashboard/profile.
+- **In progress:** `TASK-033` — User Administration and System Health Dashboard.
+- **Queued next:** Phase 7 security hardening and deployment preparation.
 - **Source of truth:** `project/TASKS.md`, task packets in `tasks/`, and implementation/review reports in `reports/`.
 
 ## Phase Overview
@@ -19,7 +18,7 @@
 | Phase 3 | Authentication and learning core | DONE |
 | Phase 4 | Lessons, exercises, submissions, and progress | DONE |
 | Phase 5 | AI explanations and mentor experience | DONE |
-| Phase 6 | Dashboards and administration | IN_PROGRESS |
+| Phase 6 | Dashboards and administration | DONE |
 | Phase 7 | Security hardening, regression testing, and deployment | PLANNED |
 
 ## Phase 1 — Project Foundation and Quality Gates
@@ -60,7 +59,7 @@
 
 - `TASK-031` — Content Moderation API and Moderation Queue — **VERIFIED**
 - `TASK-032` — Learner Dashboard and Profile Management — **VERIFIED**
-- `TASK-033` — User Administration and System Health Dashboard — **READY**
+- `TASK-033` — User Administration and System Health Dashboard — **VERIFIED**
 
 ## Phase 7 — Hardening and Deployment
 

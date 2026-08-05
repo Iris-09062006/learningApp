@@ -1,12 +1,12 @@
 # TASK-033 — User Administration and System Health Dashboard
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Required Context
 - `docs/requirements.md`
 - `docs/features.md` (Module 16: Admin Module — F-ADMIN-01..05, Module 17: System Module — F-SYSTEM-01)
-- `docs/database.md` (§7.1 `profiles`, §7.13 `audit_logs`)
+- `docs/database.md` (§7.1 `profiles`, §7.14 `admin_logs`)
 - `docs/api_contract.md`
 - `docs/security.md`
 
@@ -25,6 +25,8 @@
 - `src/app/api/admin/`
 - `src/app/api/system/`
 - `src/app/(main)/admin/`
+- `supabase/migrations/*_admin_user_management_rpc.sql`
+- `src/generated/database.types.ts`
 - `src/features/admin/**/__tests__/`
 - `src/app/api/admin/**/__tests__/`
 - `src/app/api/system/**/__tests__/`
@@ -33,7 +35,21 @@
 - `project/TASKS.md`
 - `project/ROADMAP.md`
 - `reports/TASK-033-implementation.md`
+- `reports/TASK-033-test.md`
 - `reports/TASK-033-review.md`
+
+## Implementation Contract
+- `GET /api/admin/users` returns `{ items, page, pageSize, total, totalPages }`; items follow `AdminUserSummary` in `docs/api_contract.md`.
+- Search is case-insensitive across Auth email and profile username; `role` and `isActive` filters are optional and pagination is applied after filtering.
+- Role and status mutations use authenticated, narrowly granted database RPC functions so last-active-admin protection, profile update, and `admin_logs` insert are atomic.
+- TASK-033 intentionally exposes the basic public health endpoint as `GET /api/system/health`, overriding the older `/api/health` path in `docs/api_contract.md` for this task. Its response fields remain `status`, `database`, and `timestamp`.
+- `admin_logs` is the canonical audit table. No `audit_logs` table is introduced.
+
+## Required Commands
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
 
 ## Acceptance Criteria
 - `/api/admin/*` endpoints strictly reject non-Admin users with 403 Forbidden.

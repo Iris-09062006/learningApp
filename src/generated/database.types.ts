@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: number
+          metadata: Json
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: number
+          metadata?: Json
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: number
+          metadata?: Json
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_explanations: {
         Row: {
           created_at: string
@@ -596,10 +634,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_change_user_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["user_role"]
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      admin_change_user_status: {
+        Args: { p_is_active: boolean; p_user_id: string }
+        Returns: Json
+      }
       enroll_course: { Args: { p_course_id: number }; Returns: Json }
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
+      }
+      publish_generated_exercise: {
+        Args: { p_generated_exercise_id: number }
+        Returns: Json
       }
       submit_exercise: {
         Args: { p_answer: Json; p_exercise_id: number }
