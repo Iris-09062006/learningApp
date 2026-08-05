@@ -55,4 +55,4 @@ Một quyết định trọng yếu khác (redirect allowlist) phụ thuộc pro
 
 ## Commit
 
-- Không có commit nào được tạo trong run này (chỉ cập nhật trạng thái blocker).
+- Commit `55ceb9d` (`docs(task-035): mark TASK-035 as BLOCKED pending contract decisions`) chứa cập nhật trạng thái blocker: `tasks/TASK-035.md`, `project/TASKS.md`, `reports/TASK-035-blocked.md`.
