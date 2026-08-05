@@ -1,6 +1,7 @@
 # Active Task Queue
 
 - **Active task:** None
+- **Last verified task:** `TASK-042` — Restore Public Onboarding and Product Navigation
 - **Next task:** `TASK-036` — Accessible Fix-the-Bug Drag-and-Drop
 - **Next status:** `READY`
 - **Owner:** Codex
@@ -15,4 +16,4 @@
 
 ## Start condition
 
-Khi bắt đầu implementation, chỉ chuyển một task có dependency thỏa mãn sang `IN_PROGRESS` và cập nhật file này trỏ đến packet tương ứng.
+`TASK-042` đã `VERIFIED`; queue quay lại `TASK-036`. Chỉ chuyển một task có dependency thỏa mãn sang `IN_PROGRESS` khi bắt đầu implementation tiếp theo.

@@ -11,12 +11,13 @@
 
 ## Active Task
 
-Task đang triển khai: Không có. Task kế tiếp đủ điều kiện bắt đầu là `TASK-036`.
+Task đang triển khai: Không có. `TASK-042` đã được verified; task feature kế tiếp đủ điều kiện bắt đầu là `TASK-036`.
 
 ## Verified and Completed Tasks
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-042` | Restore Public Onboarding and Product Navigation | VERIFIED | Critical hotfix | `reports/TASK-042-implementation.md`, `reports/TASK-042-review.md`, `reports/TASK-042-test.md` |
 | `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
 | `TASK-030` | AI Exercise Generation Backend | VERIFIED | Phase 5 | `reports/TASK-030-implementation.md`, `reports/TASK-030-review.md` |
 | `TASK-031` | Content Moderation API and Moderation Queue | VERIFIED | Phase 6 | `reports/TASK-031-implementation.md`, `reports/TASK-031-review.md` |
