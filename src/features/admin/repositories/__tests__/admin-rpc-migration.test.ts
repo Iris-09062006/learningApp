@@ -1,13 +1,28 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { basename, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const sql = readFileSync(
-  resolve(process.cwd(), "supabase/migrations/20260805100930_admin_user_management_rpc.sql"),
-  "utf8",
+const migrationPath = resolve(
+  process.cwd(),
+  "supabase/migrations/014_create_admin_user_management_rpc_functions.sql",
 );
+const sql = readFileSync(migrationPath, "utf8");
 
 describe("admin user management migration", () => {
+  it("continues the repository's sequential migration naming convention", () => {
+    const migrationNames = readdirSync(resolve(process.cwd(), "supabase/migrations"))
+      .filter((name) => name.endsWith(".sql"));
+    const versions = migrationNames
+      .map((name) => Number(name.slice(0, 3)))
+      .sort((left, right) => left - right);
+
+    expect(basename(migrationPath)).toBe("014_create_admin_user_management_rpc_functions.sql");
+    expect(migrationNames).toContain(basename(migrationPath));
+    expect(migrationNames.every((name) => /^\d{3}_[a-z0-9_]+\.sql$/.test(name))).toBe(true);
+    expect(new Set(versions).size).toBe(versions.length);
+    expect(versions.every((version, index) => version === index + 1)).toBe(true);
+  });
+
   it("keeps last-admin protection, update, and audit insert in transactional RPCs", () => {
     expect(sql).toContain("admin_change_user_role");
     expect(sql).toContain("admin_change_user_status");

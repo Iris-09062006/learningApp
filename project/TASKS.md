@@ -10,7 +10,7 @@
 
 ## Active Task
 
-Task đang triển khai: Không có. `TASK-033` đã hoàn tất và verified; Phase 6 đã hoàn tất.
+Task đang triển khai: Không có. `TASK-033` đã được audit lại và verified; Phase 6 đã hoàn tất.
 
 ## Verified and Completed Tasks
 

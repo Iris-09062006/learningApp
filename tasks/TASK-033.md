@@ -25,7 +25,7 @@
 - `src/app/api/admin/`
 - `src/app/api/system/`
 - `src/app/(main)/admin/`
-- `supabase/migrations/*_admin_user_management_rpc.sql`
+- `supabase/migrations/014_create_admin_user_management_rpc_functions.sql`
 - `src/generated/database.types.ts`
 - `src/features/admin/**/__tests__/`
 - `src/app/api/admin/**/__tests__/`
@@ -54,7 +54,7 @@
 ## Acceptance Criteria
 - `/api/admin/*` endpoints strictly reject non-Admin users with 403 Forbidden.
 - User management API allows pagination, text searching by email/username, and filtering by role/active status.
-- Role and status modifications generate corresponding `audit_logs` entries.
+- Role and status modifications generate corresponding `admin_logs` entries.
 - System prevents demoting or deactivating the last remaining active Admin user.
 - `/api/system/health` returns basic operational status without leaking secret credentials.
 - Tests verify authorization enforcement, audit log generation, last-admin protection, and UI components.

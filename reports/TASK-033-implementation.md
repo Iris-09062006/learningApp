@@ -10,7 +10,7 @@
 - Added `src/features/admin` types, server-only repository, service, components, and tests.
 - Added `GET /api/admin/users` with email/username search, role/status filters, and pagination.
 - Added role/status PATCH routes with strict UUID/body validation and standard error envelopes.
-- Added migration `20260805100930_admin_user_management_rpc.sql` with two narrowly granted atomic RPCs.
+- Added sequential migration `014_create_admin_user_management_rpc_functions.sql` with two narrowly granted atomic RPCs.
 - Added `admin_logs` and RPC signatures to generated database types, including the existing publish RPC omitted by the prior generated snapshot.
 - Added `/admin/users` and `/admin/system` dynamic, server-authorized pages.
 - Added `GET /api/system/health` with coarse application/database status only.
@@ -21,19 +21,19 @@
 - `src/app/api/admin/**`
 - `src/app/api/system/**`
 - `src/app/(main)/admin/**`
-- `supabase/migrations/20260805100930_admin_user_management_rpc.sql`
+- `supabase/migrations/014_create_admin_user_management_rpc_functions.sql`
 - `src/generated/database.types.ts`
 - TASK-033 coordination and report artifacts.
 
 ## Quality Gates
 
-- Focused tests: PASS (22/22)
+- Focused tests: PASS (23/23)
 - `npm run lint`: PASS
 - `npm run typecheck`: PASS
-- `npm run test`: PASS (328/328)
+- `npm run test`: PASS (329/329)
 - `npm run build`: PASS
 
 ## Environment Limitation
 
-- Supabase CLI was installed temporarily through `npx` and created the migration successfully.
+- The initial CLI-generated timestamp filename was corrected to the repository's established sequential naming convention (`014_...`).
 - Local migration application/list verification could not run because the Supabase Postgres service at `127.0.0.1:54322` and Docker daemon were unavailable. Migration SQL is covered by static security regression tests but must be applied in an environment with a running Supabase stack.

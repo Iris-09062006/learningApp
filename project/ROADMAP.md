@@ -2,9 +2,9 @@
 
 ## Current State
 
-- **Current phase:** Phase 6 — Operations and Dashboards.
-- **Completed:** Phases 0–5 plus TASK-031 moderation and TASK-032 learner dashboard/profile.
-- **In progress:** `TASK-033` — User Administration and System Health Dashboard.
+- **Current phase:** Phase 6 complete; Phase 7 is planned.
+- **Completed:** Phases 0–6, including the audited TASK-033 migration sequence.
+- **In progress:** None.
 - **Queued next:** Phase 7 security hardening and deployment preparation.
 - **Source of truth:** `project/TASKS.md`, task packets in `tasks/`, and implementation/review reports in `reports/`.
 
