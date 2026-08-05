@@ -1,7 +1,7 @@
 # TASK-032 — Learner Dashboard and Profile Management
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Required Context
 - `docs/requirements.md`
@@ -32,7 +32,20 @@
 - `project/TASKS.md`
 - `project/ROADMAP.md`
 - `reports/TASK-032-implementation.md`
+- `reports/TASK-032-test.md`
 - `reports/TASK-032-review.md`
+
+## Implementation Contract
+- `GET /api/profile` keeps the profile fields defined in `docs/api_contract.md` and adds `learningMetrics` with `enrolledCourses`, `activeCourses`, `completedCourses`, `completedLessons`, and `totalLessons` to satisfy the task acceptance criterion for summarized learning metrics.
+- `PATCH /api/profile` accepts an object containing only `username`; unknown or restricted fields are rejected with `VALIDATION_ERROR` rather than ignored.
+- Dashboard data is loaded server-side for the authenticated owner and contains enrolled course summaries, per-course progress, the next rule-based recommendation, and a trusted quick-resume URL derived from owned progress data.
+- Existing RLS policies and column-level `UPDATE (username)` grants are sufficient; this task does not change the database schema.
+
+## Required Commands
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
 
 ## Acceptance Criteria
 - `/api/profile` returns the authenticated learner's details and summarized learning metrics.

@@ -17,9 +17,9 @@
 | Phase 1 | Project foundation and quality gates | DONE |
 | Phase 2 | Supabase database and security foundation | DONE |
 | Phase 3 | Authentication and learning core | DONE |
-| Phase 4 | Lessons, exercises, submissions, and progress | IN_PROGRESS |
-| Phase 5 | AI explanations and mentor experience | PLANNED |
-| Phase 6 | Dashboards and administration | PLANNED |
+| Phase 4 | Lessons, exercises, submissions, and progress | DONE |
+| Phase 5 | AI explanations and mentor experience | DONE |
+| Phase 6 | Dashboards and administration | IN_PROGRESS |
 | Phase 7 | Security hardening, regression testing, and deployment | PLANNED |
 
 ## Phase 1 — Project Foundation and Quality Gates
@@ -46,10 +46,22 @@
 
 ## Phase 4 — Learning Execution
 
-- `TASK-025` — Lesson Content API and Viewer — **READY**
-- `TASK-026` — Exercise API, Evaluation, and Submissions — **READY**
-- `TASK-027` — Progress Tracking API and Learner Progress Engine — **READY**
+- `TASK-025` — Lesson Content API and Viewer — **VERIFIED**
+- `TASK-026` — Exercise API, Evaluation, and Submissions — **VERIFIED**
+- `TASK-027` — Progress Tracking API and Learner Progress Engine — **VERIFIED**
 
-## Phase 5–7
+## Phase 5 — AI Mentor
 
-AI integration, dashboards/administration, security regression, accessibility/performance review, and production deployment remain planned. No task is considered active until a corresponding packet is created and added to `project/TASKS.md`.
+- `TASK-028` — AI Mentor API and Explanation Service — **VERIFIED**
+- `TASK-029` — AI Learning Recommendation Experience — **VERIFIED**
+- `TASK-030` — AI Exercise Generation Backend — **VERIFIED**
+
+## Phase 6 — Operations and Dashboards
+
+- `TASK-031` — Content Moderation API and Moderation Queue — **VERIFIED**
+- `TASK-032` — Learner Dashboard and Profile Management — **VERIFIED**
+- `TASK-033` — User Administration and System Health Dashboard — **READY**
+
+## Phase 7 — Hardening and Deployment
+
+Security regression, accessibility/performance review, and deployment remain planned. Production deployment requires an explicit user request.

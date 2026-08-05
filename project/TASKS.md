@@ -10,7 +10,7 @@
 
 ## Active Task
 
-Task đang triển khai: Không có. `TASK-031` đã hoàn tất và verified. Các task tiếp theo trong Phase 6 (`TASK-032`, `TASK-033`) có packet ở trạng thái `READY`.
+Task đang triển khai: Không có. `TASK-032` đã hoàn tất và verified; `TASK-033` là task tiếp theo ở trạng thái `READY`.
 
 ## Verified and Completed Tasks
 
@@ -19,6 +19,7 @@ Task đang triển khai: Không có. `TASK-031` đã hoàn tất và verified. C
 | `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
 | `TASK-030` | AI Exercise Generation Backend | VERIFIED | Phase 5 | `reports/TASK-030-implementation.md`, `reports/TASK-030-review.md` |
 | `TASK-031` | Content Moderation API and Moderation Queue | VERIFIED | Phase 6 | `reports/TASK-031-implementation.md`, `reports/TASK-031-review.md` |
+| `TASK-032` | Learner Dashboard and Profile Management | VERIFIED | Phase 6 | `reports/TASK-032-implementation.md`, `reports/TASK-032-review.md`, `reports/TASK-032-test.md` |
 | `TASK-029` | AI Learning Recommendation Experience | VERIFIED | Phase 5 | `reports/TASK-029-implementation.md`, `reports/TASK-029-review.md`, `reports/TASK-029-test.md` |
 | `TASK-000` | Documentation and Agent Workflow | DONE | Phase 0 | Repository workflow documentation (`AGENTS.md`, `CODEX.md`) |
 | `TASK-001` | Bootstrap Next.js and Project Configuration | DONE | Phase 1 | Git commit history & baseline configs |
@@ -40,7 +41,6 @@ Task đang triển khai: Không có. `TASK-031` đã hoàn tất và verified. C
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-032` | Learner Dashboard and Profile Management | READY | Phase 6 | `TASK-027`, `TASK-029` |
 | `TASK-033` | User Administration and System Health Dashboard | READY | Phase 6 | `TASK-031` |
 
 ## Planned Work
