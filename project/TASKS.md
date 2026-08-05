@@ -6,11 +6,12 @@
 - `VERIFIED`: Implementation, required tests, and review evidence pass.
 - `READY`: Packet is defined and ready to implement.
 - `IN_PROGRESS`: Currently being implemented.
-- `PLANNED`: Future work without an active packet.
+- `PLANNED`: Packet đã được định nghĩa nhưng chưa thể bắt đầu vì dependency/order.
+- `DRAFT`: Packet đã có nhưng còn thiếu contract, quyết định sản phẩm hoặc dependency.
 
 ## Active Task
 
-Task đang triển khai: Không có. `TASK-033` đã được audit lại và verified; Phase 6 đã hoàn tất.
+Task đang triển khai: Không có. Task kế tiếp đủ điều kiện bắt đầu là `TASK-034`.
 
 ## Verified and Completed Tasks
 
@@ -42,6 +43,19 @@ Task đang triển khai: Không có. `TASK-033` đã được audit lại và ve
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+| `TASK-034` | Course Catalog Search | READY | Feature completion | `TASK-022` |
+| `TASK-036` | Accessible Fix-the-Bug Drag-and-Drop | READY | Feature completion | `TASK-026` |
+
+## Draft / Deferred Queue
+
+| Task ID | Title | Status | Phase | Blocker or dependency |
+|---|---|---|---|---|
+| `TASK-035` | Self-service Password Recovery | DRAFT | Feature completion | Password recovery API/callback contract chưa được khóa |
+| `TASK-037` | Admin-triggered Password Reset | DRAFT | Feature completion (P2) | Phụ thuộc `TASK-035`; admin endpoint và abuse-control contract chưa có |
+| `TASK-038` | Security and RLS Regression Hardening | PLANNED | Phase 7 | Chạy sau các feature READY được chọn để tránh audit lại |
+| `TASK-039` | Critical-flow E2E and Accessibility | PLANNED | Phase 7 | `TASK-038` |
+| `TASK-040` | Performance and Release Readiness | PLANNED | Phase 7 | `TASK-039` |
+| `TASK-041` | Preview Deployment and Smoke Verification | DRAFT | Phase 7 | `TASK-040`, quyền push/deploy và môi trường external |
 
 ## Planned Work
 
@@ -50,7 +64,8 @@ Task đang triển khai: Không có. `TASK-033` đã được audit lại và ve
 | Phase 4 | `TASK-025`–`TASK-027` verified: lesson content/start flow, exercises/submissions/grading, and progress engine |
 | Phase 5 | `TASK-028`–`TASK-031` verified: AI explanations, rule-based learning recommendations, controlled AI exercise generation, and content moderation |
 | Phase 6 | `TASK-031`–`TASK-033` verified: moderation, learner dashboard/profile, user administration, and system health |
-| Phase 7 | Security regression, accessibility/performance review, and deployment |
+| Feature completion | `TASK-034`–`TASK-037`: search course, password recovery, accessible drag-and-drop, and optional Admin reset |
+| Phase 7 | `TASK-038`–`TASK-041`: security/RLS regression, critical E2E + accessibility, performance/release readiness, then explicitly authorized preview deployment |
 
 ## Retired Task IDs
 

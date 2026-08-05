@@ -5,7 +5,7 @@
 - **Current phase:** Phase 6 complete; Phase 7 is planned.
 - **Completed:** Phases 0–6, including the audited TASK-033 migration sequence.
 - **In progress:** None.
-- **Queued next:** Phase 7 security hardening and deployment preparation.
+- **Queued next:** Complete selected feature gaps, then execute Phase 7 hardening and release preparation.
 - **Source of truth:** `project/TASKS.md`, task packets in `tasks/`, and implementation/review reports in `reports/`.
 
 ## Phase Overview
@@ -19,7 +19,8 @@
 | Phase 4 | Lessons, exercises, submissions, and progress | DONE |
 | Phase 5 | AI explanations and mentor experience | DONE |
 | Phase 6 | Dashboards and administration | DONE |
-| Phase 7 | Security hardening, regression testing, and deployment | PLANNED |
+| Feature completion | Remaining P1/P2 feature gaps (`TASK-034`–`TASK-037`) | PLANNED |
+| Phase 7 | Security hardening, regression testing, and release readiness (`TASK-038`–`TASK-041`) | PLANNED |
 
 ## Phase 1 — Project Foundation and Quality Gates
 
@@ -63,4 +64,22 @@
 
 ## Phase 7 — Hardening and Deployment
 
-Security regression, accessibility/performance review, and deployment remain planned. Production deployment requires an explicit user request.
+### Feature completion before the release candidate
+
+| Task | Scope | State |
+|---|---|---|
+| `TASK-034` | F-COURSE-02 course search over published catalog data | READY |
+| `TASK-035` | F-AUTH-04 self-service password recovery | DRAFT — contract required |
+| `TASK-036` | F-EXERCISE-03 accessible drag-and-drop using the existing `selectedOptionId` grading contract | READY |
+| `TASK-037` | F-ADMIN-04 admin-triggered password reset | DRAFT — P2 and contract required |
+
+Already implemented and therefore not replanned: F-SUBMISSION-02, F-AI-02, F-AI-03, F-PROFILE-02, F-ADMIN-05, F-SYSTEM-01 and audit writes required by F-SYSTEM-02.
+
+### Phase 7 execution order
+
+1. `TASK-038` — run full RLS/security regression and close release-blocking gaps, including required rate limits.
+2. `TASK-039` — replace the placeholder E2E test with the three critical learner flows and complete accessibility verification.
+3. `TASK-040` — establish performance evidence, run all quality gates, and finish environment/migration/rollback/smoke-test runbooks without deploying.
+4. `TASK-041` — create and verify a Preview deployment only after a separate explicit authorization to push/deploy.
+
+Production deployment remains outside these packets and requires a new explicit user request after Preview evidence passes.

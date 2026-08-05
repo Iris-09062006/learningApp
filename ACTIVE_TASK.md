@@ -1,28 +1,18 @@
-# Active Task: TASK-033 (User Administration and System Health Dashboard)
+# Active Task Queue
 
-- **Task ID**: TASK-033
-- **Task Name**: User Administration and System Health Dashboard
-- **Status**: `VERIFIED`
-- **Owner**: Codex
+- **Active task:** None
+- **Next task:** `TASK-034` — Course Catalog Search
+- **Next status:** `READY`
+- **Owner:** Codex
 
-## Objectives
-- [x] Implement admin-only user list, role mutation, and status mutation APIs.
-- [x] Make last-active-admin protection and audit logging transactional.
-- [x] Implement public basic system health API without sensitive details.
-- [x] Build responsive `/admin/users` and `/admin/system` interfaces.
-- [x] Cover authorization, validation, audit, last-admin protection, and UI states with tests.
+## Planning baseline
 
-## Required Context & Scope
-- **Task packet**: `tasks/TASK-033.md`
-- **Domain**: Administration (`src/features/admin`)
-- **API Specs**: `/api/admin/users*`, `/api/system/health`
-- **Pages**: `/admin/users`, `/admin/system`
+- Phase 0–6 đã hoàn tất và được ghi nhận đến `TASK-033`.
+- Các feature đã có dù roadmap cũ chưa chỉ rõ: submission history, AI explanation history, rule-based learning recommendation, profile update, admin user management, audit writes và system health.
+- Feature gap còn lại được tách thành `TASK-034`–`TASK-037`.
+- Phase 7 được tách thành `TASK-038`–`TASK-041`.
+- Không có push hoặc deployment nào được phép trong vòng lập kế hoạch này.
 
-## Verification & Quality Gates
-- `npm run lint`: PASSED (0 errors, 0 warnings)
-- `npm run typecheck`: PASSED (0 errors)
-- `npm run test`: PASSED (329/329)
-- `npm run build`: PASSED
-- Review report: `reports/TASK-033-review.md` (Verdict: PASS)
-- Implementation report: `reports/TASK-033-implementation.md`
-- Test report: `reports/TASK-033-test.md`
+## Start condition
+
+Khi bắt đầu implementation, chỉ chuyển một task có dependency thỏa mãn sang `IN_PROGRESS` và cập nhật file này trỏ đến packet tương ứng.
