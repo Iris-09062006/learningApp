@@ -48,6 +48,41 @@ Một quyết định trọng yếu khác (redirect allowlist) phụ thuộc pro
 2. Cập nhật `tasks/TASK-035.md`: điền các quyết định, chuyển Status `READY` khi đủ.
 3. Khi `READY`, chạy lại vòng lặp PLAN → IMPLEMENT → TEST → REVIEW → COMMIT với đầy đủ required commands (`npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, `npm run build`).
 
+## Dependencies & Conditions to Implement (chi tiết)
+
+### Dependency 1 — Product/Contract decisions (BẮT BUỘC, đang thiếu → gây BLOCKED)
+
+4 quyết định phải được người giữ quyết định sản phẩm khóa và ghi vào source of truth **trước khi chuyển `tasks/TASK-035.md` sang `READY`**:
+
+| # | Quyết định | Ghi vào đâu | Nội dung cần khóa |
+|---|-----------|-------------|-------------------|
+| 1 | Route/API names cho request recovery và update password | `docs/api_contract.md` | Path chính xác (ví dụ đề xuất dạng `POST /api/auth/recovery/request` và `PATCH /api/auth/recovery/password` — PHẢI được chốt, không phải đề xuất từ agent); method; request/response shape; error codes |
+| 2 | Allowlist recovery redirect URL | `docs/security.md` + `docs/deployment.md` | Danh sách origin hợp lệ cho từng môi trường: local (`http://localhost:3000`), Preview (origin cụ thể của Vercel Preview), Production (**cần production domain thực tế** — hiện chưa có trong `docs/deployment.md`) |
+| 3 | Flow: server-mediated hay Supabase SSR callback/session | `docs/architecture.md` | Chọn 1 trong 2: (a) server-mediated — gọi `supabase.auth.resetPasswordForEmail` rồi `supabase.auth.updateUser` trong Server Action/API Route bằng anon key + session cookie; (b) Supabase SSR callback/session — dùng `updatePassword` với `code`/`session` từ recovery link và `createServerClient` |
+| 4 | Rate limit, generic response chống account enumeration, hành vi với inactive user | `docs/security.md` + `docs/api_contract.md` | Rate limit cụ thể (ví dụ số request/IPhoặc/email trong khoảng thời gian); response chuẩn hoá luôn trả về cùng message (bất kể email tồn tại hay không); cách xử lý user `banned`/`inactive` khi nhận request recovery |
+
+### Dependency 2 — Production origin / domain (BẮT BUỘC, đang thiếu)
+
+- Cần origin Production thực tế (URL app khi deploy, ví dụ `https://learning-app.example.com`) để khóa allowlist redirect URL (Dependency 1, quyết định #2).
+- Hiện `docs/deployment.md` không xác định production origin — đây là thông tin nằm ngoài phạm vi TASK-035, không thể suy ra an toàn từ source of truth hiện có.
+
+### Dependency 3 — Environment / Platform configuration (chỉ cần khi task đã READY)
+
+Khi contract đã khóa và chuyển sang IMPLEMENT, cần có (không phải blocker hiện tại, nhưng là điều kiện để chạy e2e/build được):
+
+- **Bổ sung env var origin** vào `.env.example` (ví dụ `NEXT_PUBLIC_SITE_URL`) để app biết origin của chính nó khi validate redirect, nếu flow được chọn cần điều này.
+- **Cấu hình Supabase Auth**: nếu chọn flow SSR callback, cần `Site URL` và `Redirect URLs` được cấu hình trong Supabase Dashboard cho từng môi trường (local/Preview/Production) khớp với allowlist.
+- **Email provider (SMTP)** cấu hình trong Supabase Auth để gửi recovery email — KHÔNG gọi email provider thật trong tests (đã nằm trong Planned Scope).
+- Không cần migration database mới: theo `docs/database.md`, password recovery không thêm bảng/cột (token/password nằm trong Supabase Auth, không lưu ở application DB).
+
+### Điều kiện để thực hiện task (Definition of Ready)
+
+1. `tasks/TASK-035.md`: 4 quyết định đã điền + Status chuyển `READY`.
+2. Source of truth đã cập nhật: `docs/api_contract.md`, `docs/architecture.md`, `docs/security.md`, `docs/deployment.md` (+ `docs/features.md` nếu cần mô tả flow F-AUTH-04).
+3. `ACTIVE_TASK.md`: TASK-035 được chọn làm active/next task (hiện queue đang trỏ `TASK-036` READY).
+4. Production origin đã xác định và nằm trong allowlist.
+5. Khi IMPLEMENT: mọi required command phải pass — `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, `npm run build`.
+
 ## Không phải blocker
 
 - Thiếu quyền ghi, dependency hoặc dịch vụ bên ngoài: không.
