@@ -1,7 +1,7 @@
 # TASK-036 — Accessible Fix-the-Bug Drag-and-Drop
 
 ## Status
-`READY`
+`VERIFIED`
 
 ## Feature ID
 `F-EXERCISE-03`

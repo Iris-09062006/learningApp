@@ -11,7 +11,7 @@
 
 ## Active Task
 
-Task đang triển khai: Không có. `TASK-035` đã được verified; task feature kế tiếp đủ điều kiện bắt đầu là `TASK-036`.
+Task đang triển khai: Không có. `TASK-036` đã được verified; task feature kế tiếp đủ điều kiện bắt đầu là `TASK-037`.
 
 ## Verified and Completed Tasks
 
@@ -19,6 +19,7 @@ Task đang triển khai: Không có. `TASK-035` đã được verified; task fea
 |---|---|---|---|---|
 | `TASK-042` | Restore Public Onboarding and Product Navigation | VERIFIED | Critical hotfix | `reports/TASK-042-implementation.md`, `reports/TASK-042-review.md`, `reports/TASK-042-test.md` |
 | `TASK-035` | Self-service Password Recovery | VERIFIED | Feature completion | `reports/TASK-035-implementation.md`, `reports/TASK-035-review.md`, `reports/TASK-035-test.md` |
+| `TASK-036` | Accessible Fix-the-Bug Drag-and-Drop | VERIFIED | Feature completion | `reports/TASK-036-implementation.md`, `reports/TASK-036-review.md`, `reports/TASK-036-test.md` |
 | `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
 | `TASK-030` | AI Exercise Generation Backend | VERIFIED | Phase 5 | `reports/TASK-030-implementation.md`, `reports/TASK-030-review.md` |
 | `TASK-031` | Content Moderation API and Moderation Queue | VERIFIED | Phase 6 | `reports/TASK-031-implementation.md`, `reports/TASK-031-review.md` |
@@ -46,7 +47,6 @@ Task đang triển khai: Không có. `TASK-035` đã được verified; task fea
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-036` | Accessible Fix-the-Bug Drag-and-Drop | READY | Feature completion | `TASK-026` |
 
 ## Draft / Deferred Queue
 
