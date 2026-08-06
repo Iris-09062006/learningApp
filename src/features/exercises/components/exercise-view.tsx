@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AiExplanationView } from "@/features/ai/components/ai-explanation-view";
+import { FixTheBugDragDrop } from "@/features/exercises/components/fix-the-bug-drag-drop";
 import type {
   GetExerciseResponse,
   SubmitExerciseResponse,
@@ -97,6 +98,15 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({ exercise }) => {
           Chọn đáp án
         </h2>
 
+        {exercise.type === "fix_the_bug" ? (
+          <div className="mt-4">
+            <FixTheBugDragDrop
+              options={exercise.options}
+              value={selectedOptionId}
+              onChange={setSelectedOptionId}
+            />
+          </div>
+        ) : (
         <div className="mt-4 space-y-3">
           {exercise.options.map((option) => {
             const isSelected = selectedOptionId === option.id;
@@ -132,6 +142,7 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({ exercise }) => {
             );
           })}
         </div>
+        )}
 
         <div className="mt-6 flex flex-col items-start gap-3">
           <button
