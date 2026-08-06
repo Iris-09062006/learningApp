@@ -274,8 +274,17 @@ AI_API_KEY=AIzaSy...
 |---|---|---|
 | `POST /api/auth/login` | 10 requests / IP / 10 phút | HTTP 429 Too Many Requests |
 | `POST /api/auth/register` | 5 requests / IP / 1 giờ | HTTP 429 Too Many Requests |
+| `POST /api/auth/forgot-password` | 5 requests / IP / 1 giờ | HTTP 429 Too Many Requests |
 | `POST /api/ai/explanations` | 20 requests / user / 1 giờ | HTTP 429 Rate Limited |
 | `POST /api/moderation/*` | 30 requests / moderator / 1 giờ | HTTP 429 Rate Limited |
+
+Giới hạn `POST /api/auth/forgot-password` được chốt theo ADR-024.
+
+### 9.2 Quy tắc chống account enumeration
+
+- `POST /api/auth/forgot-password` luôn trả response generic giống nhau (`{ submitted: true }`) bất kể email có tồn tại hay không.
+- User bị vô hiệu hóa (`isActive = false`) cũng nhận response generic giống hệt, không khác biệt về message hay HTTP status.
+- Không log email không tồn tại riêng biệt với email hợp lệ trong response trả client.
 
 ---
 

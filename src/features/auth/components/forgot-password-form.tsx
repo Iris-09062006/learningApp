@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -16,13 +15,8 @@ import { Input } from "@/components/ui/input";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-interface LoginFormProps {
-  notice?: string;
-}
-
-interface LoginFieldErrors {
+interface ForgotPasswordFieldErrors {
   email?: string;
-  password?: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -39,25 +33,11 @@ function getApiErrorMessage(payload: unknown): string | undefined {
     : undefined;
 }
 
-function validateLogin(email: string, password: string): LoginFieldErrors {
-  const errors: LoginFieldErrors = {};
-
-  if (!EMAIL_PATTERN.test(email)) {
-    errors.email = "Vui lòng nhập địa chỉ email hợp lệ.";
-  }
-
-  if (!password) {
-    errors.password = "Vui lòng nhập mật khẩu.";
-  }
-
-  return errors;
-}
-
-export function LoginForm({ notice }: LoginFormProps) {
-  const router = useRouter();
-  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
+export function ForgotPasswordForm() {
+  const [fieldErrors, setFieldErrors] = useState<ForgotPasswordFieldErrors>({});
   const [formError, setFormError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,8 +46,11 @@ export function LoginForm({ notice }: LoginFormProps) {
     const email = String(formData.get("email") ?? "")
       .trim()
       .toLowerCase();
-    const password = String(formData.get("password") ?? "");
-    const errors = validateLogin(email, password);
+    const errors: ForgotPasswordFieldErrors = {};
+
+    if (!EMAIL_PATTERN.test(email)) {
+      errors.email = "Vui lòng nhập địa chỉ email hợp lệ.";
+    }
 
     setFieldErrors(errors);
     setFormError(undefined);
@@ -79,23 +62,22 @@ export function LoginForm({ notice }: LoginFormProps) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
       const payload: unknown = await response.json().catch(() => null);
 
       if (!response.ok || !isRecord(payload) || payload.success !== true) {
         setFormError(
           getApiErrorMessage(payload) ??
-            "Không thể đăng nhập lúc này. Vui lòng thử lại.",
+            "Không thể gửi yêu cầu lúc này. Vui lòng thử lại.",
         );
         return;
       }
 
-      router.replace("/dashboard");
-      router.refresh();
+      setIsSubmitted(true);
     } catch {
       setFormError("Không thể kết nối tới máy chủ. Vui lòng thử lại.");
     } finally {
@@ -103,38 +85,62 @@ export function LoginForm({ notice }: LoginFormProps) {
     }
   }
 
+  if (isSubmitted) {
+    return (
+      <Card className="w-full max-w-md border-slate-200/80 shadow-xl shadow-indigo-950/5">
+        <CardHeader className="space-y-3 px-6 pb-5 pt-7 sm:px-8 sm:pt-8">
+          <div
+            aria-hidden="true"
+            className="flex size-11 items-center justify-center rounded-2xl bg-emerald-50 text-xl font-bold text-emerald-600"
+          >
+            ✓
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Kiểm tra email của bạn
+            </h1>
+            <CardDescription className="text-sm leading-6 sm:text-base">
+              Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui
+              lòng kiểm tra hộp thư đến và thư rác.
+            </CardDescription>
+          </div>
+        </CardHeader>
+
+        <CardFooter className="justify-center border-t border-slate-100 px-6 py-5 text-sm text-slate-600 sm:px-8">
+          <Link
+            href="/login"
+            className="font-semibold text-indigo-600 underline-offset-4 hover:underline"
+          >
+            Quay lại đăng nhập
+          </Link>
+        </CardFooter>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full max-w-md border-slate-200/80 shadow-xl shadow-indigo-950/5">
       <CardHeader className="space-y-3 px-6 pb-5 pt-7 sm:px-8 sm:pt-8">
         <div
           aria-hidden="true"
-          className="flex size-11 items-center justify-center rounded-2xl bg-indigo-50 text-xl font-bold text-indigo-600"
+          className="flex size-11 items-center justify-center rounded-2xl bg-amber-50 text-xl font-bold text-amber-600"
         >
-          &gt;_
+          ?
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Chào mừng trở lại
+            Quên mật khẩu
           </h1>
           <CardDescription className="text-sm leading-6 sm:text-base">
-            Đăng nhập để tiếp tục lộ trình học Python của bạn.
+            Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu.
           </CardDescription>
         </div>
       </CardHeader>
 
       <CardContent className="px-6 pb-6 sm:px-8">
-        {notice ? (
-          <p
-            role="status"
-            className="mb-5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm leading-5 text-cyan-900"
-          >
-            {notice}
-          </p>
-        ) : null}
-
         <form noValidate className="space-y-5" onSubmit={handleSubmit}>
           <Input
-            id="login-email"
+            id="forgot-password-email"
             name="email"
             type="email"
             label="Email"
@@ -144,25 +150,6 @@ export function LoginForm({ notice }: LoginFormProps) {
             disabled={isSubmitting}
             error={fieldErrors.email}
           />
-          <Input
-            id="login-password"
-            name="password"
-            type="password"
-            label="Mật khẩu"
-            placeholder="Nhập mật khẩu"
-            autoComplete="current-password"
-            disabled={isSubmitting}
-            error={fieldErrors.password}
-          />
-
-          <div className="flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-indigo-600 underline-offset-4 hover:underline"
-            >
-              Quên mật khẩu?
-            </Link>
-          </div>
 
           {formError ? (
             <p
@@ -178,20 +165,20 @@ export function LoginForm({ notice }: LoginFormProps) {
             size="lg"
             className="w-full"
             isLoading={isSubmitting}
-            aria-label="Đăng nhập"
+            aria-label="Gửi liên kết đặt lại mật khẩu"
           >
-            Đăng nhập
+            Gửi liên kết đặt lại
           </Button>
         </form>
       </CardContent>
 
       <CardFooter className="justify-center border-t border-slate-100 px-6 py-5 text-sm text-slate-600 sm:px-8">
-        Chưa có tài khoản?&nbsp;
+        Nhớ mật khẩu?&nbsp;
         <Link
-          href="/register"
+          href="/login"
           className="font-semibold text-indigo-600 underline-offset-4 hover:underline"
         >
-          Đăng ký miễn phí
+          Đăng nhập
         </Link>
       </CardFooter>
     </Card>

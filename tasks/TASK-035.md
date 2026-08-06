@@ -1,7 +1,7 @@
 # TASK-035 — Self-service Password Recovery
 
 ## Status
-`BLOCKED` — blockers được ghi tại `reports/TASK-035-blocked.md`
+`IN_PROGRESS` — blockers đã được gỡ bằng ADR-024 (Accepted); implementation + tests đang hoàn tất
 
 ## Feature ID
 `F-AUTH-04`
@@ -19,13 +19,11 @@ Cung cấp luồng quên mật khẩu và đặt mật khẩu mới qua Supabase
 - `docs/api_contract.md`
 - Supabase SSR recovery semantics used by the installed version
 
-## Contract Decisions Required Before READY
-- Khóa route/API names cho request recovery và update password.
-- Khóa allowlist của recovery redirect URL cho local, Preview và Production.
-- Chọn server-mediated hay Supabase SSR callback/session flow.
-- Quy định rate limit, generic response chống account enumeration và hành vi với inactive user.
-
-Không tự thêm endpoint trước khi các quyết định trên được ghi vào source of truth.
+## Contract Decisions (locked by ADR-024 — Accepted, xem `docs/decisions.md`)
+- Route/API names: `POST /api/auth/forgot-password`, `GET /forgot-password`, `GET /reset-password`.
+- Redirect allowlist: `originAncestors`/`redirectTo` dùng `NEXT_PUBLIC_APP_URL` (config tồn tại ở `src/lib/env.ts`, allowlist local, Preview, Production theo môi trường).
+- Flow: server-mediated — server `POST` gọi `supabase.auth.resetPasswordForEmail`; client state dùng URL search param `state=recovery`.
+- Rate limit: 5/giờ/IP/IPv6 và 10/giờ/email; response generic (200) chống account enumeration; inactive user vẫn nhận response generic (no leak).
 
 ## Planned Scope
 - Forgot-password form và generic success state.

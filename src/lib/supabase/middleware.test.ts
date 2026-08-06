@@ -27,6 +27,8 @@ describe("Supabase middleware route policy", () => {
     "/",
     "/login",
     "/register",
+    "/forgot-password",
+    "/reset-password",
     "/courses",
     "/courses/python-foundations",
   ])("allows guest access to public page %s", (pathname) => {

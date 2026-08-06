@@ -1,11 +1,12 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   CurrentUser,
+  ForgotPasswordResponse,
   LoginResponse,
   RegisterResponse,
   UserRole,
 } from "./auth.types";
-import { LoginInput, RegisterInput } from "./auth.schema";
+import { ForgotPasswordInput, LoginInput, RegisterInput } from "./auth.schema";
 
 export class AuthService {
   async register(input: RegisterInput): Promise<RegisterResponse> {
@@ -109,6 +110,28 @@ export class AuthService {
       role,
       isActive,
     };
+  }
+
+  async forgotPassword(
+    input: ForgotPasswordInput
+  ): Promise<ForgotPasswordResponse> {
+    const supabase = await createServerSupabaseClient();
+
+    const origin = process.env.NEXT_PUBLIC_SITE_URL;
+    const redirectTo = origin
+      ? `${origin.replace(/\/+$/, "")}/reset-password`
+      : undefined;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(input.email, {
+      redirectTo,
+    });
+
+    // Luôn trả response generic để không lộ email có tồn tại hay không.
+    if (error) {
+      throw error;
+    }
+
+    return { submitted: true };
   }
 
   handleRouteError(error: unknown): Response {

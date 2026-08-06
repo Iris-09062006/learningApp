@@ -1,6 +1,6 @@
 # Active Task Queue
 
-- **Active task:** None
+- **Active task:** `TASK-035` — Self-service Password Recovery (`IN_PROGRESS`)
 - **Last verified task:** `TASK-042` — Restore Public Onboarding and Product Navigation
 - **Next task:** `TASK-036` — Accessible Fix-the-Bug Drag-and-Drop
 - **Next status:** `READY`
@@ -16,4 +16,4 @@
 
 ## Start condition
 
-`TASK-042` đã `VERIFIED`; queue quay lại `TASK-036`. Chỉ chuyển một task có dependency thỏa mãn sang `IN_PROGRESS` khi bắt đầu implementation tiếp theo.
+`TASK-035` đang `IN_PROGRESS`: blockers đã được gỡ bằng ADR-024 (Accepted); implementation + tests hoàn tất, đang chờ review → commit. Sau khi `TASK-035` `VERIFIED`, queue quay lại `TASK-036`.

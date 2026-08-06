@@ -9,6 +9,10 @@ export interface LoginInput {
   password: string;
 }
 
+export interface ForgotPasswordInput {
+  email: string;
+}
+
 class ValidationZodError extends Error {
   errors: Array<{ field: string; message: string }>;
   constructor(errors: Array<{ field: string; message: string }>) {
@@ -50,6 +54,28 @@ export const registerSchema = {
       email: (email as string).trim(),
       password: password as string,
       username: trimmedUsername,
+    };
+  },
+};
+
+export const forgotPasswordSchema = {
+  parse(data: unknown): ForgotPasswordInput {
+    if (!data || typeof data !== "object") {
+      throw new ValidationZodError([{ field: "body", message: "Invalid JSON body" }]);
+    }
+    const { email } = data as Record<string, unknown>;
+    const errors: Array<{ field: string; message: string }> = [];
+
+    if (typeof email !== "string" || !email.includes("@")) {
+      errors.push({ field: "email", message: "Email không hợp lệ" });
+    }
+
+    if (errors.length > 0) {
+      throw new ValidationZodError(errors);
+    }
+
+    return {
+      email: (email as string).trim().toLowerCase(),
     };
   },
 };

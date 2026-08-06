@@ -5,7 +5,7 @@ import type { Database } from "@/generated/database.types";
 
 const PUBLIC_PAGE_PATTERNS = [
   /^\/$/,
-  /^\/(?:login|register)\/?$/,
+  /^\/(?:login|register|forgot-password|reset-password)\/?$/,
   /^\/courses\/?$/,
   /^\/courses\/[^/]+\/?$/,
 ];

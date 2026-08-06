@@ -175,4 +175,46 @@ describe("AuthService Unit Tests", () => {
     expect(body.error.code).toBe("INTERNAL_ERROR");
     expect(body.error.message).not.toContain("secret_db_key");
   });
+
+  it("forgotPassword calls resetPasswordForEmail and returns a generic response", async () => {
+    const mockSupabase = {
+      auth: {
+        resetPasswordForEmail: vi.fn().mockResolvedValue({
+          data: {},
+          error: null,
+        }),
+      },
+    };
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
+
+    const result = await service.forgotPassword({
+      email: "test@example.com",
+    });
+
+    expect(result).toEqual({ submitted: true });
+    expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
+      "test@example.com",
+      expect.any(Object),
+    );
+  });
+
+  it("forgotPassword propagates Supabase errors", async () => {
+    const mockSupabase = {
+      auth: {
+        resetPasswordForEmail: vi.fn().mockResolvedValue({
+          data: {},
+          error: new Error("Rate limit exceeded"),
+        }),
+      },
+    };
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
+
+    await expect(
+      service.forgotPassword({ email: "test@example.com" }),
+    ).rejects.toThrow("Rate limit exceeded");
+  });
 });

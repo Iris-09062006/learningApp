@@ -471,6 +471,70 @@ interface CurrentUser {
 
 ---
 
+## 8.5 Forgot password
+
+```text
+POST /api/auth/forgot-password
+```
+
+Access:
+
+```text
+Guest
+```
+
+Request:
+
+```ts
+interface ForgotPasswordRequest {
+  email: string;
+}
+```
+
+Ví dụ:
+
+```json
+{
+  "email": "learner@example.com"
+}
+```
+
+Validation:
+
+- Email hợp lệ.
+
+Response (luôn trả về nội dung giống nhau bất kể email có tồn tại hay không để chống account enumeration):
+
+```ts
+interface ForgotPasswordResponse {
+  submitted: true;
+}
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "submitted": true
+  }
+}
+```
+
+Error codes:
+
+| HTTP Status | Error code |
+|---|---|
+| 400 | VALIDATION_ERROR |
+| 429 | RATE_LIMITED |
+
+Quy tắc:
+
+- Server gọi `supabase.auth.resetPasswordForEmail` với redirect URL là `<app origin>/reset-password` (origin lấy từ `NEXT_PUBLIC_SITE_URL`).
+- Không trả về thông tin email có tồn tại hay không; user bị vô hiệu hóa cũng nhận response generic giống hệt.
+- Không có endpoint server-side cho bước đặt mật khẩu mới. Bước đó dùng Supabase recovery session và client-side `supabase.auth.updateUser` tại `/reset-password` (xem ADR-024).
+
+---
+
 # 9. Profile API
 
 ## 9.1 Get current profile
@@ -1597,5 +1661,8 @@ Endpoint cần rate limit:
 POST /api/ai/explanations
 POST /api/auth/login
 POST /api/auth/register
+POST /api/auth/forgot-password
 POST /api/moderation/generated-exercises/:id/publish
 ```
+
+Giới hạn cụ thể từng endpoint được ghi tại `docs/security.md` — Mục 9.

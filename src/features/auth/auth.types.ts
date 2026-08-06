@@ -42,6 +42,10 @@ export interface LogoutResponse {
   loggedOut: boolean;
 }
 
+export interface ForgotPasswordResponse {
+  submitted: boolean;
+}
+
 export interface ApiSuccess<T> {
   success: true;
   data: T;
