@@ -1,7 +1,7 @@
 # TASK-035 — Self-service Password Recovery
 
 ## Status
-`IN_PROGRESS` — blockers đã được gỡ bằng ADR-024 (Accepted); implementation + tests đang hoàn tất
+`VERIFIED` — implementation, tests và review đều PASS; committed `6259cd5`. Reports: `reports/TASK-035-implementation.md`, `reports/TASK-035-review.md`, `reports/TASK-035-test.md`
 
 ## Feature ID
 `F-AUTH-04`
