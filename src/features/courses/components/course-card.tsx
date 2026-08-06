@@ -10,11 +10,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   return (
     <div
       data-testid="course-card"
-      className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+      className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-100/60 motion-reduce:transform-none motion-reduce:transition-none dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/40 dark:hover:shadow-indigo-950/40"
     >
       <div>
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-block rounded bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+          <span className="inline-block rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
             {course.language.toUpperCase()}
           </span>
           <span className="text-xs text-slate-500 capitalize dark:text-slate-400">
@@ -44,9 +44,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
         <Link
           href={`/courses/${course.id}`}
-          className="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+          className="group/link inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-indigo-400"
         >
-          {course.isEnrolled ? "Tiếp tục học" : "Xem chi tiết"} &rarr;
+          {course.isEnrolled ? "Tiếp tục học" : "Xem chi tiết"}
+          <span aria-hidden="true" className="transition-transform duration-200 group-hover/link:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none">&rarr;</span>
         </Link>
       </div>
     </div>

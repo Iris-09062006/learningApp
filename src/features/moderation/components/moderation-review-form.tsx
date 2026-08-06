@@ -12,6 +12,24 @@ interface ModerationReviewFormProps {
   onSuccess: () => void;
 }
 
+const decisionOptions: { value: ReviewStatus; label: string; badge: string }[] = [
+  {
+    value: "approved",
+    label: "Duyệt",
+    badge: "text-emerald-800 border-emerald-200 bg-emerald-50",
+  },
+  {
+    value: "needs_revision",
+    label: "Cần chỉnh sửa",
+    badge: "text-amber-800 border-amber-200 bg-amber-50",
+  },
+  {
+    value: "rejected",
+    label: "Từ chối",
+    badge: "text-red-800 border-red-200 bg-red-50",
+  },
+];
+
 export function ModerationReviewForm({
   exerciseId,
   initialTitle,
@@ -21,12 +39,14 @@ export function ModerationReviewForm({
 }: ModerationReviewFormProps) {
   const [status, setStatus] = useState<ReviewStatus>("approved");
   const [feedback, setFeedback] = useState("");
-  
+
   // Optional edit fields
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(initialTitle);
   const [editedDescription, setEditedDescription] = useState(initialDescription);
-  const [contentJson, setContentJson] = useState(JSON.stringify(initialContent, null, 2));
+  const [contentJson, setContentJson] = useState(
+    JSON.stringify(initialContent, null, 2)
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +63,7 @@ export function ModerationReviewForm({
         try {
           parsedContent = JSON.parse(contentJson);
         } catch {
-          throw new Error("Invalid JSON format for edited exercise content");
+          throw new Error("Định dạng JSON của nội dung bài tập không hợp lệ");
         }
       }
 
@@ -58,15 +78,18 @@ export function ModerationReviewForm({
         }),
       };
 
-      const res = await fetch(`/api/moderation/generated-exercises/${exerciseId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `/api/moderation/generated-exercises/${exerciseId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to submit review");
+        throw new Error(data.error || "Không thể gửi đánh giá");
       }
 
       onSuccess();
@@ -74,7 +97,7 @@ export function ModerationReviewForm({
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unknown error occurred");
+        setError("Đã xảy ra lỗi không xác định");
       }
     } finally {
       setLoading(false);
@@ -82,136 +105,156 @@ export function ModerationReviewForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg border shadow-sm space-y-6">
-      <h3 className="text-lg font-bold text-gray-900 border-b pb-3">Submit Moderation Review</h3>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
+      <div>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          Gửi đánh giá kiểm duyệt
+        </h2>
+        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          Đưa ra quyết định cho bài tập này trước khi xuất bản
+        </p>
+      </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-3 rounded text-sm border border-red-200">
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
           {error}
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Review Decision</label>
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-gray-50 flex-1 min-w-[120px]">
-            <input
-              type="radio"
-              name="status"
-              value="approved"
-              checked={status === "approved"}
-              onChange={() => setStatus("approved")}
-              className="text-green-600 focus:ring-green-500"
-            />
-            <span className="text-sm font-medium text-green-800">Approve</span>
-          </label>
-
-          <label className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-gray-50 flex-1 min-w-[120px]">
-            <input
-              type="radio"
-              name="status"
-              value="needs_revision"
-              checked={status === "needs_revision"}
-              onChange={() => setStatus("needs_revision")}
-              className="text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm font-medium text-blue-800">Needs Revision</span>
-          </label>
-
-          <label className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-gray-50 flex-1 min-w-[120px]">
-            <input
-              type="radio"
-              name="status"
-              value="rejected"
-              checked={status === "rejected"}
-              onChange={() => setStatus("rejected")}
-              className="text-red-600 focus:ring-red-500"
-            />
-            <span className="text-sm font-medium text-red-800">Reject</span>
-          </label>
+      <fieldset>
+        <legend className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          Quyết định đánh giá
+        </legend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {decisionOptions.map((option) => (
+            <label
+              key={option.value}
+              className={`flex cursor-pointer items-center gap-2 rounded-lg border-2 p-3 transition ${
+                status === option.value
+                  ? "border-slate-900 bg-slate-50 dark:border-indigo-500 dark:bg-slate-800"
+                  : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600"
+              }`}
+            >
+              <input
+                type="radio"
+                name="status"
+                value={option.value}
+                checked={status === option.value}
+                onChange={() => setStatus(option.value)}
+                className="h-4 w-4 text-slate-900 focus:ring-indigo-500 dark:text-indigo-500"
+              />
+              <span
+                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${option.badge}`}
+              >
+                {option.label}
+              </span>
+            </label>
+          ))}
         </div>
-      </div>
+      </fieldset>
 
       <div>
-        <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
-          Feedback / Reason (Optional)
+        <label
+          htmlFor="feedback"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
+        >
+          Phản hồi / Lý do <span className="text-slate-400">(tùy chọn)</span>
         </label>
         <textarea
           id="feedback"
           rows={3}
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Provide instructions or notes on your review decision..."
-          className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          placeholder="Nhập ghi chú hoặc hướng dẫn cho quyết định của bạn..."
+          className="w-full rounded-md border border-slate-300 bg-white p-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         />
       </div>
 
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <span className="text-sm font-semibold text-gray-900">Edit Exercise (Optional)</span>
-            <p className="text-xs text-gray-500">Modify exercise title, description, or content structure before approval.</p>
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+              Chỉnh sửa bài tập <span className="text-slate-400">(tùy chọn)</span>
+            </span>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              Thay đổi tiêu đề, mô tả hoặc cấu trúc nội dung trước khi duyệt.
+            </p>
           </div>
           <button
             type="button"
             onClick={() => setIsEditing(!isEditing)}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+            className="shrink-0 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            {isEditing ? "Cancel Edits" : "Edit Details"}
+            {isEditing ? "Hủy chỉnh sửa" : "Chỉnh sửa nội dung"}
           </button>
         </div>
 
         {isEditing && (
-          <div className="space-y-4 bg-gray-50 p-4 rounded-md border">
+          <div className="space-y-4 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
             <div>
-              <label htmlFor="editedTitle" className="block text-xs font-medium text-gray-700 mb-1">
-                Title
+              <label
+                htmlFor="editedTitle"
+                className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300"
+              >
+                Tiêu đề
               </label>
               <input
                 id="editedTitle"
                 type="text"
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
               />
             </div>
 
             <div>
-              <label htmlFor="editedDescription" className="block text-xs font-medium text-gray-700 mb-1">
-                Description
+              <label
+                htmlFor="editedDescription"
+                className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300"
+              >
+                Mô tả
               </label>
               <textarea
                 id="editedDescription"
                 rows={2}
                 value={editedDescription}
                 onChange={(e) => setEditedDescription(e.target.value)}
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
               />
             </div>
 
             <div>
-              <label htmlFor="contentJson" className="block text-xs font-medium text-gray-700 mb-1">
-                Exercise Content JSON
+              <label
+                htmlFor="contentJson"
+                className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300"
+              >
+                Nội dung bài tập (JSON)
               </label>
               <textarea
                 id="contentJson"
                 rows={8}
                 value={contentJson}
                 onChange={(e) => setContentJson(e.target.value)}
-                className="w-full border rounded p-2 text-xs font-mono bg-white"
+                className="w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
               />
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex justify-end pt-2 border-t">
+      <div className="flex justify-end border-t border-slate-200 pt-4 dark:border-slate-800">
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white font-medium text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-500"
         >
-          {loading ? "Submitting..." : "Submit Review"}
+          {loading && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          )}
+          {loading ? "Đang gửi..." : "Gửi đánh giá"}
         </button>
       </div>
     </form>

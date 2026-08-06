@@ -114,9 +114,9 @@ describe("CourseDetailView", () => {
 
   it("renders chapter lists", () => {
     render(<CourseDetailView course={baseDetail} />);
-    expect(screen.getByText("Chương 1: Intro")).toBeInTheDocument();
+    expect(screen.getByText("Intro")).toBeInTheDocument();
     expect(screen.getByText("Hello")).toBeInTheDocument();
-    expect(screen.getByText("Chương 2: Data Types")).toBeInTheDocument();
+    expect(screen.getByText("Data Types")).toBeInTheDocument();
     expect(screen.getByText(/2 bài học/)).toBeInTheDocument();
     expect(screen.getByText(/3 bài học/)).toBeInTheDocument();
   });

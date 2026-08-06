@@ -9,6 +9,15 @@ interface ModerationDetailViewProps {
   id: number;
 }
 
+const statusBadge: Record<string, string> = {
+  pending: "border-slate-200 bg-slate-50 text-slate-700",
+  under_review: "border-amber-200 bg-amber-50 text-amber-800",
+  approved: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  needs_revision: "border-amber-200 bg-amber-50 text-amber-800",
+  rejected: "border-red-200 bg-red-50 text-red-800",
+  published: "border-indigo-200 bg-indigo-50 text-indigo-800",
+};
+
 export function ModerationDetailView({ id }: ModerationDetailViewProps) {
   const [item, setItem] = useState<ModerationQueueItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +71,9 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
       }
 
       const result = await res.json();
-      setPublishSuccess(`Exercise successfully published! Created exercise #${result.publishedExerciseId}`);
+      setPublishSuccess(
+        `Exercise successfully published! Created exercise #${result.publishedExerciseId}`
+      );
       fetchDetail(); // Refresh data
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -77,8 +88,17 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
 
   if (loading) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg border">
-        <p className="text-gray-500">Loading exercise details...</p>
+      <div className="space-y-6">
+        <div className="h-5 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="space-y-3">
+            <div className="h-7 w-2/3 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-4 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+            <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+            <div className="h-48 w-full animate-pulse rounded-md bg-slate-100 dark:bg-slate-800" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -86,21 +106,29 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
   if (error || !item) {
     return (
       <div className="space-y-4">
-        <Link href="/moderation" className="text-sm text-blue-600 hover:underline">
+        <Link
+          href="/moderation"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 transition hover:text-indigo-500 dark:text-indigo-400"
+        >
           &larr; Back to Moderation Queue
         </Link>
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
           <p className="font-semibold">Error</p>
-          <p className="text-sm">{error || "Item not found"}</p>
+          <p className="mt-0.5">{error || "Item not found"}</p>
         </div>
       </div>
     );
   }
 
+  const badgeClass = statusBadge[item.status] ?? statusBadge.pending;
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Link href="/moderation" className="text-sm text-blue-600 hover:underline font-medium">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/moderation"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 transition hover:text-indigo-500 dark:text-indigo-400"
+        >
           &larr; Back to Queue
         </Link>
 
@@ -108,60 +136,94 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
           <button
             onClick={handlePublish}
             disabled={publishing}
-            className="px-4 py-2 bg-green-600 text-white font-medium text-sm rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
+            {publishing && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            )}
             {publishing ? "Publishing..." : "Publish to Production"}
           </button>
         )}
       </div>
 
       {publishError && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 text-sm">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
           {publishError}
         </div>
       )}
 
       {publishSuccess && (
-        <div className="bg-green-50 text-green-700 p-4 rounded-lg border border-green-200 text-sm">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
           {publishSuccess}
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
-        <div className="flex justify-between items-start">
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>
-            <p className="text-sm text-gray-500 mt-1">ID: #{item.id} | Lesson ID: #{item.lessonId}</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {item.title}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              ID: #{item.id} | Lesson ID: #{item.lessonId}
+            </p>
           </div>
-          <span className="px-3 py-1 text-sm font-semibold rounded bg-blue-100 text-blue-800 capitalize">
+          <span
+            className={`rounded-full border px-3 py-1 text-sm font-semibold capitalize ${badgeClass}`}
+          >
             {item.status.replace("_", " ")}
           </span>
         </div>
 
-        <p className="text-gray-700 text-sm">{item.description}</p>
+        <p className="mt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+          {item.description}
+        </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-b py-3 text-xs text-gray-600">
+        <div className="mt-4 grid grid-cols-1 gap-4 border-y border-slate-200 py-4 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-400 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <span className="font-semibold block text-gray-900">Type</span>
-            {item.exerciseType}
+            <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Type
+            </span>
+            <span className="mt-1 block font-medium capitalize text-slate-900 dark:text-white">
+              {item.exerciseType.replace("_", " ")}
+            </span>
           </div>
           <div>
-            <span className="font-semibold block text-gray-900">Difficulty</span>
-            {item.difficulty}
+            <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Difficulty
+            </span>
+            <span className="mt-1 block font-medium capitalize text-slate-900 dark:text-white">
+              {item.difficulty}
+            </span>
           </div>
           <div>
-            <span className="font-semibold block text-gray-900">AI Provider</span>
-            {item.provider} ({item.model || "N/A"})
+            <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              AI Provider
+            </span>
+            <span className="mt-1 block font-medium capitalize text-slate-900 dark:text-white">
+              {item.provider} ({item.model || "N/A"})
+            </span>
           </div>
           <div>
-            <span className="font-semibold block text-gray-900">Created At</span>
-            {new Date(item.createdAt).toLocaleString()}
+            <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Created At
+            </span>
+            <span className="mt-1 block font-medium text-slate-900 dark:text-white">
+              {new Date(item.createdAt).toLocaleString()}
+            </span>
           </div>
         </div>
 
-        <div>
-          <h3 className="text-sm font-bold text-gray-900 mb-2">Exercise Payload (JSON)</h3>
-          <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-xs font-mono overflow-x-auto max-h-96">
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Exercise Payload (JSON)
+            </h3>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              {JSON.stringify(item.content).length.toLocaleString()} bytes
+            </span>
+          </div>
+          <pre className="max-h-96 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100 dark:bg-slate-950 dark:text-slate-200">
             {JSON.stringify(item.content, null, 2)}
           </pre>
         </div>

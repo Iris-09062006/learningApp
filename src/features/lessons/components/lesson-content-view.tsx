@@ -55,7 +55,7 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="rounded bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+            <span className="rounded-md bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
               Bài {lesson.order}
             </span>
             <span className="text-xs text-slate-500 capitalize dark:text-slate-400">
@@ -79,7 +79,7 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
             type="button"
             onClick={handleStartLesson}
             disabled={isStarting}
-            className="inline-flex items-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-700 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-none motion-reduce:transition-none"
           >
             {isStarting
               ? "Đang xử lý..."
@@ -88,7 +88,10 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
                 : "Bắt đầu bài học"}
           </button>
           {errorMessage && (
-            <p role="alert" className="max-w-md text-xs text-red-600">
+            <p
+              role="alert"
+              className="max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300"
+            >
               {errorMessage}
             </p>
           )}
@@ -129,7 +132,7 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
             {lesson.exercises.map((exercise) => (
               <div
                 key={exercise.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100/40 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/40 dark:hover:shadow-indigo-950/30"
               >
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white">

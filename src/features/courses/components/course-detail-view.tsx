@@ -83,8 +83,24 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course }) =>
               type="button"
               onClick={handleEnrollment}
               disabled={isEnrolling}
-              className="inline-flex items-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
+              {isEnrolled && !isEnrolling && (
+                <svg
+                  aria-hidden="true"
+                  className="size-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 4v16" />
+                  <path d="M6 4h9a3 3 0 0 1 0 6H6" />
+                  <path d="M6 10h10a3 3 0 0 1 0 6H6" />
+                </svg>
+              )}
               {isEnrolling
                 ? "Đang đăng ký..."
                 : isEnrolled
@@ -115,19 +131,27 @@ export const CourseDetailView: React.FC<CourseDetailViewProps> = ({ course }) =>
             {course.chapters.map((ch) => (
               <div
                 key={ch.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
               >
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                    Chương {ch.chapterOrder}: {ch.title}
-                  </h3>
-                  {ch.description && (
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {ch.description}
-                    </p>
-                  )}
+                <div className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-sm font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400"
+                  >
+                    {ch.chapterOrder}
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                      {ch.title}
+                    </h3>
+                    {ch.description && (
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {ch.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <span className="text-xs text-slate-400">
+                <span className="shrink-0 text-xs text-slate-400">
                   {ch.lessonCount} bài học
                 </span>
               </div>

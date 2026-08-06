@@ -23,14 +23,14 @@ export default function HomePage() {
     <main className="min-h-screen overflow-hidden bg-slate-950 text-white">
       <header className="relative z-20 border-b border-white/10">
         <nav aria-label="Điều hướng trang chủ" className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-3 font-bold tracking-tight">
+          <Link href="/" className="flex items-center gap-3 font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-400">
             <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-500 font-mono text-sm">Py</span>
             Python Learning
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/courses" className="hidden min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-300 hover:text-white sm:flex">Khóa học</Link>
-            <Link href="/login" className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-200 hover:bg-white/10">Đăng nhập</Link>
-            <Link href="/register" className="flex min-h-10 items-center rounded-lg bg-indigo-500 px-4 text-sm font-semibold text-white hover:bg-indigo-400">Bắt đầu học</Link>
+            <Link href="/courses" className="hidden min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-300 transition-colors duration-200 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 sm:flex">Khóa học</Link>
+            <Link href="/login" className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-200 transition-colors duration-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">Đăng nhập</Link>
+            <Link href="/register" className="flex min-h-10 items-center rounded-lg bg-indigo-500 px-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300">Bắt đầu học</Link>
           </div>
         </nav>
       </header>
@@ -46,8 +46,8 @@ export default function HomePage() {
             Một hành trình học có cấu trúc: chọn khóa học, đi theo roadmap, sửa lỗi trong code và hiểu sâu hơn với AI Mentor khi bạn cần.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/register" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-500 px-6 font-bold shadow-lg shadow-indigo-950 hover:bg-indigo-400">Tạo tài khoản miễn phí</Link>
-            <Link href="/courses" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 font-bold hover:bg-white/10">Khám phá khóa học</Link>
+            <Link href="/register" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-500 px-6 font-bold shadow-lg shadow-indigo-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 motion-reduce:transform-none motion-reduce:transition-none">Tạo tài khoản miễn phí</Link>
+            <Link href="/courses" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 font-bold transition-colors duration-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">Khám phá khóa học</Link>
           </div>
         </div>
 
@@ -76,8 +76,8 @@ export default function HomePage() {
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {PRODUCT_PILLARS.map((pillar) => (
-              <article key={pillar.step} className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-                <span className="font-mono text-sm font-bold text-indigo-300">{pillar.step}</span>
+              <article key={pillar.step} className="group rounded-2xl border border-white/10 bg-slate-900 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-lg hover:shadow-indigo-950/50 motion-reduce:transform-none motion-reduce:transition-none">
+                <span className="font-mono text-sm font-bold text-indigo-300 transition-colors duration-300 group-hover:text-indigo-200">{pillar.step}</span>
                 <h3 className="mt-5 text-xl font-bold">{pillar.title}</h3>
                 <p className="mt-3 leading-7 text-slate-400">{pillar.description}</p>
               </article>

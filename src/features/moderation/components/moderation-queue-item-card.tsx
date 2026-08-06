@@ -6,86 +6,149 @@ function formatRelativeTime(dateString: string): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return "just now";
-  
+  if (diffInSeconds < 60) return "vừa xong";
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes === 1 ? "" : "s"} ago`;
-  
+  if (diffInMinutes < 60)
+    return `${diffInMinutes} phút trước`;
+
   const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours} hour${diffInHours === 1 ? "" : "s"} ago`;
-  
+  if (diffInHours < 24)
+    return `${diffInHours} giờ trước`;
+
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 30) return `${diffInDays} day${diffInDays === 1 ? "" : "s"} ago`;
-  
-  return date.toLocaleDateString();
+  if (diffInDays < 30) return `${diffInDays} ngày trước`;
+
+  return date.toLocaleDateString("vi-VN");
 }
 
 interface ModerationQueueItemCardProps {
   item: ModerationQueueItem;
 }
 
-export function ModerationQueueItemCard({ item }: ModerationQueueItemCardProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <span className="px-2 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">Pending</span>;
-      case "approved":
-        return <span className="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">Approved</span>;
-      case "rejected":
-        return <span className="px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-800">Rejected</span>;
-      case "needs_revision":
-        return <span className="px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">Needs Revision</span>;
-      case "published":
-        return <span className="px-2 py-1 text-xs font-semibold rounded bg-purple-100 text-purple-800">Published</span>;
-      default:
-        return <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-800">{status}</span>;
-    }
-  };
+const statusConfig: Record<
+  string,
+  { label: string; dot: string; badge: string }
+> = {
+  pending: {
+    label: "Chờ duyệt",
+    dot: "bg-amber-500",
+    badge:
+      "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-950 dark:text-amber-400 dark:ring-amber-400/20",
+  },
+  approved: {
+    label: "Đã duyệt",
+    dot: "bg-emerald-500",
+    badge:
+      "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-400/20",
+  },
+  rejected: {
+    label: "Từ chối",
+    dot: "bg-red-500",
+    badge:
+      "bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-950 dark:text-red-400 dark:ring-red-400/20",
+  },
+  needs_revision: {
+    label: "Cần chỉnh sửa",
+    dot: "bg-sky-500",
+    badge:
+      "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-950 dark:text-sky-400 dark:ring-sky-400/20",
+  },
+  published: {
+    label: "Đã xuất bản",
+    dot: "bg-violet-500",
+    badge:
+      "bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-950 dark:text-violet-400 dark:ring-violet-400/20",
+  },
+};
+
+const defaultStatusConfig = {
+  label: "Khác",
+  dot: "bg-slate-400",
+  badge:
+    "bg-slate-100 text-slate-700 ring-slate-600/20 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-400/20",
+};
+
+export function ModerationQueueItemCard({
+  item,
+}: ModerationQueueItemCardProps) {
+  const status = statusConfig[item.status] ?? defaultStatusConfig;
 
   const difficultyColors: Record<string, string> = {
-    beginner: "bg-green-100 text-green-800",
-    intermediate: "bg-yellow-100 text-yellow-800",
-    advanced: "bg-red-100 text-red-800",
+    beginner:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
+    intermediate:
+      "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+    advanced: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
   };
 
-  const difficultyClass = difficultyColors[item.difficulty as string] || "bg-gray-100 text-gray-800";
+  const difficultyClass =
+    difficultyColors[item.difficulty as string] ??
+    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+
+  const difficultyLabel: Record<string, string> = {
+    beginner: "Cơ bản",
+    intermediate: "Trung cấp",
+    advanced: "Nâng cao",
+  };
 
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-bold text-gray-900 truncate" title={item.title}>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-2 flex items-start justify-between gap-4">
+        <h3
+          className="truncate text-lg font-bold text-slate-900 dark:text-white"
+          title={item.title}
+        >
           {item.title}
         </h3>
-        <div className="flex space-x-2 shrink-0">
-          {getStatusBadge(item.status)}
-        </div>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${status.badge}`}
+        >
+          <span className={`size-1.5 rounded-full ${status.dot}`} />
+          {status.label}
+        </span>
       </div>
-      
-      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-        {item.description || "No description provided."}
+
+      <p className="mb-4 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
+        {item.description || "Chưa có mô tả."}
       </p>
-      
-      <div className="flex flex-wrap gap-2 mb-4">
-        <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
           {item.exerciseType}
         </span>
-        <span className={`px-2 py-1 text-xs rounded ${difficultyClass}`}>
-          {item.difficulty}
+        <span
+          className={`rounded-md px-2.5 py-1 text-xs font-medium ${difficultyClass}`}
+        >
+          {difficultyLabel[item.difficulty as string] ?? item.difficulty}
         </span>
         {item.lessonTitle && (
-          <span className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700 max-w-[200px] truncate" title={item.lessonTitle}>
-            Lesson: {item.lessonTitle}
+          <span className="max-w-[200px] truncate rounded-md bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-400">
+            {item.lessonTitle}
           </span>
         )}
       </div>
-      
-      <div className="flex justify-between items-center text-xs text-gray-500 mt-4 border-t pt-3">
-        <span>Generated {formatRelativeTime(item.createdAt)}</span>
-        <Link 
+
+      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <span>Tạo {formatRelativeTime(item.createdAt)}</span>
+        <Link
           href={`/moderation/${item.id}`}
-          className="text-blue-600 hover:text-blue-800 font-medium"
+          className="inline-flex items-center gap-1 font-medium text-indigo-600 transition hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
-          Review Exercise &rarr;
+          Xem & duyệt
+          <svg
+            className="h-3.5 w-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
         </Link>
       </div>
     </div>

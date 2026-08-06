@@ -33,3 +33,11 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local tooling artifacts (not part of the app)
+.agents/
+.ua/
