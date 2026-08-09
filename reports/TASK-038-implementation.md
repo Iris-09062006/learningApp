@@ -48,3 +48,7 @@ Provide release-grade evidence for authentication, authorization, RLS, server-on
 | Supabase local reset + SQL assertions | PASS — migrations `001–017`, RLS isolation and atomic limiter verified |
 | Supabase DB lint/advisors | PASS — no issues |
 | `npm run build` | PASS — production build completed successfully |
+
+## Implementation Commit
+
+`08df655` — `feat(security): complete TASK-037 and TASK-038`

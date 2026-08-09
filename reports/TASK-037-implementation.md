@@ -47,3 +47,7 @@ Allow an administrator to trigger a password recovery email for a target user wi
 ## Review Verdict
 
 PASS — no Critical/High/Medium findings remain. Review fixed missing cooldown, duplicate admin checks, the 1,000-user lookup ceiling, missing redirect origin, and an incorrect health-test assertion before retest.
+
+## Implementation Commit
+
+`08df655` — `feat(security): complete TASK-037 and TASK-038`
