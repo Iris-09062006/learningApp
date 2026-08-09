@@ -181,7 +181,9 @@ export const ExerciseView: React.FC<ExerciseViewProps> = ({ exercise }) => {
                 {result.isCorrect ? "Chính xác!" : "Chưa chính xác"}
               </p>
               <p className="mt-1 whitespace-pre-wrap">{result.feedback}</p>
-              <AiExplanationView submissionId={result.submissionId} />
+              {!result.isCorrect ? (
+                <AiExplanationView submissionId={result.submissionId} />
+              ) : null}
             </div>
           )}
         </div>

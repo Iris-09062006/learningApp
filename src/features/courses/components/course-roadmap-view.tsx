@@ -65,9 +65,11 @@ export const CourseRoadmapView: React.FC<CourseRoadmapViewProps> = ({
                     return (
                       <div
                         key={lesson.id}
+                        data-testid={`lesson-${lesson.id}-status`}
+                        data-status={lesson.status}
                         className={`flex items-center justify-between gap-4 p-6 transition-colors ${
                           isLocked
-                            ? "bg-slate-50 opacity-60 dark:bg-slate-900/40"
+                            ? "bg-slate-50 dark:bg-slate-900/40"
                             : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
                         }`}
                       >
@@ -152,7 +154,7 @@ export const CourseRoadmapView: React.FC<CourseRoadmapViewProps> = ({
                                   Bài {lesson.order}: {lesson.title}
                                 </h3>
                                 {isCompleted && (
-                                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:bg-green-950 dark:text-green-400">
+                                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-800 dark:bg-green-950 dark:text-green-300">
                                     Hoàn thành
                                   </span>
                                 )}
@@ -174,7 +176,7 @@ export const CourseRoadmapView: React.FC<CourseRoadmapViewProps> = ({
 
                         {!isLocked && (
                           <Link
-                            href={`/courses/${roadmap.course.id}/lessons/${lesson.id}`}
+                            href={`/lessons/${lesson.id}`}
                             className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
                           >
                             {isCompleted ? "Xem lại" : "Học tiếp"}

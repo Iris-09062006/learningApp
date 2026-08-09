@@ -53,6 +53,11 @@ describe("LessonContentView", () => {
     expect(screen.getByText("This is a detailed markdown content for variables.")).toBeInTheDocument();
     expect(screen.getByText(/Variable Declaration Exercise/)).toBeInTheDocument();
     expect(screen.getByText(/Multiple Choice Quiz/)).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Làm bài" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Làm bài" })[0]).toHaveAttribute(
+      "href",
+      "/exercises/101",
+    );
   });
 
   it("starts the lesson after the user clicks the start button", async () => {

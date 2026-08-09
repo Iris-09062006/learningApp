@@ -83,7 +83,7 @@ export function AppNavigation({ user }: AppNavigationProps) {
                   active ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                 }`}
               >
-                <span aria-hidden="true" className="font-mono text-xs text-slate-400">{item.marker}</span>
+                <span aria-hidden="true" className="font-mono text-xs text-slate-600">{item.marker}</span>
                 {item.label}
               </Link>
             );

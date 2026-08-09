@@ -10,16 +10,16 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "Continue" });
 
     expect(button.getAttribute("type")).toBe("button");
-    expect(button.className).toContain("bg-indigo-500");
+    expect(button.className).toContain("bg-indigo-600");
     expect(button.className).toContain("h-10");
   });
 
   it.each<[ButtonVariant, string]>([
-    ["primary", "bg-indigo-500"],
+    ["primary", "bg-indigo-600"],
     ["secondary", "bg-slate-100"],
     ["outline", "border-slate-200"],
     ["ghost", "bg-transparent"],
-    ["danger", "bg-red-500"],
+    ["danger", "bg-red-600"],
   ])("applies the %s variant", (variant, expectedClass) => {
     render(<Button variant={variant}>{variant}</Button>);
 

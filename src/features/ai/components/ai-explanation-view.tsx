@@ -68,14 +68,18 @@ export const AiExplanationView: React.FC<AiExplanationViewProps> = ({
       )}
 
       {isLoading && (
-        <div className="flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent dark:border-indigo-400" />
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-center gap-2 text-xs text-indigo-700 dark:text-indigo-300"
+        >
+          <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent motion-reduce:animate-none dark:border-indigo-400" />
           <span>AI Mentor đang suy nghĩ...</span>
         </div>
       )}
 
       {error && (
-        <div className="mt-2 max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
+        <div role="alert" className="mt-2 max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
           <p>{error}</p>
           <button
             type="button"
@@ -88,15 +92,18 @@ export const AiExplanationView: React.FC<AiExplanationViewProps> = ({
       )}
 
       {explanation && (
-        <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/50 p-5 text-xs text-slate-700 shadow-sm transition-all duration-200 hover:shadow-indigo-100/40 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-slate-200">
+        <div role="status" aria-live="polite" className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/50 p-5 text-xs text-slate-700 shadow-sm transition-all duration-200 hover:shadow-indigo-100/40 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-slate-200">
           <div className="mb-2 flex items-center justify-between font-semibold text-indigo-900 dark:text-indigo-300">
             <span>💡 Giải thích từ AI Mentor</span>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-600 dark:text-slate-300">
               Provider: {explanation.provider}
             </span>
           </div>
           <p className="whitespace-pre-wrap leading-relaxed">
             {explanation.response}
+          </p>
+          <p className="mt-3 border-t border-indigo-100 pt-3 text-[11px] font-medium text-slate-600 dark:border-indigo-900 dark:text-slate-300">
+            Nội dung do AI tạo — có thể chứa sai sót.
           </p>
         </div>
       )}

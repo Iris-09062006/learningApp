@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           aria-label="Về trang chủ Python Learning"
           className="inline-flex items-center gap-3 rounded-xl text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-4"
         >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-500 font-mono text-sm font-bold text-white shadow-lg shadow-indigo-500/20">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-600 font-mono text-sm font-bold text-white shadow-lg shadow-indigo-600/20">
             Py
           </span>
           <span className="text-lg font-bold tracking-tight">Python Learning</span>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -130,7 +131,7 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
         ) : (
           <div className="space-y-3">
             {lesson.exercises.map((exercise) => (
-              <div
+              <article
                 key={exercise.id}
                 className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100/40 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/40 dark:hover:shadow-indigo-950/30"
               >
@@ -142,7 +143,13 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
                     {exercise.type} &bull; {exercise.difficulty}
                   </p>
                 </div>
-              </div>
+                <Link
+                  href={`/exercises/${exercise.id}`}
+                  className="ml-4 inline-flex shrink-0 items-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950"
+                >
+                  Làm bài
+                </Link>
+              </article>
             ))}
           </div>
         )}

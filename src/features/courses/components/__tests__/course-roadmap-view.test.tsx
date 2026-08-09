@@ -147,9 +147,9 @@ describe("CourseRoadmapView", () => {
   it("renders link with correct lesson URL", () => {
     render(<CourseRoadmapView roadmap={baseRoadmap} />);
     const links = screen.getAllByTestId("lesson-link");
-    expect(links[0]).toHaveAttribute("data-href", "/courses/1/lessons/100");
-    expect(links[1]).toHaveAttribute("data-href", "/courses/1/lessons/101");
-    expect(links[2]).toHaveAttribute("data-href", "/courses/1/lessons/200");
+    expect(links[0]).toHaveAttribute("data-href", "/lessons/100");
+    expect(links[1]).toHaveAttribute("data-href", "/lessons/101");
+    expect(links[2]).toHaveAttribute("data-href", "/lessons/200");
   });
 
   it("renders empty state message when no chapters", () => {
