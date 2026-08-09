@@ -19,3 +19,7 @@ Performance and release-readiness work is implemented, reviewed and `VERIFIED`.
 - No external database migration was applied.
 - No push or deployment was performed.
 - Existing unrelated TASK-037/TASK-038 and user working-tree changes were not modified or staged by TASK-040.
+
+## Commit
+
+- Implementation and verification commit: `2849d36` (`perf: complete TASK-040 release readiness`).
