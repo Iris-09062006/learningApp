@@ -1,19 +1,27 @@
 # Active Task Queue
 
-- **Active task:** Không có
-- **Last verified task:** `TASK-039` — Critical-flow E2E and Accessibility
-- **Next task:** `TASK-040` — Performance and Release Readiness (PLANNED)
-- **Next status:** Không có
+- **Active task:** `TASK-043` — Document-to-Lesson Content Pipeline
+- **Status:** `VERIFIED`
 - **Owner:** Codex
+- **Deferred task:** `TASK-040` — Performance and Release Readiness (`PLANNED`, paused by product priority)
 
-## Planning baseline
+## Current objective
 
-- Phase 0–6 và `TASK-034`–`TASK-039` đã hoàn tất, verified.
-- Các feature đã có dù roadmap cũ chưa chỉ rõ: submission history, AI explanation history, rule-based learning recommendation, profile update, admin user management, audit writes và system health.
-- Feature gap còn lại được tách thành `TASK-034`–`TASK-037`.
-- Phase 7 được tách thành `TASK-038`–`TASK-041`.
-- Không có push hoặc deployment nào được phép trong vòng lập kế hoạch này.
+Build the document-to-lesson epic: private source upload, deterministic extraction,
+9Router-backed structured lesson drafts with citations, Admin review/editing, and
+transactional publication before a course becomes visible in the catalog.
 
-## Start condition
+## Delivery order
 
-`TASK-039` đã `VERIFIED` sau khi toàn bộ quality gates và review PASS. `TASK-040` đủ điều kiện để bắt đầu.
+1. Align PRD and technical contracts.
+2. Add Storage, source-document, draft, citation, review and publish schema.
+3. Reconcile and deploy migrations to Supabase Cloud through Supabase MCP.
+4. Build upload/extraction and structured generation pipeline.
+5. Build Admin review/edit experience.
+6. Publish approved content transactionally and verify catalog isolation.
+
+## Current state
+
+Supabase MCP connectivity recovered. Migrations `010` through `015` and the Cloud
+hardening migration are applied, Cloud types are regenerated, advisor findings are
+resolved or documented, and every required quality gate passes.

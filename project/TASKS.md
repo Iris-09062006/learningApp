@@ -11,7 +11,7 @@
 
 ## Active Task
 
-Task đang triển khai: Không có. `TASK-039` đã được verified; task kế tiếp đủ điều kiện bắt đầu là `TASK-040`.
+Task vừa hoàn tất: `TASK-043` — Document-to-Lesson Content Pipeline (`VERIFIED`; migrations và hardening đã lên Supabase Cloud qua MCP). `TASK-040` vẫn `PLANNED` và có thể tiếp tục theo ưu tiên sản phẩm.
 
 ## Verified and Completed Tasks
 
@@ -50,6 +50,12 @@ Task đang triển khai: Không có. `TASK-039` đã được verified; task k�
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+
+## Active Epic
+
+| Task ID | Title | Status | Phase | Dependency |
+|---|---|---|---|---|
+| `TASK-043` | Document-to-Lesson Content Pipeline | VERIFIED | Content Operations Epic | Review PASS; Cloud migrations and all required gates complete |
 
 ## Draft / Deferred Queue
 

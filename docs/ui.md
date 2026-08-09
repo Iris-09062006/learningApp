@@ -215,3 +215,15 @@ Key Elements:
 7. `Exercise Page` (`/exercises/:id`): Giao diện làm bài tập Predict Output / Fix Bug.
 8. `Moderator Queue` (`/moderator/queue`): Hàng đợi duyệt bài tập AI.
 9. `Admin User Management` (`/admin/users`): Quản lý người dùng & phân quyền.
+# Admin Document-to-Lesson screen
+
+Route `/admin/content` dành riêng cho Admin, gồm ba vùng responsive:
+
+1. Form upload + chọn course/chapter/lesson đích.
+2. Queue draft với revision và trạng thái bằng text, không phụ thuộc màu.
+3. Editor section/citation với hành động save, needs revision, reject, approve và
+   transactional publish.
+
+Mọi input có label, status pipeline dùng `aria-live`, lỗi dùng `role="alert"`, button có
+loading/disabled state và focus ring. Citation hiển thị cạnh section tương ứng. Nút
+publish chỉ bật khi draft ở trạng thái `approved`; UI vẫn không thay thế server/RLS.

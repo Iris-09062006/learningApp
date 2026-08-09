@@ -1666,3 +1666,23 @@ POST /api/moderation/generated-exercises/:id/publish
 ```
 
 Giới hạn cụ thể từng endpoint được ghi tại `docs/security.md` — Mục 9.
+# Admin Document-to-Lesson API
+
+Mọi route dưới đây yêu cầu active Admin, trả envelope chuẩn và
+`Cache-Control: no-store`.
+
+| Method | Route | Request | Success |
+|---|---|---|---|
+| `GET` | `/api/admin/content-targets` | — | `{ items: ContentTarget[] }` |
+| `POST` | `/api/admin/content-sources` | multipart `file` | `201 SourceDocument` |
+| `POST` | `/api/admin/content-sources/:id/extract` | — | extraction summary |
+| `POST` | `/api/admin/content-sources/:id/generate` | `{ targetLessonId }` | `201 { lessonDraftId, status }` |
+| `GET` | `/api/admin/lesson-drafts?status=` | optional status | `{ items: LessonDraft[] }` |
+| `GET` | `/api/admin/lesson-drafts/:id` | — | draft + current-revision citations |
+| `PATCH` | `/api/admin/lesson-drafts/:id` | structured draft | new revision/status |
+| `POST` | `/api/admin/lesson-drafts/:id/reviews` | `{ decision, comment? }` | review status |
+| `POST` | `/api/admin/lesson-drafts/:id/publish` | — | publication + course visibility |
+
+Upload giới hạn 10 MiB và MIME theo `docs/document-to-lesson.md`. `409 INVALID_STATE`
+được dùng khi gọi sai thứ tự pipeline; invalid input trả `400`; authentication/
+authorization trả `401`/`403`.

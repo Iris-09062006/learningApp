@@ -1,0 +1,30 @@
+import { NextResponse } from "next/server";
+
+import { ContentPipelineError } from "@/features/content-pipeline/services/content-pipeline-service";
+
+export function contentPipelineErrorResponse(error: unknown) {
+  if (error instanceof ContentPipelineError) {
+    const status = error.code === "UNAUTHENTICATED" ? 401
+      : error.code === "FORBIDDEN" ? 403
+        : error.code === "NOT_FOUND" ? 404
+          : error.code === "INVALID_STATE" ? 409
+            : error.code === "VALIDATION_ERROR" ? 400
+              : 500;
+    return NextResponse.json(
+      { success: false, error: { code: error.code, message: error.message } },
+      { status, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+  return NextResponse.json(
+    { success: false, error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred." } },
+    { status: 500, headers: { "Cache-Control": "no-store" } }
+  );
+}
+
+export async function readPipelineJson(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Request body must be valid JSON.");
+  }
+}

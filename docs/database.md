@@ -1118,3 +1118,20 @@ Database task chỉ hoàn thành khi:
 | RAG | Không thuộc MVP |
 
 Thiết kế này đủ để Codex triển khai từng task mà không tự suy đoán schema. Gemini/Antigravity review migration, RLS và test thông qua workflow thủ công do người dùng làm cầu nối.
+# Document-to-Lesson schema extension
+
+Migration `015_document_to_lesson.sql` bổ sung:
+
+- Private Storage bucket `lesson-sources` (10 MiB, MIME allowlist, active Admin only).
+- `source_documents`: metadata, extraction/generation state và object provenance.
+- `document_chunks`: đoạn nguồn ổn định, offsets và SHA-256.
+- `lesson_drafts`: structured content, target course/chapter/lesson, revision và state.
+- `lesson_draft_citations`: mapping section/revision sang đúng source chunk.
+- `lesson_draft_reviews`: immutable Admin decisions theo revision.
+- `lesson_draft_publications`: idempotency/audit record cho publish.
+
+Tất cả bảng public bật RLS và chỉ active Admin được truy cập. Các RPC ghi nhiều bảng là
+`SECURITY DEFINER` với `search_path = ''`, tự kiểm tra `auth.uid()` + active Admin,
+revoke `PUBLIC`/`anon` và chỉ grant `authenticated`. `publish_lesson_draft` khóa các row
+liên quan, yêu cầu approved revision hiện tại và citation đầy đủ trước khi cập nhật
+lesson/chapter/course trong cùng transaction.

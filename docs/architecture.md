@@ -1172,3 +1172,21 @@ Kiến trúc ưu tiên khả năng hoàn thành, kiểm thử và vận hành s�
 Service và repository nằm trong feature sở hữu nghiệp vụ. Supabase đảm nhiệm Authentication và PostgreSQL. Vercel chạy ứng dụng Next.js. Mọi thao tác nhạy cảm, chấm bài, cập nhật tiến độ, quản trị và lời gọi AI được thực hiện phía server.
 
 Cấu trúc này đủ rõ để Antigravity và Codex làm việc trên cùng workspace mà không tự suy đoán ranh giới module, đồng thời vẫn cho phép mở rộng thêm khóa học, exercise type hoặc AI provider trong tương lai.
+# Document-to-Lesson extension
+
+Chi tiết normative nằm tại `docs/document-to-lesson.md`. Extension giữ nguyên modular
+monolith và thêm module `src/features/content-pipeline` theo chuỗi:
+
+```text
+Admin UI → Admin Route Handlers → Content Pipeline Service
+  → Private Supabase Storage / extraction adapters
+  → 9Router provider adapter → strict response validator
+  → Content Pipeline Repository → RLS tables / transactional RPC
+```
+
+Extraction và provider chỉ chạy trong Node.js server runtime. Source text là dữ liệu
+không tin cậy; provider không được gọi từ browser. Các RPC `replace_document_chunks`,
+`create_lesson_draft`, `review_lesson_draft`, `revise_lesson_draft` và
+`publish_lesson_draft` là transaction boundary. Course catalog tiếp tục chỉ đọc course
+có `is_published = true`; chỉ RPC publish mới được chuyển visibility sau khi kiểm tra
+toàn bộ chapter/lesson.

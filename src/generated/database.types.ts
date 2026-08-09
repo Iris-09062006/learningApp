@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -28,7 +28,7 @@ export type Database = {
           action: string
           actor_id: string
           created_at?: string
-          id?: number
+          id?: never
           metadata?: Json
           target_id: string
           target_type: string
@@ -37,7 +37,7 @@ export type Database = {
           action?: string
           actor_id?: string
           created_at?: string
-          id?: number
+          id?: never
           metadata?: Json
           target_id?: string
           target_type?: string
@@ -215,6 +215,47 @@ export type Database = {
         }
         Relationships: []
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          content_hash: string
+          created_at: string
+          end_offset: number
+          id: number
+          source_document_id: number
+          start_offset: number
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          content_hash: string
+          created_at?: string
+          end_offset: number
+          id?: never
+          source_document_id: number
+          start_offset: number
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          content_hash?: string
+          created_at?: string
+          end_offset?: number
+          id?: never
+          source_document_id?: number
+          start_offset?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "source_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_options: {
         Row: {
           content: string
@@ -246,6 +287,51 @@ export type Database = {
             columns: ["exercise_id"]
             isOneToOne: false
             referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_reviews: {
+        Row: {
+          comment: string | null
+          edited_snapshot: Json | null
+          generated_exercise_id: number
+          id: number
+          reviewed_at: string
+          reviewer_id: string
+          status: Database["public"]["Enums"]["review_status"]
+        }
+        Insert: {
+          comment?: string | null
+          edited_snapshot?: Json | null
+          generated_exercise_id: number
+          id?: never
+          reviewed_at?: string
+          reviewer_id: string
+          status: Database["public"]["Enums"]["review_status"]
+        }
+        Update: {
+          comment?: string | null
+          edited_snapshot?: Json | null
+          generated_exercise_id?: number
+          id?: never
+          reviewed_at?: string
+          reviewer_id?: string
+          status?: Database["public"]["Enums"]["review_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_reviews_generated_exercise_id_fkey"
+            columns: ["generated_exercise_id"]
+            isOneToOne: false
+            referencedRelation: "generated_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -338,51 +424,6 @@ export type Database = {
           },
         ]
       }
-      exercise_reviews: {
-        Row: {
-          comment: string | null
-          edited_snapshot: Json | null
-          generated_exercise_id: number
-          id: number
-          reviewed_at: string
-          reviewer_id: string
-          status: Database["public"]["Enums"]["review_status"]
-        }
-        Insert: {
-          comment?: string | null
-          edited_snapshot?: Json | null
-          generated_exercise_id: number
-          id?: number
-          reviewed_at?: string
-          reviewer_id: string
-          status: Database["public"]["Enums"]["review_status"]
-        }
-        Update: {
-          comment?: string | null
-          edited_snapshot?: Json | null
-          generated_exercise_id?: number
-          id?: number
-          reviewed_at?: string
-          reviewer_id?: string
-          status?: Database["public"]["Enums"]["review_status"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "exercise_reviews_generated_exercise_id_fkey"
-            columns: ["generated_exercise_id"]
-            isOneToOne: false
-            referencedRelation: "generated_exercises"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "exercise_reviews_reviewer_id_fkey"
-            columns: ["reviewer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       generated_exercises: {
         Row: {
           content: Json
@@ -407,7 +448,7 @@ export type Database = {
           description?: string | null
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           exercise_type: Database["public"]["Enums"]["exercise_type"]
-          id?: number
+          id?: never
           lesson_id: number
           model?: string | null
           provider: string
@@ -424,7 +465,7 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           exercise_type?: Database["public"]["Enums"]["exercise_type"]
-          id?: number
+          id?: never
           lesson_id?: number
           model?: string | null
           provider?: string
@@ -455,6 +496,264 @@ export type Database = {
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_draft_citations: {
+        Row: {
+          created_at: string
+          document_chunk_id: number
+          id: number
+          lesson_draft_id: number
+          quote: string
+          revision: number
+          section_index: number
+        }
+        Insert: {
+          created_at?: string
+          document_chunk_id: number
+          id?: never
+          lesson_draft_id: number
+          quote: string
+          revision: number
+          section_index: number
+        }
+        Update: {
+          created_at?: string
+          document_chunk_id?: number
+          id?: never
+          lesson_draft_id?: number
+          quote?: string
+          revision?: number
+          section_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_draft_citations_document_chunk_id_fkey"
+            columns: ["document_chunk_id"]
+            isOneToOne: false
+            referencedRelation: "document_chunks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_draft_citations_lesson_draft_id_fkey"
+            columns: ["lesson_draft_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_draft_publications: {
+        Row: {
+          course_id: number
+          id: number
+          lesson_draft_id: number
+          lesson_id: number
+          published_at: string
+          published_by: string
+          published_revision: number
+          source_document_id: number
+        }
+        Insert: {
+          course_id: number
+          id?: never
+          lesson_draft_id: number
+          lesson_id: number
+          published_at?: string
+          published_by: string
+          published_revision: number
+          source_document_id: number
+        }
+        Update: {
+          course_id?: number
+          id?: never
+          lesson_draft_id?: number
+          lesson_id?: number
+          published_at?: string
+          published_by?: string
+          published_revision?: number
+          source_document_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_draft_publications_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_draft_publications_lesson_draft_id_fkey"
+            columns: ["lesson_draft_id"]
+            isOneToOne: true
+            referencedRelation: "lesson_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_draft_publications_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_draft_publications_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_draft_publications_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "source_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_draft_reviews: {
+        Row: {
+          comment: string | null
+          decision: Database["public"]["Enums"]["lesson_draft_review_decision"]
+          id: number
+          lesson_draft_id: number
+          reviewed_at: string
+          reviewer_id: string
+          revision: number
+        }
+        Insert: {
+          comment?: string | null
+          decision: Database["public"]["Enums"]["lesson_draft_review_decision"]
+          id?: never
+          lesson_draft_id: number
+          reviewed_at?: string
+          reviewer_id: string
+          revision: number
+        }
+        Update: {
+          comment?: string | null
+          decision?: Database["public"]["Enums"]["lesson_draft_review_decision"]
+          id?: never
+          lesson_draft_id?: number
+          reviewed_at?: string
+          reviewer_id?: string
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_draft_reviews_lesson_draft_id_fkey"
+            columns: ["lesson_draft_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_draft_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_drafts: {
+        Row: {
+          approved_revision: number | null
+          chapter_id: number
+          course_id: number
+          created_at: string
+          estimated_minutes: number
+          id: number
+          model: string | null
+          provider: string
+          published_at: string | null
+          requested_by: string
+          revision: number
+          sections: Json
+          source_document_id: number
+          status: Database["public"]["Enums"]["lesson_draft_status"]
+          summary: string
+          target_lesson_id: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_revision?: number | null
+          chapter_id: number
+          course_id: number
+          created_at?: string
+          estimated_minutes: number
+          id?: never
+          model?: string | null
+          provider: string
+          published_at?: string | null
+          requested_by: string
+          revision?: number
+          sections: Json
+          source_document_id: number
+          status?: Database["public"]["Enums"]["lesson_draft_status"]
+          summary: string
+          target_lesson_id: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_revision?: number | null
+          chapter_id?: number
+          course_id?: number
+          created_at?: string
+          estimated_minutes?: number
+          id?: never
+          model?: string | null
+          provider?: string
+          published_at?: string | null
+          requested_by?: string
+          revision?: number
+          sections?: Json
+          source_document_id?: number
+          status?: Database["public"]["Enums"]["lesson_draft_status"]
+          summary?: string
+          target_lesson_id?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_drafts_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_drafts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_drafts_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_drafts_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "source_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_drafts_target_lesson_id_fkey"
+            columns: ["target_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
         ]
@@ -529,6 +828,62 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      source_documents: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          extracted_char_count: number | null
+          id: number
+          mime_type: string
+          original_filename: string
+          sha256: string | null
+          size_bytes: number
+          status: Database["public"]["Enums"]["source_document_status"]
+          storage_bucket: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          extracted_char_count?: number | null
+          id?: never
+          mime_type: string
+          original_filename: string
+          sha256?: string | null
+          size_bytes: number
+          status?: Database["public"]["Enums"]["source_document_status"]
+          storage_bucket?: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          extracted_char_count?: number | null
+          id?: never
+          mime_type?: string
+          original_filename?: string
+          sha256?: string | null
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["source_document_status"]
+          storage_bucket?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submissions: {
         Row: {
@@ -645,6 +1000,22 @@ export type Database = {
         Args: { p_is_active: boolean; p_user_id: string }
         Returns: Json
       }
+      create_lesson_draft: {
+        Args: {
+          p_chapter_id: number
+          p_citations: Json
+          p_course_id: number
+          p_estimated_minutes: number
+          p_model: string
+          p_provider: string
+          p_sections: Json
+          p_source_document_id: number
+          p_summary: string
+          p_target_lesson_id: number
+          p_title: string
+        }
+        Returns: number
+      }
       enroll_course: { Args: { p_course_id: number }; Returns: Json }
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["user_role"] }
@@ -653,6 +1024,37 @@ export type Database = {
       publish_generated_exercise: {
         Args: { p_generated_exercise_id: number }
         Returns: Json
+      }
+      publish_lesson_draft: {
+        Args: { p_lesson_draft_id: number }
+        Returns: Json
+      }
+      replace_document_chunks: {
+        Args: {
+          p_chunks: Json
+          p_extracted_char_count: number
+          p_sha256: string
+          p_source_document_id: number
+        }
+        Returns: number
+      }
+      review_lesson_draft: {
+        Args: {
+          p_comment?: string
+          p_decision: Database["public"]["Enums"]["lesson_draft_review_decision"]
+          p_lesson_draft_id: number
+        }
+        Returns: Database["public"]["Enums"]["lesson_draft_status"]
+      }
+      revise_lesson_draft: {
+        Args: {
+          p_estimated_minutes: number
+          p_lesson_draft_id: number
+          p_sections: Json
+          p_summary: string
+          p_title: string
+        }
+        Returns: number
       }
       submit_exercise: {
         Args: { p_answer: Json; p_exercise_id: number }
@@ -671,8 +1073,23 @@ export type Database = {
         | "rejected"
         | "needs_revision"
         | "published"
+      lesson_draft_review_decision: "approved" | "rejected" | "needs_revision"
+      lesson_draft_status:
+        | "pending_review"
+        | "needs_revision"
+        | "rejected"
+        | "approved"
+        | "published"
       progress_status: "locked" | "unlocked" | "in_progress" | "completed"
       review_status: "approved" | "rejected" | "needs_revision"
+      source_document_status:
+        | "uploaded"
+        | "extracting"
+        | "extracted"
+        | "generating"
+        | "ready_for_review"
+        | "failed"
+        | "archived"
       user_role: "learner" | "moderator" | "admin"
     }
     CompositeTypes: {
@@ -813,8 +1230,25 @@ export const Constants = {
         "needs_revision",
         "published",
       ],
+      lesson_draft_review_decision: ["approved", "rejected", "needs_revision"],
+      lesson_draft_status: [
+        "pending_review",
+        "needs_revision",
+        "rejected",
+        "approved",
+        "published",
+      ],
       progress_status: ["locked", "unlocked", "in_progress", "completed"],
       review_status: ["approved", "rejected", "needs_revision"],
+      source_document_status: [
+        "uploaded",
+        "extracting",
+        "extracted",
+        "generating",
+        "ready_for_review",
+        "failed",
+        "archived",
+      ],
       user_role: ["learner", "moderator", "admin"],
     },
   },

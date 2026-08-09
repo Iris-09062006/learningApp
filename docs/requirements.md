@@ -45,6 +45,20 @@
    - Thay đổi vai trò người dùng (Learner <-> Moderator <-> Admin).
    - Kích hoạt / Vô hiệu hóa tài khoản người dùng.
    - Ghi Log quản trị (Audit Log).
+3. **Document-to-Lesson (Admin Content Pipeline):**
+   - Admin tải tài liệu nguồn lên vùng lưu trữ riêng tư; learner và guest không được
+     đọc object hoặc nội dung trích xuất.
+   - Hệ thống trích xuất văn bản có giới hạn, chia thành các đoạn nguồn ổn định và
+     lưu provenance để phục vụ citation; MVP không thực hiện OCR.
+   - Server gửi duy nhất các đoạn nguồn đã chọn đến 9Router qua endpoint
+     OpenAI-compatible và yêu cầu structured output cho một lesson draft.
+   - Mỗi luận điểm quan trọng trong draft phải có citation trỏ đến đoạn nguồn đã lưu;
+     output sai schema hoặc citation không hợp lệ bị từ chối.
+   - Draft luôn đi qua Admin review; Admin có thể chỉnh sửa, approve, reject hoặc yêu
+     cầu tạo lại. AI không được tự publish.
+   - Publish chạy trong một transaction, cập nhật lesson và course visibility cùng
+     các dấu vết publication. Course chỉ xuất hiện trong catalog sau khi transaction
+     hoàn tất và mọi chapter/lesson bắt buộc đã publish.
 
 ### 2.3 Ngoài phạm vi MVP (Out of Scope)
 
@@ -53,6 +67,7 @@
 - Trình soạn thảo IDE đầy đủ / Chạy code Python trực tiếp trên server (Code Execution Sandbox).
 - Mạng xã hội / Bảng xếp hạng thi đấu phức tạp.
 - Kỹ thuật RAG phức tạp (MVP sử dụng Direct Context Injection).
+- OCR tài liệu scan, crawler URL, đồng bộ Google Drive và vector search đa tài liệu.
 
 ---
 
@@ -66,4 +81,5 @@
 | Chấm bài | So sánh đáp án tĩnh ở Server | - | Sandbox đếm thời gian thực thi |
 | Trợ lý AI | Giải thích đáp án sai theo bối cảnh | Lưu lịch sử giải thích chi tiết | RAG trên toàn bộ tài liệu |
 | Tạo bài tập AI | - | Sinh bài tập + Hàng chờ duyệt | Tự động xuất bản bài tập AI |
+| Document-to-Lesson | - | Upload riêng tư → extraction → draft có citation → Admin review → transactional publish | AI tự publish, OCR hoặc RAG đa tài liệu |
 | Phân quyền | RLS + Session + Service checks | Quản lý User + Audit Log | Quản lý permission matrix phức tạp |
