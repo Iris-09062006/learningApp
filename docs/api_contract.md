@@ -1508,7 +1508,7 @@ interface ChangeUserStatusResponse {
 ## 18.1 Basic health check
 
 ```text
-GET /api/health
+GET /api/system/health
 ```
 
 Access:

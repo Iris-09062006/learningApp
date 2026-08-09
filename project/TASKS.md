@@ -11,7 +11,8 @@
 
 ## Active Task
 
-Task vừa hoàn tất: `TASK-043` — Document-to-Lesson Content Pipeline (`VERIFIED`; migrations và hardening đã lên Supabase Cloud qua MCP). `TASK-040` vẫn `PLANNED` và có thể tiếp tục theo ưu tiên sản phẩm.
+`TASK-040` — Performance and Release Readiness (`VERIFIED`). `TASK-043`
+— Document-to-Lesson Content Pipeline remains `VERIFIED`.
 
 ## Verified and Completed Tasks
 
@@ -23,6 +24,7 @@ Task vừa hoàn tất: `TASK-043` — Document-to-Lesson Content Pipeline (`VER
 | `TASK-037` | Admin-triggered Password Reset | VERIFIED | Feature completion | `reports/TASK-037-implementation.md`, `reports/TASK-037-review.md`, `reports/TASK-037-test.md` |
 | `TASK-038` | Security and RLS Regression Hardening | VERIFIED | Phase 7 | `reports/TASK-038-implementation.md`, `reports/TASK-038-review.md`, `reports/TASK-038-test.md` |
 | `TASK-039` | Critical-flow E2E and Accessibility | VERIFIED | Phase 7 | `reports/TASK-039-implementation.md`, `reports/TASK-039-review.md`, `reports/TASK-039-test.md` |
+| `TASK-040` | Performance and Release Readiness | VERIFIED | Phase 7 | `reports/TASK-040-implementation.md`, `reports/TASK-040-performance.md`, `reports/TASK-040-review.md`, `reports/TASK-040-test.md` |
 | `TASK-028` | AI Mentor API and Explanation Service | VERIFIED | Phase 5 | `reports/TASK-028-implementation.md`, `reports/TASK-028-review.md`, `reports/TASK-028-test.md` |
 | `TASK-030` | AI Exercise Generation Backend | VERIFIED | Phase 5 | `reports/TASK-030-implementation.md`, `reports/TASK-030-review.md` |
 | `TASK-031` | Content Moderation API and Moderation Queue | VERIFIED | Phase 6 | `reports/TASK-031-implementation.md`, `reports/TASK-031-review.md` |
@@ -62,7 +64,6 @@ Task vừa hoàn tất: `TASK-043` — Document-to-Lesson Content Pipeline (`VER
 | Task ID | Title | Status | Phase | Blocker or dependency |
 |---|---|---|---|---|
 | `TASK-037` | Admin-triggered Password Reset | DRAFT | Feature completion (P2) | Phụ thuộc `TASK-035` (VERIFIED); admin endpoint và abuse-control contract chưa có |
-| `TASK-040` | Performance and Release Readiness | PLANNED | Phase 7 | `TASK-039` |
 | `TASK-041` | Preview Deployment and Smoke Verification | DRAFT | Phase 7 | `TASK-040`, quyền push/deploy và môi trường external |
 
 ## Planned Work

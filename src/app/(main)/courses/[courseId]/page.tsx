@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { CourseLearningRecommendation } from "@/features/ai/components/course-learning-recommendation";
 import { CourseDetailView } from "@/features/courses/components/course-detail-view";
 import { getCourseById } from "@/features/courses/services/course-service";
+
+const getCachedCourseById = cache(getCourseById);
 
 interface CourseDetailPageProps {
   params: Promise<{
@@ -15,7 +18,7 @@ export async function generateMetadata({
   params,
 }: CourseDetailPageProps): Promise<Metadata> {
   const { courseId } = await params;
-  const course = await getCourseById(Number(courseId));
+  const course = await getCachedCourseById(Number(courseId));
 
   return {
     title: course
@@ -29,7 +32,7 @@ export default async function CourseDetailPage({
   params,
 }: CourseDetailPageProps) {
   const { courseId } = await params;
-  const course = await getCourseById(Number(courseId));
+  const course = await getCachedCourseById(Number(courseId));
 
   if (!course) {
     notFound();

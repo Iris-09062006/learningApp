@@ -679,6 +679,12 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 **Mức ưu tiên:** P1  
 **Actor:** Moderator, Admin
 
+### UI liên quan
+
+```text
+/moderation
+```
+
 ### Nội dung
 
 - Generated exercise.
@@ -902,7 +908,7 @@ Không hiển thị secret hoặc lỗi nội bộ chi tiết.
 ### API liên quan
 
 ```text
-GET /api/health
+GET /api/system/health
 ```
 
 ### Response

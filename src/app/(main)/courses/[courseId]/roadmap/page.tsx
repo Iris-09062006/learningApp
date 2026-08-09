@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
 
 import { CourseRoadmapView } from "@/features/courses/components/course-roadmap-view";
 import {
   getCourseRoadmap,
   ServiceError,
 } from "@/features/courses/services/course-service";
+
+const getCachedCourseRoadmap = cache(getCourseRoadmap);
 
 interface CourseRoadmapPageProps {
   params: Promise<{
@@ -23,7 +26,7 @@ export async function generateMetadata({
   }
 
   try {
-    const roadmap = await getCourseRoadmap(numId);
+    const roadmap = await getCachedCourseRoadmap(numId);
     return {
       title: `Lộ trình: ${roadmap.course.title} | Python Learning Platform`,
       description: `Chi tiết lộ trình học cho khóa học ${roadmap.course.title}`,
@@ -46,7 +49,7 @@ export default async function CourseRoadmapPage({
   }
 
   try {
-    const roadmap = await getCourseRoadmap(numId);
+    const roadmap = await getCachedCourseRoadmap(numId);
 
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12 dark:bg-slate-950 sm:px-6 lg:px-8">

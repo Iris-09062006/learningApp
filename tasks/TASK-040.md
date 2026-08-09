@@ -1,7 +1,7 @@
 # TASK-040 — Performance and Release Readiness
 
 ## Status
-`PLANNED`
+`VERIFIED`
 
 ## Phase
 Phase 7
@@ -47,3 +47,21 @@ Phase 7
 - `npm run test:e2e`
 - `npm run build`
 - `git diff --check`
+
+## Performance budgets
+- Production build is the deterministic baseline tool for route bundle size.
+- Shared First Load JS must remain at or below `120 kB`.
+- Representative application routes must remain at or below `150 kB` First Load JS.
+- A documented exception may use up to `200 kB` only when a required browser SDK is isolated to that route.
+- Request-level fixes must include before/after query-count evidence when wall-clock latency would depend on an external service.
+
+## Files allowed to change
+- `src/app/(main)/courses/[courseId]/page.tsx`
+- `src/app/(main)/courses/[courseId]/roadmap/page.tsx`
+- `src/app/(main)/courses/[courseId]/course-pages.request-cache.test.tsx`
+- `next.config.ts`
+- `.github/workflows/ci.yml`
+- `.env.example`
+- `docs/api_contract.md`, `docs/features.md`, `docs/deployment.md`
+- `tasks/TASK-040.md`, `ACTIVE_TASK.md`, `project/TASKS.md`
+- `reports/TASK-040-implementation.md`, `reports/TASK-040-test.md`, `reports/TASK-040-review.md`, `reports/TASK-040-performance.md`

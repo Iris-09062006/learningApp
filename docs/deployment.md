@@ -87,12 +87,15 @@ Danh sách biến môi trường bắt buộc:
 
 | Biến môi trường | Loại | Mô tả | Môi trường |
 |---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | URL dự án Supabase | Tất cả |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Anon key cho client | Tất cả |
-| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Service role key cho server | Tất cả |
-| `AI_API_KEY` | Secret | API key của nhà cung cấp LLM | Server |
-| `AI_PROVIDER` | Config | Nhà cung cấp AI (vd: `gemini`) | Server |
-| `NODE_ENV` | System | Trạng thái môi trường (`development`/`production`) | Tất cả |
+| `NEXT_PUBLIC_SUPABASE_URL` | Public | URL Supabase đúng môi trường | Local, Preview, Production |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Anon key; quyền thực tế vẫn bị giới hạn bởi RLS | Local, Preview, Production |
+| `NEXT_PUBLIC_SITE_URL` | Public | Origin tuyệt đối, không có path; dùng cho auth redirect allowlist | Local, Preview, Production |
+| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Service-role key, chỉ được đọc trong server runtime | Local, Preview, Production |
+| `AI_API_KEY` | Secret | API key cho provider OpenAI-compatible | Local, Preview, Production khi bật AI |
+| `AI_PROVIDER_URL` | Server config | HTTPS endpoint của provider; không dùng localhost trên Vercel | Local, Preview, Production khi bật document pipeline |
+| `AI_PROVIDER_MODEL` | Server config | Model/route identifier được provider hỗ trợ | Local, Preview, Production khi bật document pipeline |
+
+`NODE_ENV` và `CI` do runtime/CI thiết lập, không lưu thủ công trong Vercel. `PLAYWRIGHT_BROWSER_EXECUTABLE_PATH` chỉ là override local/CI tùy chọn và không phải runtime variable của ứng dụng.
 
 Quy tắc bảo mật:
 
@@ -100,6 +103,8 @@ Quy tắc bảo mật:
 - Không đưa `SUPABASE_SERVICE_ROLE_KEY` hoặc `AI_API_KEY` vào biến `NEXT_PUBLIC_`.
 - File `.env.local` phải nằm trong `.gitignore`.
 - Repository phải có `.env.example` chứa danh sách tên biến mẫu không chứa giá trị thật.
+- Preview/E2E không được dùng URL, anon key hoặc service-role key của Production.
+- Sau khi đổi secret phải redeploy môi trường tương ứng; không ghi giá trị secret vào log hay report.
 
 ---
 
@@ -111,13 +116,9 @@ Trước khi merge code vào branch `main` hoặc kích hoạt Production build,
 npm run lint
 npm run typecheck
 npm run test
-npm run build
-```
-
-Nếu dự án có E2E test bắt buộc:
-
-```bash
 npm run test:e2e
+npm run build
+git diff --check
 ```
 
 Quy định:
@@ -125,7 +126,9 @@ Quy định:
 - Không deploy nếu build có lỗi TypeScript.
 - Không deploy nếu linter báo lỗi chưa sửa.
 - Không deploy nếu có unit test hoặc integration test thất bại.
+- Không deploy nếu deterministic E2E thất bại.
 - Không deploy nếu trong code có chứa API key hardcoded.
+- CI chạy E2E trong job Chromium riêng sau quality gates. Suite dùng local fixture server và dummy credentials, nên không cần Supabase/AI bên ngoài.
 
 ---
 
@@ -174,37 +177,22 @@ sequenceDiagram
 
 ## 6. Quy trình triển khai Database (Migrations)
 
-Mọi thay đổi database schema phải được thực hiện thông qua SQL Migration.
+Mọi thay đổi schema phải đi qua migration đã review. Thứ tự source-of-truth hiện tại là `001_create_enums.sql` đến `016_harden_cloud_permissions_and_indexes.sql`; áp dụng đúng thứ tự số tăng dần, không bỏ qua hoặc đổi tên file đã phát hành.
 
-Bước 1: Tạo migration file tại local
-
-```bash
-npx supabase migration new name_of_migration
-```
-
-Bước 2: Viết câu lệnh SQL trong file migration mới tạo.
-
-Bước 3: Kiểm tra migration tại local
-
-```bash
-npx supabase db reset
-```
-
-Bước 4: Commit file migration vào Git.
-
-Bước 5: Áp dụng migration cho Supabase Production
-
-Thực hiện qua Supabase CLI hoặc GitHub Actions:
-
-```bash
-npx supabase db push
-```
+1. Tạo migration mới bằng `npx supabase migration new <name>`; không sửa file đã áp dụng ở môi trường dùng chung.
+2. Review SQL, constraint, index, RLS, RPC privilege và generated types.
+3. Chạy `npx supabase db reset` trên Supabase local hoặc database test rỗng. Không chạy reset trên Preview/Production.
+4. Chạy test integration/RLS và full quality gates với dữ liệu fixture không phải Production.
+5. Đối chiếu lịch sử đích bằng `npx supabase migration list` trước khi push.
+6. Áp migration vào Staging/Preview bằng `npx supabase db push`, chạy smoke, rồi mới xin phê duyệt riêng cho Production.
+7. Sau khi Production được phê duyệt, backup/point-in-time recovery phải sẵn sàng, áp migration một lần và ghi lại operator, thời điểm, commit SHA cùng kết quả.
 
 Quy tắc an toàn:
 
 - Không sửa trực tiếp cấu trúc bảng trên Supabase Dashboard của Production.
 - Kiểm tra tính tương thích ngược (backwards compatibility) trước khi xóa hoặc đổi tên cột.
 - Nếu migration có rủi ro làm gián đoạn ứng dụng, phải thực hiện theo 2 bước: thêm cột mới -> cập nhật app -> xóa cột cũ sau.
+- TASK-040 không áp migration lên database bên ngoài; các lệnh push ở trên chỉ thuộc task deploy được ủy quyền riêng.
 
 ---
 
@@ -222,7 +210,7 @@ Quy định Branch protection trên GitHub:
 
 - Branch `main` cần được bảo vệ.
 - Yêu cầu Pull Request trước khi merge.
-- Yêu cầu các kiểm tra CI (Build, Lint, Test) thành công trước khi merge.
+- Yêu cầu cả job quality gates và deterministic Chromium E2E thành công trước khi merge.
 
 ---
 
@@ -232,37 +220,37 @@ Nếu phiên bản Production gặp lỗi sau khi deploy:
 
 ## 8.1 Rollback ứng dụng trên Vercel
 
-1. Truy cập Vercel Dashboard -> dự án `learning-app`.
-2. Vào mục **Deployments**.
-3. Tìm phiên bản deployment gần nhất hoạt động ổn định.
-4. Chọn **Promote to Production**.
-5. Vercel sẽ chuyển ngay lập tức traffic về phiên bản cũ.
-
-Thời gian rollback ứng dụng: < 1 phút.
+1. Dừng promote mới và ghi nhận deployment/commit gây lỗi.
+2. Trong **Deployments**, chọn deployment gần nhất đã vượt smoke test.
+3. Chọn **Promote to Production**, rồi chạy lại health và critical smoke bên dưới.
+4. Không khẳng định RTO cố định; ghi thời điểm bắt đầu/kết thúc và kiểm tra traffic thực tế.
 
 ---
 
 ## 8.2 Rollback Database (nếu có)
 
-Nếu deployment mới đi kèm migration làm hỏng dữ liệu:
+Không dùng `db reset`, xóa migration history hoặc rollback SQL ad-hoc trên Production.
 
-1. Xác định file migration gây lỗi.
-2. Viết migration khắc phục (revert migration).
-3. Chạy `npx supabase db push` để áp dụng migration khắc phục.
-4. Không tự ý chỉnh sửa thủ công dữ liệu trên Production Dashboard nếu không có kịch bản đã review.
+1. Xác định migration và tính tương thích của app version cũ với schema mới.
+2. Nếu schema mới tương thích ngược, rollback app trước và giữ schema.
+3. Nếu cần sửa schema/data, tạo forward-fix migration được review và kiểm thử trên bản sao/fixture Staging.
+4. Với mất mát dữ liệu, dừng write path liên quan và dùng backup/PITR theo runbook của Supabase; không thử nghiệm bằng Production data.
+5. Áp forward-fix chỉ trong task có ủy quyền Production riêng, sau đó chạy smoke và đối chiếu audit log.
 
 ---
 
 ## 9. Giám sát sau triển khai (Post-deployment Verification)
 
-Sau khi deploy thành công lên Production, thực hiện kiểm tra nhanh (Smoke Test):
+Chạy bằng tài khoản smoke riêng của môi trường; không dùng dữ liệu hay credential người dùng Production.
 
-1. Truy cập trang chủ.
-2. Thử đăng nhập bằng tài khoản test.
-3. Mở một bài học và kiểm tra hiển thị.
-4. Nộp thử một bài tập static.
-5. Thử gọi AI Mentor giải thích 1 câu để đảm bảo API key hoạt động.
-6. Kiểm tra log trên Vercel để đảm bảo không xuất hiện lỗi 500 hàng loạt.
+1. `GET /` và `GET /courses`: HTTP thành công, không có error overlay.
+2. `GET /api/system/health`: response theo contract, database `connected`, không lộ URL/secret/error nội bộ.
+3. Đăng nhập learner smoke; mở `/dashboard`, course detail, roadmap và một lesson được cấp quyền.
+4. Nộp một exercise fixture có thể xóa/đối soát và xác minh progress; không sửa course thật.
+5. Với moderator smoke, mở `/moderation`, kiểm tra queue/filter nhưng không publish nội dung Production.
+6. Với admin smoke, mở `/admin/system` và `/admin/users`; không thay role/status.
+7. Nếu AI được bật, gọi prompt smoke không chứa dữ liệu cá nhân và xác minh lỗi provider được xử lý an toàn.
+8. Kiểm tra log/error rate và latency bất thường; rollback nếu có lỗi 5xx lặp lại, health degraded hoặc critical flow hỏng.
 
 ---
 
@@ -270,11 +258,14 @@ Sau khi deploy thành công lên Production, thực hiện kiểm tra nhanh (Smo
 
 Trước khi công bố phiên bản mới, kiểm tra các mục sau:
 
-- [ ] Tất cả code đã được merge vào `main`.
-- [ ] Không có secret hardcode trong repository.
-- [ ] File migration đã được commit và push.
-- [ ] Đã chạy `npx supabase db push` lên Production DB (nếu có migration mới).
-- [ ] Biến môi trường trên Vercel Production đã đầy đủ.
-- [ ] `npm run build` chạy thành công không có lỗi TypeScript/ESLint.
-- [ ] Smoke test trên Production URL thành công.
-- [ ] Log hệ thống không có exception nghiêm trọng.
+- [ ] Release commit đã được review, merge vào `main` và có thể truy vết tới reports/task packet.
+- [ ] `lint`, `typecheck`, `test`, deterministic `test:e2e`, `build` và `git diff --check` đều pass trên commit phát hành.
+- [ ] Bundle budgets trong report performance đạt; exception (nếu có) được ghi rõ.
+- [ ] Secret scan/staged diff không chứa credential; `.env.local` không được track.
+- [ ] Public/secret boundary của toàn bộ biến ở mục 3 đã được đối chiếu riêng cho Preview và Production.
+- [ ] Preview dùng Supabase non-Production và đã vượt smoke test.
+- [ ] Migration list ở đích khớp repository; backup/PITR và forward-fix plan sẵn sàng trước mọi migration Production.
+- [ ] Migration Production (nếu có) chỉ được áp sau phê duyệt riêng và đã ghi operator/time/commit SHA.
+- [ ] Deployment ổn định trước đã được xác định để rollback; app cũ tương thích với schema mới.
+- [ ] Post-deploy smoke ở mục 9 pass bằng tài khoản/fixture smoke, không dùng dữ liệu người dùng Production.
+- [ ] Health, log, error rate và critical-flow monitoring không có dấu hiệu suy giảm.

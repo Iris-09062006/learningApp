@@ -1,27 +1,24 @@
 # Active Task Queue
 
-- **Active task:** `TASK-043` — Document-to-Lesson Content Pipeline
+- **Active task:** `TASK-040` — Performance and Release Readiness
 - **Status:** `VERIFIED`
 - **Owner:** Codex
-- **Deferred task:** `TASK-040` — Performance and Release Readiness (`PLANNED`, paused by product priority)
+- **Previous task:** `TASK-043` — Document-to-Lesson Content Pipeline (`VERIFIED`)
 
 ## Current objective
 
-Build the document-to-lesson epic: private source upload, deterministic extraction,
-9Router-backed structured lesson drafts with citations, Admin review/editing, and
-transactional publication before a course becomes visible in the catalog.
+Package measured performance evidence and an executable release-readiness runbook
+without pushing, deploying, or applying migrations to an external database.
 
 ## Delivery order
 
-1. Align PRD and technical contracts.
-2. Add Storage, source-document, draft, citation, review and publish schema.
-3. Reconcile and deploy migrations to Supabase Cloud through Supabase MCP.
-4. Build upload/extraction and structured generation pipeline.
-5. Build Admin review/edit experience.
-6. Publish approved content transactionally and verify catalog isolation.
+1. Measure representative route baselines in a controlled local production build.
+2. Audit bundle/client boundaries, waterfalls, pagination and obvious N+1 behavior.
+3. Reconcile CI, environment, migration, rollback and smoke-test documentation.
+4. Run all required quality gates and review the actual TASK-040 diff.
 
 ## Current state
 
-Supabase MCP connectivity recovered. Migrations `010` through `015` and the Cloud
-hardening migration are applied, Cloud types are regenerated, advisor findings are
-resolved or documented, and every required quality gate passes.
+Implementation, required quality gates and review are complete with verdict `PASS`.
+TASK-040 is `VERIFIED`; existing unrelated working-tree changes remain preserved and
+excluded from the TASK-040 commit.
