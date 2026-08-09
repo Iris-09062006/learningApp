@@ -1,7 +1,7 @@
 # TASK-037 — Admin-triggered Password Reset
 
 ## Status
-`DRAFT`
+`VERIFIED`
 
 ## Feature ID
 `F-ADMIN-04`
@@ -13,11 +13,11 @@ Cho phép Admin khởi tạo một email recovery an toàn cho user mà không x
 - `TASK-033` verified.
 - `TASK-035` contract and implementation.
 
-## Contract Decisions Required Before READY
-- Xác định endpoint, response và audit action chính thức.
-- Xác định rate limit/cooldown và cách chống spam email.
-- Xác định hành vi đối với inactive user và self-target.
-- Xác nhận Supabase Admin/Auth method phù hợp mà không cấp service-role cho client.
+## Contract Decisions
+- Endpoint: `POST /api/admin/users/:userId/recover`, empty body, safe response documented in `docs/api_contract.md` §17.5.
+- Abuse control: 5 requests per active Admin/target pair/hour; `429` includes `Retry-After`.
+- Inactive targets return not found; self-target is forbidden and must use self-service recovery.
+- Email lookup and recovery dispatch remain server-only; no service-role credential reaches the client.
 
 ## Planned Scope
 - Admin-only server action/API để gửi recovery email.

@@ -122,6 +122,40 @@ describe("AuthService Unit Tests", () => {
     expect(mockSupabase.auth.signOut).toHaveBeenCalled();
   });
 
+  it("login rejects inactive accounts", async () => {
+    const mockSupabase = {
+      auth: {
+        signInWithPassword: vi.fn().mockResolvedValue({
+          data: { user: { id: "usr_123", email: "test@example.com" } },
+          error: null,
+        }),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "usr_123", email: "test@example.com" } },
+          error: null,
+        }),
+        signOut: vi.fn().mockResolvedValue({ error: null }),
+      },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { username: "testuser", role: "learner", is_active: false },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+    vi.mocked(createServerSupabaseClient).mockResolvedValue(
+      asServerSupabaseClient(mockSupabase),
+    );
+
+    await expect(
+      service.login({ email: "test@example.com", password: "password123" }),
+    ).rejects.toThrow("ACCOUNT_INACTIVE");
+    expect(mockSupabase.auth.signOut).toHaveBeenCalledOnce();
+  });
+
   it("getCurrentUser returns null when not authenticated", async () => {
     const mockSupabase = {
       auth: {

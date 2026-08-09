@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   changeUserStatus,
   checkSystemHealth,
   fetchAdminUsers,
   requireAdminActor,
+  sendPasswordRecoveryEmail,
 } from "../admin-repository";
 
 const mockGetUser = vi.fn();
@@ -12,6 +13,8 @@ const mockServerFrom = vi.fn();
 const mockRpc = vi.fn();
 const mockAdminFrom = vi.fn();
 const mockListUsers = vi.fn();
+const mockGetUserById = vi.fn();
+const mockResetPasswordForEmail = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: vi.fn(async () => ({
@@ -22,7 +25,10 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminSupabaseClient: vi.fn(() => ({
-    auth: { admin: { listUsers: mockListUsers } },
+    auth: {
+      admin: { listUsers: mockListUsers, getUserById: mockGetUserById },
+      resetPasswordForEmail: mockResetPasswordForEmail,
+    },
     from: mockAdminFrom,
   })),
 }));
@@ -40,6 +46,7 @@ function createBuilder(result: unknown) {
 
 describe("admin repository", () => {
   beforeEach(() => vi.clearAllMocks());
+  afterEach(() => vi.unstubAllEnvs());
 
   it("rejects unauthenticated and non-admin actors", async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: null }, error: null });
@@ -76,6 +83,51 @@ describe("admin repository", () => {
     expect(mockRpc).toHaveBeenCalledWith("admin_change_user_status", {
       p_user_id: "admin-1", p_is_active: false,
     });
+  });
+
+  it("sends recovery emails through the admin client and records audit evidence", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://preview.example.com/");
+    mockResetPasswordForEmail.mockResolvedValueOnce({ data: {}, error: null });
+    mockGetUserById.mockResolvedValueOnce({
+      data: { user: { id: "user-1", email: "student@example.com" } },
+      error: null,
+    });
+
+    const insertBuilder = {
+      select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 17 }, error: null }) }),
+    };
+    const profileQueryBuilder = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { role: "learner", is_active: true }, error: null }),
+        }),
+      }),
+      insert: vi.fn().mockReturnValue(insertBuilder),
+    };
+    const serverQueryBuilder = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { role: "admin", is_active: true }, error: null }),
+        }),
+      }),
+      insert: vi.fn().mockReturnValue(insertBuilder),
+    };
+    mockServerFrom.mockImplementation((table: string) => {
+      if (table === "profiles") return profileQueryBuilder;
+      if (table === "admin_logs") return serverQueryBuilder;
+      return createBuilder({ data: [], error: null });
+    });
+    await expect(sendPasswordRecoveryEmail("user-1", "admin-1")).resolves.toMatchObject({ email: "student@example.com", auditLogId: 17 });
+    expect(mockGetUserById).toHaveBeenCalledWith("user-1");
+    expect(mockResetPasswordForEmail).toHaveBeenCalledWith("student@example.com", {
+      redirectTo: "https://preview.example.com/reset-password",
+    });
+  });
+
+  it("requires admins to use self-service recovery for their own account", async () => {
+    await expect(sendPasswordRecoveryEmail("admin-1", "admin-1"))
+      .rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(mockGetUserById).not.toHaveBeenCalled();
   });
 
   it("returns only coarse health information", async () => {

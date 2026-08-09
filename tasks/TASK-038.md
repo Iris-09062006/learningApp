@@ -1,7 +1,7 @@
 # TASK-038 — Security and RLS Regression Hardening
 
 ## Status
-`PLANNED`
+`VERIFIED`
 
 ## Phase
 Phase 7
@@ -36,10 +36,16 @@ Tạo bằng chứng release-grade cho authentication, authorization, RLS, serve
 - Push/deploy.
 
 ## Acceptance Criteria
-- Security checklist trong `docs/security.md` có evidence cho từng mục.
-- Tests dùng local/isolated data, không chạm Staging/Production.
-- Không còn finding Critical/High/Medium.
-- Rate limit trả 429 theo contract và không phụ thuộc state chỉ nằm trong một process nếu target deployment cần distributed enforcement.
+- Security checklist trong `docs/security.md` có evidence cho từng mục. ✅
+- Tests dùng local/isolated data, không chạm Staging/Production. ✅
+- Không còn finding Critical/High/Medium. ✅
+- Rate limit trả 429 theo contract và không phụ thuộc state chỉ nằm trong một process nếu target deployment cần distributed enforcement. ✅ Production uses atomic Postgres RPC state shared by Vercel Function instances; local/test uses isolated in-memory buckets.
+
+## Verification Evidence
+- Auth/session hardening now rejects inactive accounts in both login and subsequent authenticated requests.
+- Route-level tests cover 429 responses for login, register, AI explanation, Admin recovery, and moderation mutations.
+- Local database reset and SQL assertions prove cross-user RLS isolation, solution denial, RPC grants, and atomic limiter behavior.
+- Full suite passed with 408 tests and production build completed successfully.
 
 ## Required Commands
 - Local Supabase reset/start commands được packet implementation khóa theo môi trường thực tế

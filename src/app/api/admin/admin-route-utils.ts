@@ -12,12 +12,18 @@ export function adminErrorResponse(error: unknown) {
           ? 404
           : error.code === "LAST_ACTIVE_ADMIN"
             ? 409
+            : error.code === "RATE_LIMITED"
+              ? 429
             : error.code === "VALIDATION_ERROR"
               ? 400
               : 500;
+    const retryAfter = error.details?.retryAfterSeconds;
     return NextResponse.json(
       { success: false, error: { code: error.code, message: error.message, details: error.details } },
-      { status },
+      {
+        status,
+        headers: retryAfter ? { "Retry-After": retryAfter } : undefined,
+      },
     );
   }
   return NextResponse.json(

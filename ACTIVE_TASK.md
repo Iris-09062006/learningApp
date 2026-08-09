@@ -1,24 +1,26 @@
 # Active Task Queue
 
-- **Active task:** `TASK-040` — Performance and Release Readiness
-- **Status:** `VERIFIED`
+- **Active task:** `TASK-041` — Preview Deployment and Smoke Verification
+- **Status:** `BLOCKED`
 - **Owner:** Codex
-- **Previous task:** `TASK-043` — Document-to-Lesson Content Pipeline (`VERIFIED`)
+- **Previous task:** `TASK-040` — Performance and Release Readiness (`VERIFIED`)
 
 ## Current objective
 
-Package measured performance evidence and an executable release-readiness runbook
-without pushing, deploying, or applying migrations to an external database.
+Deploy the clean release candidate to a non-Production Preview and verify environment
+separation, health, critical smoke flows, logs and rollback evidence.
 
 ## Delivery order
 
-1. Measure representative route baselines in a controlled local production build.
-2. Audit bundle/client boundaries, waterfalls, pagination and obvious N+1 behavior.
-3. Reconcile CI, environment, migration, rollback and smoke-test documentation.
-4. Run all required quality gates and review the actual TASK-040 diff.
+1. Commit and push the verified TASK-037/038 release candidate without unrelated workspace files.
+2. Apply migration `017_add_distributed_rate_limits.sql` to Supabase Development.
+3. Deploy that exact clean commit to Vercel Preview and run health/role smoke/log checks.
+4. Record rollback evidence, review the task artifacts and commit reports.
 
 ## Current state
 
-Implementation, required quality gates and review are complete with verdict `PASS`.
-TASK-040 is `VERIFIED`; existing unrelated working-tree changes remain preserved and
-excluded from the TASK-040 commit.
+TASK-037 and TASK-038 are verified locally with 408 tests, a clean production build,
+and Supabase local migration/RLS assertions. Vercel project `learning_app` now has
+Preview environment values. TASK-041 remains blocked until the new release commit is
+pushed and migration `017` is applied to the non-Production Supabase project;
+Production is untouched.

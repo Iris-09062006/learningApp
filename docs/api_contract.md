@@ -1503,6 +1503,36 @@ interface ChangeUserStatusResponse {
 ```
 
 ---
+
+## 17.5 Admin-triggered password recovery
+
+```text
+POST /api/admin/users/:userId/recover
+```
+
+Request body: empty.
+
+Rules:
+
+- Only an active Admin may call the endpoint.
+- The target must exist and be active. An Admin must use the self-service recovery flow for their own account.
+- The server resolves the target email through Supabase Auth and sends a recovery email whose redirect is `<NEXT_PUBLIC_SITE_URL>/reset-password`.
+- The endpoint never returns or logs a password, recovery token, or recovery link.
+- Each Admin/target pair is limited to 5 requests per hour. Exceeding the limit returns `429 RATE_LIMITED` with `Retry-After`.
+- The attempt is recorded in `admin_logs` with action `user.password_recovery_requested` before the external email request is sent.
+
+Response:
+
+```ts
+interface SendPasswordRecoveryResponse {
+  userId: string;
+  email: string;
+  requestedAt: string;
+  auditLogId: number;
+}
+```
+
+---
 # 18. Health API
 
 ## 18.1 Basic health check
@@ -1662,6 +1692,7 @@ POST /api/ai/explanations
 POST /api/auth/login
 POST /api/auth/register
 POST /api/auth/forgot-password
+POST /api/admin/users/:userId/recover
 POST /api/moderation/generated-exercises/:id/publish
 ```
 

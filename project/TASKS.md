@@ -11,8 +11,9 @@
 
 ## Active Task
 
-`TASK-040` — Performance and Release Readiness (`VERIFIED`). `TASK-043`
-— Document-to-Lesson Content Pipeline remains `VERIFIED`.
+`TASK-041` — Preview Deployment and Smoke Verification (`BLOCKED`). Project
+`learning_app` and Preview environment values now exist; deployment must wait for the
+new TASK-037/038 release commit and non-Production migration `017` rollout.
 
 ## Verified and Completed Tasks
 
@@ -63,8 +64,7 @@
 
 | Task ID | Title | Status | Phase | Blocker or dependency |
 |---|---|---|---|---|
-| `TASK-037` | Admin-triggered Password Reset | DRAFT | Feature completion (P2) | Phụ thuộc `TASK-035` (VERIFIED); admin endpoint và abuse-control contract chưa có |
-| `TASK-041` | Preview Deployment and Smoke Verification | DRAFT | Phase 7 | `TASK-040`, quyền push/deploy và môi trường external |
+| `TASK-041` | Preview Deployment and Smoke Verification | BLOCKED | Phase 7 | Cần push release commit mới và áp migration `017` vào Supabase non-Production trước Preview smoke |
 
 ## Planned Work
 

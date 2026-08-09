@@ -1000,6 +1000,18 @@ export type Database = {
         Args: { p_is_active: boolean; p_user_id: string }
         Returns: Json
       }
+      consume_rate_limit: {
+        Args: {
+          p_identifier_hash: string
+          p_limit: number
+          p_scope: string
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          retry_after_seconds: number
+        }[]
+      }
       create_lesson_draft: {
         Args: {
           p_chapter_id: number

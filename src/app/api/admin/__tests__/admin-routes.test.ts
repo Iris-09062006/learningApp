@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AdminServiceError,
   listAdminUsers,
+  sendAdminPasswordRecovery,
   updateAdminUserRole,
   updateAdminUserStatus,
 } from "@/features/admin/services/admin-service";
@@ -12,6 +13,7 @@ vi.mock("@/features/admin/services/admin-service", async (importOriginal) => {
   return {
     ...actual,
     listAdminUsers: vi.fn(),
+    sendAdminPasswordRecovery: vi.fn(),
     updateAdminUserRole: vi.fn(),
     updateAdminUserStatus: vi.fn(),
   };
@@ -86,5 +88,20 @@ describe("admin user API routes", () => {
       { params: Promise.resolve({ userId }) },
     );
     expect(invalid.status).toBe(400);
+  });
+
+  it("POST recovery sends a safe admin-triggered reset request", async () => {
+    vi.mocked(sendAdminPasswordRecovery).mockResolvedValueOnce({
+      userId,
+      email: "student@example.com",
+      requestedAt: "2026-08-05T00:00:00Z",
+      auditLogId: 14,
+    });
+    const { POST } = await import("../users/[userId]/recover/route");
+    const response = await POST(new Request("http://localhost", { method: "POST" }), {
+      params: Promise.resolve({ userId }),
+    });
+    expect(response.status).toBe(200);
+    expect(sendAdminPasswordRecovery).toHaveBeenCalledWith(userId);
   });
 });

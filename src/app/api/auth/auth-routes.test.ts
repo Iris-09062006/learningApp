@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/features/auth/auth.service", async (importOriginal) => {
   const actual =
@@ -18,8 +18,13 @@ vi.mock("@/features/auth/auth.service", async (importOriginal) => {
 });
 
 import { authService } from "@/features/auth/auth.service";
+import { resetRateLimitBuckets } from "@/lib/rate-limiter";
 
 describe("Auth Route Handlers Contract Verification", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetRateLimitBuckets();
+  });
   it("POST /api/auth/register handles success response contract", async () => {
     vi.mocked(authService.register).mockResolvedValueOnce({
       user: {
@@ -130,6 +135,50 @@ describe("Auth Route Handlers Contract Verification", () => {
         loggedOut: true,
       },
     });
+  });
+
+  it("POST /api/auth/login returns 429 after exceeding the IP-based rate limit", async () => {
+    const { POST } = await import("./login/route");
+    const makeRequest = () => new Request("http://localhost:3000/api/auth/login", {
+      method: "POST",
+      headers: { "x-forwarded-for": "192.0.2.10" },
+      body: JSON.stringify({
+        email: "learner@example.com",
+        password: "StrongPassword123!",
+      }),
+    });
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      await POST(makeRequest());
+    }
+
+    const response = await POST(makeRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
+  });
+
+  it("POST /api/auth/register returns 429 after exceeding the IP-based rate limit", async () => {
+    const { POST } = await import("./register/route");
+    const makeRequest = () => new Request("http://localhost:3000/api/auth/register", {
+      method: "POST",
+      headers: { "x-forwarded-for": "192.0.2.20" },
+      body: JSON.stringify({
+        email: "learner@example.com",
+        password: "StrongPassword123!",
+        username: "learner01",
+      }),
+    });
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await POST(makeRequest());
+    }
+
+    const response = await POST(makeRequest());
+    const body = await response.json();
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
   });
 
   it("GET /api/auth/me returns current user when authenticated", async () => {

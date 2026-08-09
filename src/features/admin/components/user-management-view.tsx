@@ -23,6 +23,7 @@ export function UserManagementView({ initialData }: UserManagementViewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  const [recoveringId, setRecoveringId] = useState<string | null>(null);
 
   async function loadUsers(page = 1, clearMessage = true) {
     setIsLoading(true);
@@ -74,6 +75,24 @@ export function UserManagementView({ initialData }: UserManagementViewProps) {
     }
   }
 
+  async function requestRecovery(userId: string) {
+    setRecoveringId(userId);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/recover`, { method: "POST" });
+      const body = (await response.json()) as ApiResponse<unknown>;
+      if (!response.ok || !body.success) {
+        setMessage({ kind: "error", text: body.error?.message ?? "Không thể gửi email recovery." });
+        return;
+      }
+      setMessage({ kind: "success", text: "Đã gửi email recovery và ghi audit log." });
+    } catch {
+      setMessage({ kind: "error", text: "Không thể kết nối tới máy chủ." });
+    } finally {
+      setRecoveringId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleFilter} className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-2 lg:grid-cols-4">
@@ -112,7 +131,12 @@ export function UserManagementView({ initialData }: UserManagementViewProps) {
                     <option value="learner">Learner</option><option value="moderator">Moderator</option><option value="admin">Admin</option>
                   </select>
                 </td>
-                <td className="px-4 py-4"><Button size="sm" variant={user.isActive ? "danger" : "secondary"} isLoading={mutatingId === user.id} onClick={() => void mutateUser(user.id, "status", !user.isActive)}>{user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}</Button></td>
+                <td className="px-4 py-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant={user.isActive ? "danger" : "secondary"} isLoading={mutatingId === user.id} onClick={() => void mutateUser(user.id, "status", !user.isActive)}>{user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}</Button>
+                    <Button size="sm" variant="outline" isLoading={recoveringId === user.id} onClick={() => void requestRecovery(user.id)}>Gửi recovery</Button>
+                  </div>
+                </td>
                 <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{new Intl.DateTimeFormat("vi-VN").format(new Date(user.createdAt))}</td>
               </tr>
             ))}

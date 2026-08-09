@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ModerationService } from "@/features/moderation/services/moderation-service";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 export const runtime = "nodejs";
 
@@ -16,11 +17,11 @@ async function checkModeratorAccess(client: ReturnType<typeof createServerSupaba
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_active")
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile || !["moderator", "admin"].includes(profile.role)) {
+  if (profileError || !profile || !profile.is_active || !["moderator", "admin"].includes(profile.role)) {
     return { error: "Forbidden: Moderators only", status: 403, user: null };
   }
 
@@ -36,6 +37,19 @@ export async function POST(
 
   if (access.error || !access.user) {
     return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
+  const rateLimit = await checkRateLimit("moderation:mutations", access.user.id);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Rate limited" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      }
+    );
   }
 
   try {

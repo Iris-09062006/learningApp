@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { UnauthenticatedError, getOptionalUser, requireUser } from "./session";
+import {
+  InactiveAccountError,
+  UnauthenticatedError,
+  getOptionalUser,
+  requireUser,
+} from "./session";
 
 // Mock Supabase Server Client
 vi.mock("@/lib/supabase/server", () => ({
@@ -23,6 +28,13 @@ describe("Session Helper Tests", () => {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
       },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({ data: { is_active: true }, error: null }),
+          }),
+        }),
+      }),
     };
     vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
       asServerSupabaseClient(mockSupabase),
@@ -52,6 +64,13 @@ describe("Session Helper Tests", () => {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
       },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({ data: { is_active: true }, error: null }),
+          }),
+        }),
+      }),
     };
     vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
       asServerSupabaseClient(mockSupabase),
@@ -72,5 +91,26 @@ describe("Session Helper Tests", () => {
     );
 
     await expect(requireUser()).rejects.toThrow(UnauthenticatedError);
+  });
+
+  it("fails closed when the authenticated user has no active profile", async () => {
+    const mockUser = { id: "usr_123", email: "user@example.com" };
+    const mockSupabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
+      },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        }),
+      }),
+    };
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
+
+    await expect(requireUser()).rejects.toThrow(InactiveAccountError);
   });
 });

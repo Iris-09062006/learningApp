@@ -4,6 +4,12 @@ import {
   AiServiceError,
   requestAiExplanation,
 } from "@/features/ai/services/ai-service";
+import { checkRateLimit } from "@/lib/rate-limiter";
+import {
+  InactiveAccountError,
+  UnauthenticatedError,
+  requireUser,
+} from "@/lib/auth/session";
 
 interface CreateExplanationBody {
   submissionId?: unknown;
@@ -72,6 +78,53 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
+  let userId: string;
+  try {
+    userId = (await requireUser()).id;
+  } catch (error) {
+    const inactive = error instanceof InactiveAccountError;
+    const unauthenticated = error instanceof UnauthenticatedError;
+    const knownAuthError = inactive || unauthenticated;
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: inactive
+            ? "FORBIDDEN"
+            : unauthenticated
+              ? "UNAUTHENTICATED"
+              : "INTERNAL_ERROR",
+          message: inactive
+            ? "Tài khoản của bạn đã bị vô hiệu hóa."
+            : unauthenticated
+              ? "Authentication required."
+              : "Unable to verify authentication.",
+        },
+      },
+      { status: inactive ? 403 : knownAuthError ? 401 : 500 },
+    );
+  }
+
+  const rateLimit = await checkRateLimit("ai:explanations", userId);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "RATE_LIMITED",
+          message: "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
+        },
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      }
+    );
+  }
+
   try {
     const explanation = await requestAiExplanation({
       submissionId: validated.submissionId,
@@ -97,6 +150,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         NOT_FOUND: 404,
         AI_PROVIDER_ERROR: 502,
         DATABASE_ERROR: 500,
+        RATE_LIMITED: 429,
       };
 
       return NextResponse.json(

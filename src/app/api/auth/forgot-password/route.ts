@@ -13,7 +13,7 @@ function getClientIp(request: Request): string {
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit("auth:forgot-password", ip);
+    const rateLimit = await checkRateLimit("auth:forgot-password", ip);
 
     if (!rateLimit.allowed) {
       return Response.json(

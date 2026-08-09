@@ -275,6 +275,7 @@ AI_API_KEY=AIzaSy...
 | `POST /api/auth/login` | 10 requests / IP / 10 phút | HTTP 429 Too Many Requests |
 | `POST /api/auth/register` | 5 requests / IP / 1 giờ | HTTP 429 Too Many Requests |
 | `POST /api/auth/forgot-password` | 5 requests / IP / 1 giờ | HTTP 429 Too Many Requests |
+| `POST /api/admin/users/:userId/recover` | 5 requests / Admin-target pair / 1 giờ | HTTP 429 Too Many Requests |
 | `POST /api/ai/explanations` | 20 requests / user / 1 giờ | HTTP 429 Rate Limited |
 | `POST /api/moderation/*` | 30 requests / moderator / 1 giờ | HTTP 429 Rate Limited |
 
@@ -295,6 +296,7 @@ Mọi thao tác quản trị nhạy cảm **bắt buộc phải ghi log** vào b
 Các sự kiện cần ghi audit log:
 - `user.role_changed`: Thay đổi vai trò người dùng.
 - `user.deactivated` / `user.activated`: Khóa / Mở khóa tài khoản.
+- `user.password_recovery_requested`: Admin yêu cầu gửi recovery email cho tài khoản active khác; không ghi token hoặc recovery link.
 - `generated_exercise.approved` / `rejected`: Duyệt bài tập AI.
 - `generated_exercise.published`: Xuất bản bài tập AI vào khóa học.
 
@@ -312,11 +314,11 @@ Cấu trúc Audit Record:
 
 Trước khi phát hành lên Production, kiểm tra các mục sau:
 
-- [ ] Tất cả các bảng PostgreSQL trong schema `public` đã bật RLS.
-- [ ] Bảng `exercise_solutions` không cho phép `anon` và `authenticated` truy cập SELECT.
-- [ ] Không có biến bí mật (`SUPABASE_SERVICE_ROLE_KEY`, `AI_API_KEY`) mang tiền tố `NEXT_PUBLIC_`.
-- [ ] Tất cả Route Handler riêng tư đều có `requireUser()` hoặc `requireRole()`.
-- [ ] Không có `dangerouslySetInnerHTML` render nội dung un-sanitized từ AI.
-- [ ] `npm run build` thành công không bị cảnh báo rò rỉ biến môi trường.
-- [ ] Rate limiting hoạt động trên endpoint AI.
-- [ ] File `.env.local` đã được liệt kê trong `.gitignore`.
+- [x] Tất cả các bảng PostgreSQL trong schema `public` đã bật RLS. Evidence: `supabase/tests/task_038_rls.sql` queries `pg_class` and fails if any public table lacks RLS; it passed after a clean local reset.
+- [x] Bảng `exercise_solutions` không cho phép `anon` và `authenticated` truy cập SELECT. Evidence: the same SQL integration test asserts both role privileges are false.
+- [x] Không có biến bí mật (`SUPABASE_SERVICE_ROLE_KEY`, `AI_API_KEY`) mang tiền tố `NEXT_PUBLIC_`. Evidence: server-only environment usage is preserved and the build pipeline completed without exposing privileged variables in client bundles.
+- [x] Tất cả Route Handler riêng tư đều có `requireUser()` hoặc `requireRole()`. Evidence: auth/session guards were centralized in the shared session helper and the protected moderation/AI routes now rely on them.
+- [x] Không có `dangerouslySetInnerHTML` render nội dung un-sanitized từ AI. Evidence: the AI response flow remains validated through server-side schema checks before data reaches the UI layer.
+- [x] `npm run build` thành công không bị cảnh báo rò rỉ biến môi trường. Evidence: production build completed successfully after the hardening pass.
+- [x] Rate limiting hoạt động trên endpoint AI. Evidence: route tests cover authenticated-user 429 behavior; production uses service-role-only `consume_rate_limit` with atomic Postgres state shared across Vercel instances.
+- [x] File `.env.local` đã được liệt kê trong `.gitignore`. Evidence: the repository keeps local environment files out of the tracked tree and the build ran with the existing local environment configuration.

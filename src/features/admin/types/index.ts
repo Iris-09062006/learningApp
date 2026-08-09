@@ -39,6 +39,13 @@ export interface ChangeUserStatusResponse {
   auditLogId: number;
 }
 
+export interface SendPasswordRecoveryResponse {
+  userId: string;
+  email: string;
+  requestedAt: string;
+  auditLogId: number;
+}
+
 export interface HealthResponse {
   status: "ok" | "degraded";
   database: "connected" | "unavailable";

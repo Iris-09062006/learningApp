@@ -9,6 +9,7 @@ import type {
   ChangeUserRoleResponse,
   ChangeUserStatusResponse,
   HealthResponse,
+  SendPasswordRecoveryResponse,
 } from "@/features/admin/types";
 
 export class AdminRepositoryError extends Error {
@@ -144,6 +145,75 @@ export async function changeUserStatus(
   });
   if (error) mapRpcError(error);
   return data as unknown as ChangeUserStatusResponse;
+}
+
+export async function sendPasswordRecoveryEmail(userId: string, actorId: string): Promise<SendPasswordRecoveryResponse> {
+  if (userId === actorId) {
+    throw new AdminRepositoryError(
+      "FORBIDDEN",
+      "Use the self-service recovery flow for your own account.",
+    );
+  }
+  const supabase = await createServerSupabaseClient();
+  const adminClient = createAdminSupabaseClient();
+  const { data: authUserData, error: authUserError } =
+    await adminClient.auth.admin.getUserById(userId);
+  if (authUserError) {
+    throw new AdminRepositoryError("DATABASE_ERROR", "Unable to load authentication user.");
+  }
+  const targetAuthUser = authUserData.user;
+  if (!targetAuthUser?.email) {
+    throw new AdminRepositoryError("NOT_FOUND", "User not found.");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profileError) {
+    throw new AdminRepositoryError("DATABASE_ERROR", "Unable to verify target user.");
+  }
+  if (!profile || !profile.is_active) {
+    throw new AdminRepositoryError("NOT_FOUND", "User not found.");
+  }
+
+  const { data: auditEntry, error: auditError } = await supabase
+    .from("admin_logs")
+    .insert({
+      actor_id: actorId,
+      action: "user.password_recovery_requested",
+      target_type: "user",
+      target_id: userId,
+      metadata: {
+        requested_by_admin: true,
+      },
+    })
+    .select("id")
+    .single();
+
+  if (auditError || !auditEntry) {
+    throw new AdminRepositoryError("DATABASE_ERROR", "Unable to record audit evidence.");
+  }
+
+  const origin = process.env.NEXT_PUBLIC_SITE_URL;
+  const redirectTo = origin
+    ? `${origin.replace(/\/+$/, "")}/reset-password`
+    : undefined;
+  const { error: resetError } = await adminClient.auth.resetPasswordForEmail(
+    targetAuthUser.email,
+    { redirectTo },
+  );
+  if (resetError) {
+    throw new AdminRepositoryError("DATABASE_ERROR", "Unable to send recovery email.");
+  }
+
+  return {
+    userId,
+    email: targetAuthUser.email,
+    requestedAt: new Date().toISOString(),
+    auditLogId: auditEntry.id,
+  };
 }
 
 export async function checkSystemHealth(): Promise<HealthResponse> {

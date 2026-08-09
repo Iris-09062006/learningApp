@@ -8,6 +8,46 @@ import {
 } from "./auth.types";
 import { ForgotPasswordInput, LoginInput, RegisterInput } from "./auth.schema";
 
+type ProfileLookupResult = {
+  data: {
+    username: string;
+    role: UserRole;
+    is_active: boolean;
+  } | null;
+  error: unknown;
+};
+
+async function fetchProfileForUser(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  userId: string,
+): Promise<ProfileLookupResult> {
+  const profileQuery = supabase
+    .from("profiles")
+    .select("username, role, is_active")
+    .eq("id", userId) as unknown as {
+    maybeSingle?: () => Promise<ProfileLookupResult>;
+    single?: () => Promise<ProfileLookupResult>;
+  };
+
+  if (typeof profileQuery.maybeSingle === "function") {
+    try {
+      return await profileQuery.maybeSingle();
+    } catch {
+      // fall through to the single() fallback
+    }
+  }
+
+  if (typeof profileQuery.single === "function") {
+    try {
+      return await profileQuery.single();
+    } catch {
+      return { data: null, error: null };
+    }
+  }
+
+  return { data: null, error: null };
+}
+
 export class AuthService {
   async register(input: RegisterInput): Promise<RegisterResponse> {
     const supabase = await createServerSupabaseClient();
@@ -58,6 +98,21 @@ export class AuthService {
       throw new Error("Đăng nhập thất bại.");
     }
 
+    const { data: profile, error: profileError } = await fetchProfileForUser(
+      supabase,
+      authData.user.id,
+    );
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      throw new Error("ACCOUNT_INACTIVE");
+    }
+
+    if (!profile.is_active) {
+      await supabase.auth.signOut();
+      throw new Error("ACCOUNT_INACTIVE");
+    }
+
     const currentUser = await this.getCurrentUser();
     if (!currentUser) {
       throw new Error("Không thể lấy thông tin tài khoản sau khi đăng nhập.");
@@ -88,11 +143,18 @@ export class AuthService {
       return null;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username, role, is_active")
-      .eq("id", authUser.id)
-      .single();
+    const { data: profile, error: profileError } = await fetchProfileForUser(
+      supabase,
+      authUser.id,
+    );
+
+    if (profileError) {
+      throw new Error("DATABASE_ERROR");
+    }
+
+    if (!profile || !profile.is_active) {
+      throw new Error("ACCOUNT_INACTIVE");
+    }
 
     const username =
       profile?.username ??
@@ -186,6 +248,19 @@ export class AuthService {
           },
         },
         { status: 409 }
+      );
+    }
+
+    if (message.includes("ACCOUNT_INACTIVE")) {
+      return Response.json(
+        {
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "Tài khoản của bạn đã bị vô hiệu hóa.",
+          },
+        },
+        { status: 403 }
       );
     }
 

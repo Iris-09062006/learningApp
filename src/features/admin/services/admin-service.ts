@@ -5,6 +5,7 @@ import {
   checkSystemHealth,
   fetchAdminUsers,
   requireAdminActor,
+  sendPasswordRecoveryEmail,
 } from "@/features/admin/repositories/admin-repository";
 import type {
   AdminUserFilters,
@@ -12,8 +13,10 @@ import type {
   ChangeUserRoleResponse,
   ChangeUserStatusResponse,
   HealthResponse,
+  SendPasswordRecoveryResponse,
 } from "@/features/admin/types";
 import type { UserRole } from "@/features/auth/auth.types";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 export class AdminServiceError extends Error {
   constructor(
@@ -22,6 +25,7 @@ export class AdminServiceError extends Error {
       | "FORBIDDEN"
       | "NOT_FOUND"
       | "LAST_ACTIVE_ADMIN"
+      | "RATE_LIMITED"
       | "VALIDATION_ERROR"
       | "DATABASE_ERROR",
     message: string,
@@ -103,6 +107,29 @@ export async function updateAdminUserRole(userId: string, role: UserRole): Promi
 
 export async function updateAdminUserStatus(userId: string, isActive: boolean): Promise<ChangeUserStatusResponse> {
   try { return await changeUserStatus(userId, isActive); } catch (error) { mapRepositoryError(error); }
+}
+
+export async function sendAdminPasswordRecovery(userId: string): Promise<SendPasswordRecoveryResponse> {
+  try {
+    const actorId = await requireAdminActor();
+    const rateLimit = await checkRateLimit(
+      "admin:password-recovery",
+      `${actorId}:${userId}`,
+    );
+    if (!rateLimit.allowed) {
+      throw new AdminServiceError(
+        "RATE_LIMITED",
+        "Too many recovery requests. Please try again later.",
+        { retryAfterSeconds: String(rateLimit.retryAfterSeconds) },
+      );
+    }
+    return await sendPasswordRecoveryEmail(userId, actorId);
+  } catch (error) {
+    if (error instanceof AdminServiceError) {
+      throw error;
+    }
+    return mapRepositoryError(error);
+  }
 }
 
 export async function getSystemHealth(): Promise<HealthResponse> {

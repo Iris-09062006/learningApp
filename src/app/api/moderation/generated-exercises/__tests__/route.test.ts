@@ -44,12 +44,12 @@ describe("GET /api/moderation/generated-exercises", () => {
     );
   });
 
-  function mockProfileRole(role: string | null) {
+  function mockProfileRole(role: string | null, isActive = true) {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
-            data: role ? { role } : null,
+            data: role ? { role, is_active: isActive } : null,
             error: role ? null : { message: "not found" },
           }),
         }),
@@ -82,6 +82,19 @@ describe("GET /api/moderation/generated-exercises", () => {
       "http://localhost/api/moderation/generated-exercises"
     );
     const response = await GET(request);
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 403 when a moderator account is inactive", async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: "moderator-1" } },
+      error: null,
+    });
+    mockProfileRole("moderator", false);
+
+    const response = await GET(new NextRequest(
+      "http://localhost/api/moderation/generated-exercises",
+    ));
     expect(response.status).toBe(403);
   });
 

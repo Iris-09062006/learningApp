@@ -18,11 +18,11 @@ async function checkModeratorAccess(client: ReturnType<typeof createServerSupaba
   // Ensure role is moderator or admin
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_active")
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile || !["moderator", "admin"].includes(profile.role)) {
+  if (profileError || !profile || !profile.is_active || !["moderator", "admin"].includes(profile.role)) {
     return { error: "Forbidden: Moderators only", status: 403, user: null };
   }
 

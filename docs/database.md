@@ -1135,3 +1135,11 @@ Tất cả bảng public bật RLS và chỉ active Admin được truy cập. C
 revoke `PUBLIC`/`anon` và chỉ grant `authenticated`. `publish_lesson_draft` khóa các row
 liên quan, yêu cầu approved revision hiện tại và citation đầy đủ trước khi cập nhật
 lesson/chapter/course trong cùng transaction.
+
+# Distributed rate-limit state
+
+TASK-038 adds `private.rate_limit_buckets` for atomic fixed-window counters shared by
+all Vercel Function instances. Identifiers are SHA-256 hashed before storage. The
+table is outside the exposed `public` schema, has RLS enabled, and grants access only
+to `service_role`. Public RPC `consume_rate_limit` is `SECURITY INVOKER`; execution is
+revoked from `PUBLIC`, `anon`, and `authenticated`, then granted only to `service_role`.
