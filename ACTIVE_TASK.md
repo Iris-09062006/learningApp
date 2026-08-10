@@ -8,13 +8,15 @@
 
 ## Current objective
 
-No implementation task is currently active.
+No task is currently active. TASK-057 is verified locally and ready for migration rollout
+when explicitly requested.
 
 ## Current state
 
-TASK-056 is verified locally. Active Admins can explicitly remove learner access and
-archive courses without deleting learning history. Migration `024` is intentionally
-not applied to shared Supabase, and no deployment was performed.
+TASK-057 is verified locally. The Admin PDF-to-Course flow now persists an outline review
+checkpoint, generates/revises Lesson content independently, and publishes official
+curriculum atomically. Migration `025` is intentionally not applied to shared Supabase,
+and no deployment was performed.
 
 TASK-055 is verified locally. PDF-to-Course batch generation, persistent review
 resolution, per-Lesson exercise generation, authorization hardening, focused/full

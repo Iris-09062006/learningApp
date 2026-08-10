@@ -121,28 +121,24 @@ test("provides role-route smoke coverage for moderator and admin", async ({ brow
   await adminContext.close();
 });
 
-test("creates and atomically publishes a Course with multiple Lesson drafts", async ({ page }) => {
-  let draftGenerated = false;
-  let draftStatus: "pending_review" | "approved" | "published" = "pending_review";
-  const draft = () => ({
-    id: 71,
-    sourceDocumentId: 9,
-    courseId: 31,
-    chapterId: 41,
-    targetLessonId: 51,
-    title: "Nội suy Lagrange",
-    summary: "Bài học được tạo từ tài liệu nguồn.",
-    estimatedMinutes: 12,
+test("reviews an outline, generates Lesson contents, and atomically publishes a Course", async ({ page }) => {
+  let stage: "empty" | "outline" | "content" | "published" = "empty";
+  const content = (id: number, outlineLessonId: number, title: string) => ({
+    id, outlineLessonId, revision: 1, title, summary: "Nội dung có trích dẫn.", estimatedMinutes: 12,
     sections: [{ heading: "Mở đầu", bodyMarkdown: "Nội dung bài học", citationChunkIndexes: [0] }],
-    status: draftStatus,
-    revision: 1,
-    approvedRevision: draftStatus === "pending_review" ? null : 1,
-    provider: "9router",
-    model: "e2e-model",
-    publishedAt: draftStatus === "published" ? "2026-08-10T01:00:00.000Z" : null,
-    createdAt: "2026-08-10T00:00:00.000Z",
-    updatedAt: "2026-08-10T00:00:00.000Z",
+    status: "ready", provider: "9router", model: "e2e-model",
     citations: [{ sectionIndex: 0, chunkIndex: 0, quote: "Nguồn kiểm thử" }],
+  });
+  const job = () => ({
+    jobId: 61, sourceDocumentId: 9, sourceFilename: "lagrange.txt",
+    status: stage === "outline" ? "outline_review" : "content_review",
+    errorCode: null, outlineRevision: 1, approvedOutlineRevision: stage === "outline" ? null : 1,
+    title: "Phương pháp tính", description: "Khóa học nội suy.", learningObjectives: ["Hiểu nội suy"],
+    lessons: [
+      { id: 71, clientKey: "lagrange", lessonOrder: 1, title: "Nội suy Lagrange", summary: "Lagrange", learningObjectives: ["Áp dụng Lagrange"], sourceChunkIndexes: [0], contentDraft: stage === "content" ? content(81, 71, "Nội suy Lagrange") : null },
+      { id: 72, clientKey: "newton", lessonOrder: 2, title: "Nội suy Newton", summary: "Newton", learningObjectives: ["Áp dụng Newton"], sourceChunkIndexes: [0], contentDraft: stage === "content" ? content(82, 72, "Nội suy Newton") : null },
+    ],
+    publishedCourseId: null, createdAt: "2026-08-10T00:00:00.000Z", updatedAt: "2026-08-10T00:00:00.000Z",
   });
 
   await page.route("**/api/admin/**", async (route) => {
@@ -155,24 +151,19 @@ test("creates and atomically publishes a Course with multiple Lesson drafts", as
     });
 
     if (pathname === "/api/admin/content-targets") return respond({ items: [] });
-    if (pathname === "/api/admin/course-drafts") return respond({ items: draftGenerated && draftStatus === "pending_review" ? [{
-      sourceDocumentId: 9,
-      sourceFilename: "lagrange.txt",
-      courseId: 31,
-      courseTitle: "Phương pháp tính",
-      courseDescription: "Khóa học nội suy.",
-      status: "pending_review",
-      createdAt: "2026-08-10T00:00:00.000Z",
-      lessons: [draft()],
-    }] : [] });
+    if (pathname === "/api/admin/course-drafts") return respond({ items: stage === "empty" || stage === "published" ? [] : [job()] });
     if (pathname === "/api/admin/content-sources") return respond({ id: 9, originalFilename: "lagrange.txt" }, 201);
     if (pathname === "/api/admin/content-sources/9/extract") return respond({ status: "extracted" });
-    if (pathname === "/api/admin/content-sources/9/generate") {
-      draftGenerated = true;
-      return respond({ sourceDocumentId: 9, courseId: 31, chapterId: 41, lessonDraftIds: [71], status: "pending_review" });
+    if (pathname === "/api/admin/content-sources/9/course-outline") {
+      stage = "outline";
+      return respond({ jobId: 61, sourceDocumentId: 9, outlineRevision: 1, status: "outline_review" }, 201);
     }
-    if (pathname === "/api/admin/course-drafts/9/reviews") {
-      draftStatus = "published";
+    if (pathname === "/api/admin/course-drafts/61/lessons/generate") {
+      stage = "content";
+      return respond({ jobId: 61, status: "content_review" }, 201);
+    }
+    if (pathname === "/api/admin/course-drafts/61/reviews") {
+      stage = "published";
       return respond({
         sourceDocumentId: 9,
         courseId: 31,
@@ -180,7 +171,6 @@ test("creates and atomically publishes a Course with multiple Lesson drafts", as
         lessonIds: [51],
       });
     }
-    if (pathname === "/api/admin/lesson-drafts/71") return respond(draft());
     return route.fallback();
   });
 
@@ -194,11 +184,13 @@ test("creates and atomically publishes a Course with multiple Lesson drafts", as
     mimeType: "text/plain",
     buffer: Buffer.from("Nội suy Lagrange"),
   });
-  await page.getByRole("button", { name: "Tạo Course draft" }).click();
+  await page.getByRole("button", { name: "Tạo Course outline" }).click();
 
-  await expect(page.getByRole("heading", { name: "Phương pháp tính" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /1\. Nội suy Lagrange/u })).toBeVisible();
-  await page.getByRole("button", { name: "Duyệt & xuất bản Course" }).click();
+  await expect(page.getByRole("textbox", { name: "Course title" })).toHaveValue("Phương pháp tính");
+  await expect(page.getByRole("textbox", { name: "Lesson 1 title" })).toHaveValue("Nội suy Lagrange");
+  await page.getByRole("button", { name: "Continue: sinh Lesson contents" }).click();
+  await expect(page.getByRole("button", { name: "Publish Course" })).toBeVisible();
+  await page.getByRole("button", { name: "Publish Course" }).click();
 
   await expect(page.getByText("Hàng chờ trống.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Mở Course" })).toHaveAttribute("href", "/courses/31");

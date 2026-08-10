@@ -30,6 +30,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-057` | Two-stage PDF-to-Course Pipeline | VERIFIED | Content operations | `reports/TASK-057-implementation.md`, `reports/TASK-057-review.md`, `reports/TASK-057-test.md` |
 | `TASK-056` | Admin Learner Removal and Safe Course Deletion | VERIFIED | Admin operations | `reports/TASK-056-implementation.md`, `reports/TASK-056-review.md`, `reports/TASK-056-test.md` |
 | `TASK-055` | Generate Reviewable Courses and Lesson-scoped Exercises | VERIFIED | Content operations | `reports/TASK-055-implementation.md`, `reports/TASK-055-review.md`, `reports/TASK-055-test.md` |
 | `TASK-054` | Repair Lesson Review and Publish Flow | VERIFIED | Content operations hotfix | `reports/TASK-054-implementation.md`, `reports/TASK-054-review.md`, `reports/TASK-054-test.md` |

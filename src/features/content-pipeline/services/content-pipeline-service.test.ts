@@ -13,6 +13,16 @@ const mocks = vi.hoisted(() => ({
   persistGeneratedDraft: vi.fn(),
   persistGeneratedCourseDraft: vi.fn(),
   listCourseDraftBatches: vi.fn(),
+  listCourseImports: vi.fn(),
+  getCourseImport: vi.fn(),
+  getCourseImportChunks: vi.fn(),
+  persistCourseOutline: vi.fn(),
+  prepareCourseLessonGeneration: vi.fn(),
+  persistCourseLessonContent: vi.fn(),
+  failCourseImport: vi.fn(),
+  reviewCourseImport: vi.fn(),
+  publishCourseImport: vi.fn(),
+  reviseCourseLessonContent: vi.fn(),
   reviewCourseDraftBatch: vi.fn(),
   updateSourceStatus: vi.fn(),
 }));
@@ -29,6 +39,16 @@ vi.mock("@/features/content-pipeline/repositories/content-pipeline-repository", 
   persistGeneratedDraft: mocks.persistGeneratedDraft,
   persistGeneratedCourseDraft: mocks.persistGeneratedCourseDraft,
   listCourseDraftBatches: mocks.listCourseDraftBatches,
+  listCourseImports: mocks.listCourseImports,
+  getCourseImport: mocks.getCourseImport,
+  getCourseImportChunks: mocks.getCourseImportChunks,
+  persistCourseOutline: mocks.persistCourseOutline,
+  prepareCourseLessonGeneration: mocks.prepareCourseLessonGeneration,
+  persistCourseLessonContent: mocks.persistCourseLessonContent,
+  failCourseImport: mocks.failCourseImport,
+  reviewCourseImport: mocks.reviewCourseImport,
+  publishCourseImport: mocks.publishCourseImport,
+  reviseCourseLessonContent: mocks.reviseCourseLessonContent,
   reviewCourseDraftBatch: mocks.reviewCourseDraftBatch,
   updateSourceStatus: mocks.updateSourceStatus,
 }));
@@ -47,6 +67,8 @@ import {
   createNewContentTarget,
   generateLessonDraft,
   generateCourseDraft,
+  generateCourseOutline,
+  generateCourseLessonContents,
   getCourseDraftQueue,
   submitCourseDraftReview,
   getContentTargets,
@@ -232,7 +254,7 @@ describe("Course draft batches", () => {
   });
 
   it("lists only unresolved Course batches through the repository", async () => {
-    mocks.listCourseDraftBatches.mockResolvedValue([{ sourceDocumentId: 9 }]);
+    mocks.listCourseImports.mockResolvedValue([{ sourceDocumentId: 9 }]);
     await expect(getCourseDraftQueue()).resolves.toEqual([{ sourceDocumentId: 9 }]);
   });
 
@@ -240,5 +262,110 @@ describe("Course draft batches", () => {
     mocks.reviewCourseDraftBatch.mockResolvedValue({ status: "rejected" });
     await submitCourseDraftReview(9, { decision: "rejected", comment: "Không phù hợp" });
     expect(mocks.reviewCourseDraftBatch).toHaveBeenCalledWith(9, "rejected", "Không phù hợp");
+  });
+});
+
+describe("two-stage Course imports", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null }) },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { role: "admin", is_active: true }, error: null }),
+        }) }),
+      }),
+    });
+    mocks.getCourseGenerationContext.mockResolvedValue({
+      document: { status: "extracted", error_code: null, original_filename: "python.pdf" },
+      chunks: [{ id: 1, chunk_index: 0, content: "Biến" }, { id: 2, chunk_index: 1, content: "Hàm" }],
+    });
+    mocks.persistCourseOutline.mockResolvedValue({ jobId: 61, sourceDocumentId: 9, outlineRevision: 1, status: "outline_review" });
+    mocks.updateSourceStatus.mockResolvedValue(undefined);
+    mocks.failCourseImport.mockResolvedValue(undefined);
+  });
+
+  it("persists an outline without generating Lesson bodies", async () => {
+    const provider = {
+      generateLessonDraft: vi.fn(),
+      generateCourseOutline: vi.fn().mockResolvedValue({
+        outline: {
+          title: "Python", description: "Nhập môn", learningObjectives: ["Hiểu Python"],
+          lessons: [
+            { clientKey: "variables", title: "Biến", summary: "Biến", learningObjectives: ["Khai báo biến"], sourceChunkIndexes: [0] },
+            { clientKey: "functions", title: "Hàm", summary: "Hàm", learningObjectives: ["Định nghĩa hàm"], sourceChunkIndexes: [1] },
+          ],
+        }, provider: "9router", model: "model",
+      }),
+    };
+    await expect(generateCourseOutline(9, provider)).resolves.toMatchObject({ status: "outline_review" });
+    expect(mocks.persistCourseOutline).toHaveBeenCalledWith(expect.objectContaining({
+      sourceDocumentId: 9,
+      outline: expect.objectContaining({ lessons: expect.arrayContaining([expect.objectContaining({ clientKey: "variables" })]) }),
+    }));
+    expect(provider.generateLessonDraft).not.toHaveBeenCalled();
+    expect(mocks.persistCourseLessonContent).not.toHaveBeenCalled();
+  });
+
+  it("generates each Lesson only after preparing the approved outline", async () => {
+    mocks.getCourseImport.mockResolvedValue({
+      jobId: 61, sourceDocumentId: 9, sourceFilename: "python.pdf", status: "outline_review",
+      lessons: [
+        { id: 71, title: "Biến", learningObjectives: ["Khai báo biến"], sourceChunkIndexes: [0], contentDraft: null },
+        { id: 72, title: "Hàm", learningObjectives: ["Định nghĩa hàm"], sourceChunkIndexes: [1], contentDraft: null },
+      ],
+    });
+    mocks.getCourseImportChunks.mockResolvedValue([
+      { id: 1, chunk_index: 0, content: "Biến" }, { id: 2, chunk_index: 1, content: "Hàm" },
+    ]);
+    const provider = { generateLessonDraft: vi.fn().mockResolvedValue({
+      draft: { title: "Lesson", summary: "Tóm tắt", estimatedMinutes: 10,
+        sections: [{ heading: "Nội dung", bodyMarkdown: "Bài học", citationChunkIndexes: [0] }] },
+      provider: "9router", model: "model",
+    }) };
+    await generateCourseLessonContents(61, provider);
+    expect(mocks.prepareCourseLessonGeneration).toHaveBeenCalledWith(61);
+    expect(provider.generateLessonDraft).toHaveBeenCalledTimes(2);
+    expect(mocks.persistCourseLessonContent).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps an already complete content review out of the generating state", async () => {
+    mocks.getCourseImport.mockResolvedValue({
+      jobId: 61, sourceDocumentId: 9, sourceFilename: "python.pdf", status: "content_review",
+      lessons: [{ id: 71, title: "Biến", learningObjectives: ["Khai báo biến"], sourceChunkIndexes: [0], contentDraft: { id: 81 } }],
+    });
+
+    await expect(generateCourseLessonContents(61, { generateLessonDraft: vi.fn() })).resolves.toEqual({
+      jobId: 61,
+      status: "content_review",
+    });
+    expect(mocks.prepareCourseLessonGeneration).not.toHaveBeenCalled();
+  });
+
+  it("persists a retryable failed state when one Lesson provider call fails", async () => {
+    mocks.getCourseImport.mockResolvedValue({
+      jobId: 61, sourceDocumentId: 9, sourceFilename: "python.pdf", status: "outline_review",
+      lessons: [{ id: 71, title: "Biến", learningObjectives: ["Khai báo biến"], sourceChunkIndexes: [0], contentDraft: null }],
+    });
+    mocks.getCourseImportChunks.mockResolvedValue([{ id: 1, chunk_index: 0, content: "Biến" }]);
+    const provider = { generateLessonDraft: vi.fn().mockRejectedValue(new Error("AI_PROVIDER_TIMEOUT")) };
+
+    await expect(generateCourseLessonContents(61, provider)).rejects.toMatchObject({ code: "AI_PROVIDER_ERROR" });
+    expect(mocks.failCourseImport).toHaveBeenCalledWith(61, "LESSON_GENERATION_FAILED");
+    expect(mocks.persistCourseLessonContent).not.toHaveBeenCalled();
+  });
+
+  it("rejects outline output with an Exercise field", async () => {
+    const provider = { generateLessonDraft: vi.fn(), generateCourseOutline: vi.fn().mockResolvedValue({
+      outline: {
+        title: "Python", description: "Nhập môn", learningObjectives: ["Hiểu Python"], exercises: [],
+        lessons: [
+          { clientKey: "a", title: "A", summary: "A", learningObjectives: ["A"], sourceChunkIndexes: [0] },
+          { clientKey: "b", title: "B", summary: "B", learningObjectives: ["B"], sourceChunkIndexes: [1] },
+        ],
+      }, provider: "9router", model: "model",
+    }) };
+    await expect(generateCourseOutline(9, provider)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.persistCourseOutline).not.toHaveBeenCalled();
   });
 });

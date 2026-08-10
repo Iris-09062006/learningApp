@@ -197,6 +197,23 @@ describe("POST /api/ai/exercises/generate", () => {
       expect(data.error).toBe("AI_PROVIDER_ERROR");
     });
 
+    it("should map RATE_LIMITED to 429", async () => {
+      vi.mocked(aiService.generateExercise).mockRejectedValue(
+        new AiServiceError("RATE_LIMITED", "Retry later")
+      );
+
+      const response = await POST(createJsonRequest({
+        lessonId: 10,
+        exerciseType: "predict_output",
+        difficulty: "medium",
+        learningObjective: "Biến số",
+      }));
+      const data = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(data.error).toBe("RATE_LIMITED");
+    });
+
     it("should map generic errors to 500 INTERNAL_ERROR", async () => {
       vi.mocked(aiService.generateExercise).mockRejectedValue(
         new Error("Random crash")

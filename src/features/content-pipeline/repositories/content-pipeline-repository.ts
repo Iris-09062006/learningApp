@@ -3,6 +3,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
+  CourseImportDraft,
+  CourseImportLessonDraft,
   CourseDraftBatch,
   CreateCourseDraftBatchResult,
   ContentChapterTarget,
@@ -12,11 +14,13 @@ import type {
   DocumentChunkInput,
   LessonDraftRecord,
   LessonDraftReviewDecision,
+  PersistCourseOutlineResult,
   PublishLessonDraftResult,
   ReviewCourseDraftBatchResult,
   SourceDocumentRecord,
   StructuredLessonDraft,
   StructuredCourseDraft,
+  StructuredCourseOutline,
   SupportedSourceMimeType,
 } from "@/features/content-pipeline/types";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -295,6 +299,236 @@ export async function reviewCourseDraftBatch(
     p_source_document_id: sourceDocumentId,
     p_decision: decision,
     p_comment: comment,
+  });
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  return data as unknown as ReviewCourseDraftBatchResult;
+}
+
+export async function persistCourseOutline(input: {
+  sourceDocumentId: number;
+  outline: StructuredCourseOutline;
+  provider: string;
+  model: string | null;
+}): Promise<PersistCourseOutlineResult> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("create_course_outline", {
+    p_source_document_id: input.sourceDocumentId,
+    p_outline: input.outline,
+    p_provider: input.provider,
+    p_model: input.model,
+  });
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  const result = data as unknown as PersistCourseOutlineResult;
+  if (!Number.isSafeInteger(result.jobId) || result.status !== "outline_review") {
+    throw new Error("DATABASE_ERROR");
+  }
+  return result;
+}
+
+interface RawImportJob {
+  id: number;
+  source_document_id: number;
+  status: CourseImportDraft["status"];
+  error_code: string | null;
+  current_outline_revision: number;
+  approved_outline_revision: number | null;
+  published_course_id: number | null;
+  created_at: string;
+  updated_at: string;
+  source_documents: { original_filename: string };
+}
+
+async function loadCourseImports(jobId?: number): Promise<CourseImportDraft[]> {
+  const supabase = adminClient();
+  let jobQuery = supabase
+    .from("course_import_jobs")
+    .select("*, source_documents!inner(original_filename)")
+    .order("created_at", { ascending: false });
+  if (jobId) jobQuery = jobQuery.eq("id", jobId);
+  else jobQuery = jobQuery.in("status", ["outline_review", "generating_content", "content_review", "ready_to_publish", "failed"]);
+  const jobResult = await jobQuery;
+  if (jobResult.error) throw new Error("DATABASE_ERROR");
+  const jobs = (jobResult.data ?? []) as unknown as RawImportJob[];
+  if (!jobs.length) return [];
+  const jobIds = jobs.map((job) => job.id);
+  const draftResult = await supabase.from("course_drafts").select("*").in("job_id", jobIds);
+  if (draftResult.error) throw new Error("DATABASE_ERROR");
+  const allDrafts = (draftResult.data ?? []) as Array<{
+    id: number; job_id: number; revision: number; title: string; description: string;
+  }>;
+  const currentDrafts = jobs.flatMap((job) => allDrafts.filter(
+    (draft) => draft.job_id === job.id && draft.revision === job.current_outline_revision
+  ));
+  const draftIds = currentDrafts.map((draft) => draft.id);
+  if (!draftIds.length) return [];
+  const [objectiveResult, lessonResult] = await Promise.all([
+    supabase.from("course_draft_objectives").select("*").in("course_draft_id", draftIds).order("objective_order"),
+    supabase.from("course_outline_lessons").select("*").in("course_draft_id", draftIds).order("lesson_order"),
+  ]);
+  if (objectiveResult.error || lessonResult.error) throw new Error("DATABASE_ERROR");
+  const objectives = (objectiveResult.data ?? []) as Array<{ course_draft_id: number; objective_order: number; objective: string }>;
+  const outlineLessons = (lessonResult.data ?? []) as Array<{
+    id: number; course_draft_id: number; client_key: string; lesson_order: number; title: string; summary: string;
+  }>;
+  const outlineLessonIds = outlineLessons.map((lesson) => lesson.id);
+  const [lessonObjectiveResult, sourceResult, contentResult] = outlineLessonIds.length
+    ? await Promise.all([
+        supabase.from("course_outline_lesson_objectives").select("*").in("outline_lesson_id", outlineLessonIds).order("objective_order"),
+        supabase.from("course_outline_lesson_sources").select("outline_lesson_id, source_order, document_chunks!inner(chunk_index)").in("outline_lesson_id", outlineLessonIds).order("source_order"),
+        supabase.from("lesson_content_drafts").select("*").in("outline_lesson_id", outlineLessonIds).order("revision", { ascending: false }),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+  if (lessonObjectiveResult.error || sourceResult.error || contentResult.error) throw new Error("DATABASE_ERROR");
+  const lessonObjectives = (lessonObjectiveResult.data ?? []) as Array<{ outline_lesson_id: number; objective_order: number; objective: string }>;
+  const sources = (sourceResult.data ?? []) as unknown as Array<{
+    outline_lesson_id: number; source_order: number; document_chunks: { chunk_index: number };
+  }>;
+  const contents = (contentResult.data ?? []) as Array<{
+    id: number; outline_lesson_id: number; revision: number; title: string; summary: string;
+    estimated_minutes: number; sections: unknown; status: "ready" | "failed"; provider: string;
+    model: string | null;
+  }>;
+  const contentIds = contents.map((content) => content.id);
+  const citationResult = contentIds.length
+    ? await supabase.from("lesson_content_draft_citations")
+        .select("lesson_content_draft_id, section_index, quote, document_chunks!inner(chunk_index)")
+        .in("lesson_content_draft_id", contentIds).order("section_index")
+    : { data: [], error: null };
+  if (citationResult.error) throw new Error("DATABASE_ERROR");
+  const citations = (citationResult.data ?? []) as unknown as Array<{
+    lesson_content_draft_id: number; section_index: number; quote: string;
+    document_chunks: { chunk_index: number };
+  }>;
+
+  return jobs.flatMap((job) => {
+    const draft = currentDrafts.find((item) => item.job_id === job.id);
+    if (!draft) return [];
+    return [{
+      jobId: job.id,
+      sourceDocumentId: job.source_document_id,
+      sourceFilename: job.source_documents.original_filename,
+      status: job.status,
+      errorCode: job.error_code,
+      outlineRevision: job.current_outline_revision,
+      approvedOutlineRevision: job.approved_outline_revision,
+      title: draft.title,
+      description: draft.description,
+      learningObjectives: objectives.filter((item) => item.course_draft_id === draft.id)
+        .sort((a, b) => a.objective_order - b.objective_order).map((item) => item.objective),
+      lessons: outlineLessons.filter((lesson) => lesson.course_draft_id === draft.id)
+        .sort((a, b) => a.lesson_order - b.lesson_order).map((lesson) => {
+          const content = contents.find((item) => item.outline_lesson_id === lesson.id);
+          const contentDraft: CourseImportLessonDraft | null = content ? {
+            id: content.id,
+            outlineLessonId: lesson.id,
+            revision: content.revision,
+            title: content.title,
+            summary: content.summary,
+            estimatedMinutes: content.estimated_minutes,
+            sections: content.sections as CourseImportLessonDraft["sections"],
+            status: content.status,
+            provider: content.provider,
+            model: content.model,
+            citations: citations.filter((citation) => citation.lesson_content_draft_id === content.id).map((citation) => ({
+              sectionIndex: citation.section_index,
+              chunkIndex: citation.document_chunks.chunk_index,
+              quote: citation.quote,
+            })),
+          } : null;
+          return {
+            id: lesson.id,
+            clientKey: lesson.client_key,
+            lessonOrder: lesson.lesson_order,
+            title: lesson.title,
+            summary: lesson.summary,
+            learningObjectives: lessonObjectives.filter((item) => item.outline_lesson_id === lesson.id)
+              .sort((a, b) => a.objective_order - b.objective_order).map((item) => item.objective),
+            sourceChunkIndexes: sources.filter((item) => item.outline_lesson_id === lesson.id)
+              .sort((a, b) => a.source_order - b.source_order).map((item) => item.document_chunks.chunk_index),
+            contentDraft,
+          };
+        }),
+      publishedCourseId: job.published_course_id,
+      createdAt: job.created_at,
+      updatedAt: job.updated_at,
+    } satisfies CourseImportDraft];
+  });
+}
+
+export async function listCourseImports(): Promise<CourseImportDraft[]> {
+  return loadCourseImports();
+}
+
+export async function getCourseImport(jobId: number): Promise<CourseImportDraft | null> {
+  return (await loadCourseImports(jobId))[0] ?? null;
+}
+
+export async function getCourseImportChunks(sourceDocumentId: number): Promise<DocumentChunkRow[]> {
+  const supabase = adminClient();
+  const { data, error } = await supabase.from("document_chunks")
+    .select("id, chunk_index, content").eq("source_document_id", sourceDocumentId).order("chunk_index");
+  if (error) throw new Error("DATABASE_ERROR");
+  return (data ?? []) as DocumentChunkRow[];
+}
+
+export async function prepareCourseLessonGeneration(jobId: number): Promise<void> {
+  const supabase = await client();
+  const { error } = await supabase.rpc("prepare_course_lesson_generation", { p_job_id: jobId });
+  if (error) throw new Error("DATABASE_ERROR");
+}
+
+export async function persistCourseLessonContent(input: {
+  jobId: number;
+  outlineLessonId: number;
+  draft: StructuredLessonDraft;
+  provider: string;
+  model: string;
+}): Promise<void> {
+  const supabase = await client();
+  const { error } = await supabase.rpc("persist_lesson_content_draft", {
+    p_job_id: input.jobId,
+    p_outline_lesson_id: input.outlineLessonId,
+    p_title: input.draft.title,
+    p_summary: input.draft.summary,
+    p_estimated_minutes: input.draft.estimatedMinutes,
+    p_sections: input.draft.sections,
+    p_provider: input.provider,
+    p_model: input.model,
+  });
+  if (error) throw new Error("DATABASE_ERROR");
+}
+
+export async function failCourseImport(jobId: number, errorCode: string): Promise<void> {
+  const supabase = await client();
+  const { error } = await supabase.rpc("fail_course_import_job", { p_job_id: jobId, p_error_code: errorCode });
+  if (error) throw new Error("DATABASE_ERROR");
+}
+
+export async function reviseCourseLessonContent(id: number, draft: StructuredLessonDraft): Promise<void> {
+  const supabase = await client();
+  const { error } = await supabase.rpc("revise_lesson_content_draft", {
+    p_lesson_content_draft_id: id,
+    p_title: draft.title,
+    p_summary: draft.summary,
+    p_estimated_minutes: draft.estimatedMinutes,
+    p_sections: draft.sections,
+  });
+  if (error) throw new Error("DATABASE_ERROR");
+}
+
+export async function reviewCourseImport(jobId: number, decision: string, comment: string | null): Promise<{ status: string }> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("review_course_import_job", {
+    p_job_id: jobId, p_decision: decision, p_comment: comment,
+  });
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  return data as unknown as { status: string };
+}
+
+export async function publishCourseImport(jobId: number, courseSlug: string): Promise<ReviewCourseDraftBatchResult> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("publish_course_import_job", {
+    p_job_id: jobId, p_course_slug: courseSlug,
   });
   if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
   return data as unknown as ReviewCourseDraftBatchResult;

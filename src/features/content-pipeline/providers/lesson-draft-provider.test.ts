@@ -109,4 +109,43 @@ describe("NineRouterLessonDraftProvider", () => {
       chunks: [{ chunkIndex: 0, content: "Nguồn" }],
     })).rejects.toThrow("AI_RESPONSE_INVALID");
   });
+
+  it("generates outline-only output with stable Lesson keys and source references", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      model: "test-model",
+      choices: [{ message: { content: JSON.stringify({
+        title: "Python", description: "Nhập môn", learningObjectives: ["Hiểu Python"],
+        lessons: [
+          { clientKey: "variables", title: "Biến", summary: "Biến", learningObjectives: ["Khai báo biến"], sourceChunkIndexes: [0] },
+          { clientKey: "functions", title: "Hàm", summary: "Hàm", learningObjectives: ["Định nghĩa hàm"], sourceChunkIndexes: [1] },
+        ],
+      }) } }],
+    }), { status: 200 }));
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+    const result = await provider.generateCourseOutline({
+      documentTitle: "python.pdf",
+      chunks: [{ chunkIndex: 0, content: "Biến" }, { chunkIndex: 1, content: "Hàm" }],
+    });
+    expect(result.outline.lessons.map((lesson) => lesson.clientKey)).toEqual(["variables", "functions"]);
+    expect(result.outline).not.toHaveProperty("sections");
+    const request = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as { messages: Array<{ content: string }> };
+    expect(request.messages[0].content).toContain("only a Vietnamese Course outline");
+    expect(request.messages[0].content).toContain("Do not include Lesson body content");
+  });
+
+  it("rejects unknown Exercise fields in an outline", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({
+        title: "Python", description: "Nhập môn", learningObjectives: ["Hiểu Python"], exercises: [],
+        lessons: [
+          { clientKey: "a", title: "A", summary: "A", learningObjectives: ["A"], sourceChunkIndexes: [0] },
+          { clientKey: "b", title: "B", summary: "B", learningObjectives: ["B"], sourceChunkIndexes: [0] },
+        ],
+      }) } }],
+    }), { status: 200 }));
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+    await expect(provider.generateCourseOutline({
+      documentTitle: "python.pdf", chunks: [{ chunkIndex: 0, content: "Nguồn" }],
+    })).rejects.toThrow("AI_RESPONSE_INVALID");
+  });
 });

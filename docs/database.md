@@ -12,16 +12,15 @@
 - The RPC never deletes enrollments, progress, submissions, exercises, source documents,
   or drafts. Referential history is preserved.
 
-## AI Course import persistence — target contract
+## AI Course import persistence — implemented by TASK-057
 
-Migration `023` mô tả implementation một-stage hiện tại, nhưng không đủ cho product
-decision mới: nó tạo official unpublished `courses/chapters/lessons` trước review và lưu
-full Lesson content ngay sau một AI call. Target schema phải tách outline, Lesson content
-và official curriculum; không coi các row curriculum chưa publish là draft model.
+Migration `025_pdf_to_course_pipeline.sql` implements the normalized two-stage model below.
+Migration `023` remains compatibility-only: it creates official unpublished curriculum
+before review and therefore is not used by the Admin default PDF-to-Course flow.
 
 ### Normalized draft model
 
-Migration tiếp theo phải tạo hoặc cung cấp semantics tương đương cho:
+Migration `025` creates:
 
 ```text
 source_documents
@@ -1247,10 +1246,10 @@ liên quan, yêu cầu approved revision hiện tại và citation đầy đủ 
 lesson/chapter/course trong cùng transaction.
 
 Các object migration `015` và batch RPC migration `023` được giữ cho compatibility và
-lịch sử. Chúng không đáp ứng target two-stage outline contract vì `lesson_drafts` yêu cầu
-official target Lesson và batch RPC tạo curriculum trước review. Implementation mới phải
-dùng normalized Course-import draft model và atomic publish boundary định nghĩa ở mục
-“AI Course import persistence — target contract”; không sửa ngược migration cũ.
+lịch sử. Chúng không đáp ứng two-stage outline contract vì `lesson_drafts` yêu cầu official
+target Lesson và batch RPC tạo curriculum trước review. Admin default flow dùng normalized
+Course-import draft model và atomic publish boundary của migration `025`; không sửa ngược
+migration cũ.
 
 # Distributed rate-limit state
 

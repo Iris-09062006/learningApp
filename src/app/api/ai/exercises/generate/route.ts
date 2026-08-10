@@ -33,6 +33,8 @@ function mapAiServiceError(error: AiServiceError): number {
       return 404;
     case "AI_PROVIDER_ERROR":
       return 502;
+    case "RATE_LIMITED":
+      return 429;
     default:
       return 500;
   }

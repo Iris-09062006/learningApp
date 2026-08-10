@@ -3,19 +3,21 @@
 Tên file được giữ để không làm hỏng liên kết lịch sử. Nội dung này là contract chuẩn cho
 hai AI pipeline độc lập và supersede flow TASK-055 một-stage.
 
-## 1. Current-state trace
+## 1. Implementation trace
 
 ```text
-Current Course flow:
-upload → extract/chunk → one AI call creates Course metadata + full Lesson contents
-→ create unpublished Course/Chapter/Lessons/drafts → batch review → atomic publish
+TASK-057 Course flow:
+upload → extract/chunk → outline-only AI → persisted outline review/edit
+→ Continue locks outline revision → per-Lesson content generation/review
+→ atomic creation and publish of official Course/Chapter/Lessons
 
 Current Exercise flow:
 selected published Lesson → AI generation → generated_exercises.lesson_id
 → Exercise moderation → atomic publish
 ```
 
-Sai khác của Course flow hiện tại:
+The former TASK-055 Course compatibility flow had these gaps, now resolved by the default
+TASK-057 flow:
 
 - Không có outline-only output hoặc outline review checkpoint.
 - Admin chưa add/remove/reorder Lesson trước content generation.
@@ -152,13 +154,10 @@ hoặc audit primitives. Không dùng một approve API/service với giả đ�
 - AI key, service-role key, source objects và private solutions luôn server-only; RLS và
   RPC authorization vẫn là defense in depth.
 
-## 6. Implementation plan (not implemented by this documentation task)
+## 6. Implementation status
 
-1. Thêm normalized Course-import job/outline/Lesson-content draft schema và migration.
-2. Tách provider schema/prompt outline khỏi provider schema/prompt Lesson content.
-3. Thêm endpoint/state transition cho outline edit/regenerate/Continue và per-Lesson
-   regenerate; retire `{}` one-stage generate khỏi Admin default flow.
-4. Thay UI `/admin/content` bằng outline review rồi Course review; giữ Exercise action ở
-   Lesson scope và moderation riêng.
-5. Thêm unit/integration/E2E cho state transitions, validation, authorization, timeout,
-   rollback, queue persistence và invariant “Course import creates no exercise”.
+TASK-057 implements this contract with migration `025_pdf_to_course_pipeline.sql`, strict
+outline and Lesson provider boundaries, persisted outline/content revisions, Admin review
+UI, per-Lesson regeneration, atomic publish, and automated regression coverage. Historical
+one-stage endpoints and migration `023` remain compatibility-only and are not used by the
+Admin default flow.

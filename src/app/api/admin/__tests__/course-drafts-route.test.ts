@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const serviceMocks = vi.hoisted(() => ({
   getCourseDraftQueue: vi.fn(),
-  submitCourseDraftReview: vi.fn(),
+  submitCourseImportReview: vi.fn(),
 }));
 
 vi.mock("@/features/content-pipeline/services/content-pipeline-service", async (importOriginal) => {
@@ -26,8 +26,8 @@ describe("Admin Course draft routes", () => {
     });
   });
 
-  it("submits one persisted decision for the whole source batch", async () => {
-    serviceMocks.submitCourseDraftReview.mockResolvedValue({
+  it("submits one persisted decision for the Course import job", async () => {
+    serviceMocks.submitCourseImportReview.mockResolvedValue({
       sourceDocumentId: 9,
       courseId: 31,
       status: "published",
@@ -36,11 +36,11 @@ describe("Admin Course draft routes", () => {
     const response = await POST(
       new Request("http://localhost/api/admin/course-drafts/9/reviews", {
         method: "POST",
-        body: JSON.stringify({ decision: "approved" }),
+        body: JSON.stringify({ decision: "published" }),
       }),
       { params: Promise.resolve({ id: "9" }) }
     );
     expect(response.status).toBe(201);
-    expect(serviceMocks.submitCourseDraftReview).toHaveBeenCalledWith("9", { decision: "approved" });
+    expect(serviceMocks.submitCourseImportReview).toHaveBeenCalledWith("9", { decision: "published" });
   });
 });

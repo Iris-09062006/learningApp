@@ -4,10 +4,15 @@ const mocks = vi.hoisted(() => ({
   createServerSupabaseClient: vi.fn(),
   createGeneratedExerciseRecord: vi.fn(),
   fetchLessonContextForGeneration: vi.fn(),
+  checkRateLimit: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: mocks.createServerSupabaseClient,
+}));
+
+vi.mock("@/lib/rate-limiter", () => ({
+  checkRateLimit: mocks.checkRateLimit,
 }));
 
 vi.mock("../../repositories/ai-repository", async (importOriginal) => {
@@ -36,7 +41,10 @@ function serverClient(profile: { role: string; is_active: boolean } | null) {
 }
 
 describe("Lesson-scoped AI exercise generation", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.checkRateLimit.mockResolvedValue({ allowed: true, remaining: 19, retryAfterSeconds: 0 });
+  });
 
   it("rejects an inactive or non-privileged actor before reading Lesson context or calling AI", async () => {
     mocks.createServerSupabaseClient.mockResolvedValue(serverClient({ role: "learner", is_active: true }));
@@ -89,5 +97,20 @@ describe("Lesson-scoped AI exercise generation", () => {
       lesson_id: 51,
       status: "pending",
     }));
+  });
+
+  it("rate-limits an active privileged actor before reading Lesson context", async () => {
+    mocks.createServerSupabaseClient.mockResolvedValue(serverClient({ role: "admin", is_active: true }));
+    mocks.checkRateLimit.mockResolvedValue({ allowed: false, remaining: 0, retryAfterSeconds: 42 });
+    const provider: AIProvider = { generateExplanation: vi.fn(), generateExercise: vi.fn() };
+
+    await expect(generateExercise({
+      lessonId: 51,
+      exerciseType: "predict_output",
+      difficulty: "easy",
+      learningObjective: "Hiểu phép gán",
+    }, provider)).rejects.toEqual(expect.objectContaining({ code: "RATE_LIMITED" }) satisfies Partial<AiServiceError>);
+    expect(mocks.fetchLessonContextForGeneration).not.toHaveBeenCalled();
+    expect(provider.generateExercise).not.toHaveBeenCalled();
   });
 });

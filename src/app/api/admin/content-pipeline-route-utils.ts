@@ -8,6 +8,7 @@ export function contentPipelineErrorResponse(error: unknown) {
       : error.code === "FORBIDDEN" ? 403
         : error.code === "NOT_FOUND" ? 404
           : error.code === "INVALID_STATE" ? 409
+            : error.code === "RATE_LIMITED" ? 429
             : error.code === "VALIDATION_ERROR" ? 400
               : 500;
     return NextResponse.json(

@@ -19,6 +19,9 @@ const rules = new Map<string, RateLimitRule>([
   ["auth:forgot-password", { limit: 5, windowMs: WINDOW_MS }],
   ["admin:password-recovery", { limit: 5, windowMs: WINDOW_MS }],
   ["ai:explanations", { limit: 20, windowMs: WINDOW_MS }],
+  ["ai:course-outline", { limit: 20, windowMs: WINDOW_MS }],
+  ["ai:lesson-content", { limit: 20, windowMs: WINDOW_MS }],
+  ["ai:exercise-generation", { limit: 20, windowMs: WINDOW_MS }],
   ["moderation:mutations", { limit: 30, windowMs: WINDOW_MS }],
 ]);
 

@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      course_import_jobs: {
+        Row: { id: number; source_document_id: number; requested_by: string; status: Database["public"]["Enums"]["course_import_status"]; current_outline_revision: number; approved_outline_revision: number | null; error_code: string | null; published_course_id: number | null; created_at: string; updated_at: string }
+        Insert: { id?: never; source_document_id: number; requested_by: string; status?: Database["public"]["Enums"]["course_import_status"]; current_outline_revision?: number; approved_outline_revision?: number | null; error_code?: string | null; published_course_id?: number | null; created_at?: string; updated_at?: string }
+        Update: { id?: never; source_document_id?: number; requested_by?: string; status?: Database["public"]["Enums"]["course_import_status"]; current_outline_revision?: number; approved_outline_revision?: number | null; error_code?: string | null; published_course_id?: number | null; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      course_drafts: {
+        Row: { id: number; job_id: number; revision: number; title: string; description: string; provider: string; model: string | null; created_at: string }
+        Insert: { id?: never; job_id: number; revision: number; title: string; description: string; provider: string; model?: string | null; created_at?: string }
+        Update: { id?: never; job_id?: number; revision?: number; title?: string; description?: string; provider?: string; model?: string | null; created_at?: string }
+        Relationships: []
+      }
+      course_draft_objectives: {
+        Row: { id: number; course_draft_id: number; objective_order: number; objective: string }
+        Insert: { id?: never; course_draft_id: number; objective_order: number; objective: string }
+        Update: { id?: never; course_draft_id?: number; objective_order?: number; objective?: string }
+        Relationships: []
+      }
+      course_outline_lessons: {
+        Row: { id: number; course_draft_id: number; client_key: string; lesson_order: number; title: string; summary: string }
+        Insert: { id?: never; course_draft_id: number; client_key: string; lesson_order: number; title: string; summary: string }
+        Update: { id?: never; course_draft_id?: number; client_key?: string; lesson_order?: number; title?: string; summary?: string }
+        Relationships: []
+      }
+      course_outline_lesson_objectives: {
+        Row: { id: number; outline_lesson_id: number; objective_order: number; objective: string }
+        Insert: { id?: never; outline_lesson_id: number; objective_order: number; objective: string }
+        Update: { id?: never; outline_lesson_id?: number; objective_order?: number; objective?: string }
+        Relationships: []
+      }
+      course_outline_lesson_sources: {
+        Row: { outline_lesson_id: number; document_chunk_id: number; source_order: number }
+        Insert: { outline_lesson_id: number; document_chunk_id: number; source_order: number }
+        Update: { outline_lesson_id?: number; document_chunk_id?: number; source_order?: number }
+        Relationships: []
+      }
+      lesson_content_drafts: {
+        Row: { id: number; outline_lesson_id: number; revision: number; title: string; summary: string; estimated_minutes: number; sections: Json; status: Database["public"]["Enums"]["lesson_content_draft_status"]; provider: string; model: string | null; created_at: string; updated_at: string }
+        Insert: { id?: never; outline_lesson_id: number; revision: number; title: string; summary: string; estimated_minutes: number; sections: Json; status?: Database["public"]["Enums"]["lesson_content_draft_status"]; provider: string; model?: string | null; created_at?: string; updated_at?: string }
+        Update: { id?: never; outline_lesson_id?: number; revision?: number; title?: string; summary?: string; estimated_minutes?: number; sections?: Json; status?: Database["public"]["Enums"]["lesson_content_draft_status"]; provider?: string; model?: string | null; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      lesson_content_draft_citations: {
+        Row: { id: number; lesson_content_draft_id: number; section_index: number; document_chunk_id: number; quote: string }
+        Insert: { id?: never; lesson_content_draft_id: number; section_index: number; document_chunk_id: number; quote: string }
+        Update: { id?: never; lesson_content_draft_id?: number; section_index?: number; document_chunk_id?: number; quote?: string }
+        Relationships: []
+      }
+      course_import_reviews: {
+        Row: { id: number; job_id: number; reviewer_id: string; outline_revision: number; decision: string; comment: string | null; reviewed_at: string }
+        Insert: { id?: never; job_id: number; reviewer_id: string; outline_revision: number; decision: string; comment?: string | null; reviewed_at?: string }
+        Update: { id?: never; job_id?: number; reviewer_id?: string; outline_revision?: number; decision?: string; comment?: string | null; reviewed_at?: string }
+        Relationships: []
+      }
+      course_import_publications: {
+        Row: { id: number; job_id: number; course_id: number; chapter_id: number; outline_revision: number; published_by: string; published_at: string }
+        Insert: { id?: never; job_id: number; course_id: number; chapter_id: number; outline_revision: number; published_by: string; published_at?: string }
+        Update: { id?: never; job_id?: number; course_id?: number; chapter_id?: number; outline_revision?: number; published_by?: string; published_at?: string }
+        Relationships: []
+      }
+      course_import_lesson_publications: {
+        Row: { publication_id: number; outline_lesson_id: number; lesson_content_draft_id: number; lesson_id: number }
+        Insert: { publication_id: number; outline_lesson_id: number; lesson_content_draft_id: number; lesson_id: number }
+        Update: { publication_id?: number; outline_lesson_id?: number; lesson_content_draft_id?: number; lesson_id?: number }
+        Relationships: []
+      }
       admin_logs: {
         Row: {
           action: string
@@ -1008,6 +1074,22 @@ export type Database = {
         }
         Returns: Json
       }
+      create_course_outline: {
+        Args: { p_source_document_id: number; p_outline: Json; p_provider: string; p_model: string | null }
+        Returns: Json
+      }
+      prepare_course_lesson_generation: { Args: { p_job_id: number }; Returns: Json }
+      persist_lesson_content_draft: {
+        Args: { p_job_id: number; p_outline_lesson_id: number; p_title: string; p_summary: string; p_estimated_minutes: number; p_sections: Json; p_provider: string; p_model: string }
+        Returns: Json
+      }
+      fail_course_import_job: { Args: { p_job_id: number; p_error_code: string }; Returns: undefined }
+      revise_lesson_content_draft: {
+        Args: { p_lesson_content_draft_id: number; p_title: string; p_summary: string; p_estimated_minutes: number; p_sections: Json }
+        Returns: Json
+      }
+      review_course_import_job: { Args: { p_job_id: number; p_decision: string; p_comment?: string }; Returns: Json }
+      publish_course_import_job: { Args: { p_job_id: number; p_course_slug: string }; Returns: Json }
       create_content_curriculum: {
         Args: {
           p_chapter_title: string
@@ -1118,6 +1200,16 @@ export type Database = {
     }
     Enums: {
       ai_response_status: "success" | "failed"
+      course_import_status:
+        | "uploaded"
+        | "processing"
+        | "outline_review"
+        | "generating_content"
+        | "content_review"
+        | "ready_to_publish"
+        | "published"
+        | "failed"
+        | "rejected"
       difficulty_level: "easy" | "medium" | "hard"
       enrollment_status: "active" | "completed" | "cancelled"
       exercise_source: "manual" | "ai_generated"
@@ -1135,6 +1227,7 @@ export type Database = {
         | "rejected"
         | "approved"
         | "published"
+      lesson_content_draft_status: "ready" | "failed"
       progress_status: "locked" | "unlocked" | "in_progress" | "completed"
       review_status: "approved" | "rejected" | "needs_revision"
       source_document_status:

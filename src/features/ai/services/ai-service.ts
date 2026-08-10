@@ -20,6 +20,7 @@ import type {
   GenerateExerciseResponse,
 } from "@/features/ai/types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 export class AiServiceError extends Error {
   constructor(
@@ -28,6 +29,7 @@ export class AiServiceError extends Error {
       | "FORBIDDEN"
       | "NOT_FOUND"
       | "AI_PROVIDER_ERROR"
+      | "RATE_LIMITED"
       | "DATABASE_ERROR",
     message: string
   ) {
@@ -252,6 +254,11 @@ export async function generateExercise(
     !["moderator", "admin"].includes(generatorProfile.role)
   ) {
     throw new AiServiceError("FORBIDDEN", "Active Moderator or Admin role required.");
+  }
+
+  const rateLimit = await checkRateLimit("ai:exercise-generation", authData.user.id);
+  if (!rateLimit.allowed) {
+    throw new AiServiceError("RATE_LIMITED", `Rate limit exceeded. Retry after ${rateLimit.retryAfterSeconds} seconds.`);
   }
 
   let lessonContext;

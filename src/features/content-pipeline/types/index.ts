@@ -46,6 +46,7 @@ export interface StructuredLessonDraft {
 export interface LessonDraftGenerationRequest {
   documentTitle: string;
   lessonTitle: string;
+  learningObjectives?: string[];
   chunks: Array<{ chunkIndex: number; content: string }>;
 }
 
@@ -59,6 +60,87 @@ export interface StructuredCourseDraft {
   title: string;
   description: string;
   lessons: StructuredLessonDraft[];
+}
+
+export type CourseImportStatus =
+  | "uploaded"
+  | "processing"
+  | "outline_review"
+  | "generating_content"
+  | "content_review"
+  | "ready_to_publish"
+  | "published"
+  | "failed"
+  | "rejected";
+
+export interface CourseOutlineLesson {
+  clientKey: string;
+  title: string;
+  summary: string;
+  learningObjectives: string[];
+  sourceChunkIndexes: number[];
+}
+
+export interface StructuredCourseOutline {
+  title: string;
+  description: string;
+  learningObjectives: string[];
+  lessons: CourseOutlineLesson[];
+}
+
+export interface CourseOutlineGenerationRequest {
+  documentTitle: string;
+  chunks: Array<{ chunkIndex: number; content: string }>;
+}
+
+export interface CourseOutlineGenerationResponse {
+  outline: StructuredCourseOutline;
+  provider: string;
+  model: string;
+}
+
+export interface CourseImportLessonDraft {
+  id: number;
+  outlineLessonId: number;
+  revision: number;
+  title: string;
+  summary: string;
+  estimatedMinutes: number;
+  sections: LessonDraftSection[];
+  status: "ready" | "failed";
+  provider: string;
+  model: string | null;
+  citations: Array<{ sectionIndex: number; chunkIndex: number; quote: string }>;
+}
+
+export interface CourseImportOutlineLesson extends CourseOutlineLesson {
+  id: number;
+  lessonOrder: number;
+  contentDraft: CourseImportLessonDraft | null;
+}
+
+export interface CourseImportDraft {
+  jobId: number;
+  sourceDocumentId: number;
+  sourceFilename: string;
+  status: CourseImportStatus;
+  errorCode: string | null;
+  outlineRevision: number;
+  approvedOutlineRevision: number | null;
+  title: string;
+  description: string;
+  learningObjectives: string[];
+  lessons: CourseImportOutlineLesson[];
+  publishedCourseId: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PersistCourseOutlineResult {
+  jobId: number;
+  sourceDocumentId: number;
+  outlineRevision: number;
+  status: "outline_review";
 }
 
 export interface CourseDraftGenerationRequest {

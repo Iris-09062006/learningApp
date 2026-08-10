@@ -4,7 +4,7 @@ import {
   contentPipelineErrorResponse,
   readPipelineJson,
 } from "@/app/api/admin/content-pipeline-route-utils";
-import { submitCourseDraftReview } from "@/features/content-pipeline/services/content-pipeline-service";
+import { submitCourseImportReview } from "@/features/content-pipeline/services/content-pipeline-service";
 
 export const runtime = "nodejs";
 interface RouteContext { params: Promise<{ id: string }> }
@@ -14,7 +14,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json(
       {
         success: true,
-        data: await submitCourseDraftReview(
+        data: await submitCourseImportReview(
           (await context.params).id,
           await readPipelineJson(request)
         ),

@@ -43,18 +43,18 @@ queue khi server chưa resolve thành công.
 - `POST /api/admin/content-sources/:id/extract` extract/normalize server-side.
 - `POST /api/admin/content-sources/:id/course-outline` chỉ sinh outline; response không
   chứa full Lesson content hoặc exercise.
-- `GET /api/admin/course-drafts` mặc định chỉ trả unresolved items ở outline/content
-  review; published/rejected/failed không quay lại pending queue sau reload.
-- `PATCH /api/admin/course-drafts/:sourceDocumentId/outline` sửa Course metadata, add,
+- `GET /api/admin/course-drafts` mặc định chỉ trả actionable items ở outline/content
+  review hoặc retryable `failed`; published/rejected không quay lại pending queue sau reload.
+- `PATCH /api/admin/course-drafts/:jobId/outline` sửa Course metadata, add,
   remove hoặc reorder Lesson outline. Server validate toàn outline sau mutation.
-- `POST /api/admin/course-drafts/:sourceDocumentId/outline/regenerate` regenerate outline
+- `POST /api/admin/course-drafts/:jobId/outline/regenerate` regenerate outline
   và tạo revision mới; không sinh Lesson content.
-- `POST /api/admin/course-drafts/:sourceDocumentId/lessons/generate` là action Continue:
+- `POST /api/admin/course-drafts/:jobId/lessons/generate` là action Continue:
   khóa approved outline revision và sinh content cho các Lesson thuộc revision đó.
 - `PATCH /api/admin/lesson-drafts/:id` sửa content của một Lesson draft.
-- `POST /api/admin/lesson-drafts/:id/regenerate` chỉ regenerate Lesson được chọn từ
+- `POST /api/admin/course-drafts/:jobId/lessons/:outlineLessonId/regenerate` chỉ regenerate Lesson được chọn từ
   normalized source, Course metadata, approved outline và source references liên quan.
-- `POST /api/admin/course-drafts/:sourceDocumentId/reviews` nhận
+- `POST /api/admin/course-drafts/:jobId/reviews` nhận
   `{ decision: "rejected" | "needs_revision", comment? }` để resolve/request revision,
   hoặc `{ decision: "published", comment? }` để publish Course + Lessons atomically.
 
@@ -92,13 +92,12 @@ chính và trả đúng một `generatedExercise` ở trạng thái `pending` c�
 Review/edit/publish tiếp tục dùng `/api/moderation/generated-exercises/**`; Course draft
 API không được đọc, approve hoặc publish generated exercise.
 
-### Current implementation gap
+### TASK-057 implementation status
 
-Endpoint hiện hữu `POST /api/admin/content-sources/:id/generate` với body `{}` đang tạo
-Course và full Lesson drafts trong một AI call. Đây là compatibility behavior, không phải
-target contract, và phải được thay thế khỏi Admin default flow khi triển khai pipeline
-hai-stage. Biến thể `{ targetLessonId }` chỉ phục vụ dữ liệu/workflow lịch sử và không được
-dùng như PDF-to-Course flow mới.
+Admin default flow now implements the two-stage endpoints and persisted state above through
+migration `025_pdf_to_course_pipeline.sql`. The historical
+`POST /api/admin/content-sources/:id/generate` behavior remains compatibility-only for old
+data/workflows; the Admin PDF-to-Course UI does not call it.
 
 ## Separated content destinations (TASK-050; supersedes TASK-049 UI flow)
 
