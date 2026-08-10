@@ -9,16 +9,35 @@
 - Course removal archives/unpublishes curriculum rather than destroying learning history.
 - Both operations are authorized at the server/database boundary and audited.
 
-## F-CONTENT-02 — PDF-to-Course batch generation
+## Product decision — hai AI pipeline độc lập
 
-Active Admin tải một PDF, hệ thống trích xuất/chunk, AI chọn chủ đề cốt lõi và tạo một
-Course với nhiều Lesson có citation. Admin review toàn batch; approve publish nguyên tử,
-reject lưu quyết định. Không tạo bài tập trong feature này.
+Quyết định này thay thế mô hình cũ coi `AI Exercise Generation → Moderation → Publish`
+là AI-generation flow duy nhất. PDF import và Lesson-to-Exercises là hai pipeline độc lập;
+không API, prompt, schema hoặc review action nào được giả định rằng một lần duyệt có thể
+xử lý cả Course draft lẫn Exercise draft.
 
-## F-AIGEN-01 clarification
+### F-AICOURSE-01 — Import Course from PDF
 
-AI exercise generation luôn bắt đầu từ một Lesson đã chọn, đọc title/content hiện tại
-của Lesson và lưu `generated_exercises.lesson_id`; kết quả vẫn phải qua moderation.
+Active Admin upload PDF, server extract/chunk nội dung, AI chỉ tạo Course outline trước,
+Admin review/edit outline rồi mới yêu cầu sinh nội dung cho từng Lesson. Pipeline này
+không được tạo exercise, quiz, answer hoặc solution.
+
+### F-AICOURSE-02 — Review and Publish AI Course Draft
+
+Admin review Course draft và các Lesson draft, có thể sửa hoặc regenerate riêng từng
+Lesson, rồi publish Course + Lessons bằng một transaction. Item đã publish/reject phải
+biến mất khỏi pending queue sau reload mà không xóa lịch sử draft/source.
+
+### F-AIEXERCISE-01 — Generate Exercises for Lesson
+
+Exercise generation luôn bắt đầu từ đúng một Lesson đã chọn, dùng title, learning
+objectives và content của Lesson làm context chính, rồi lưu quan hệ
+`generated_exercises.lesson_id`. Không có action generate exercise ở cấp Course.
+
+### F-AIEXERCISE-02 — Review and Publish Exercise Draft
+
+Exercise draft đi qua queue/edit/approve/publish riêng. Exercise chưa approved không
+được xuất hiện cho learner; publish phải giữ đúng `lesson_id` và chạy nguyên tử.
 
 ## 1. Mục tiêu
 
@@ -60,10 +79,10 @@ Mục tiêu:
 | AI Mentor | F-AI-01 | Giải thích đáp án sai / bài tập | P0 |
 | | F-AI-02 | Xem lịch sử giải thích | P1 |
 | | F-AI-03 | Đề xuất bước học tiếp theo | P2 |
-| AI Generation | F-AIGEN-01 | Tạo bài tập bằng AI | P1 |
-| Moderation | F-MOD-01 | Xem hàng đợi bài tập AI | P1 |
-| | F-MOD-02 | Review bài tập AI | P1 |
-| | F-MOD-03 | Publish bài tập đã duyệt | P1 |
+| AI Course | F-AICOURSE-01 | Import Course từ PDF qua outline review | P1 |
+| | F-AICOURSE-02 | Review và publish AI Course draft | P1 |
+| AI Exercise | F-AIEXERCISE-01 | Tạo bài tập cho một Lesson | P1 |
+| | F-AIEXERCISE-02 | Review và publish Exercise draft | P1 |
 | Profile | F-PROFILE-01 | Xem hồ sơ cá nhân | P0 |
 | | F-PROFILE-02 | Cập nhật username | P1 |
 | Admin | F-ADMIN-01 | Xem danh sách người dùng | P1 |
@@ -657,26 +676,66 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 
 ---
 
-# 13. AI Exercise Generation Module
+# 13. AI Course Generation Module
 
-## F-AIGEN-01 — Tạo bài tập bằng AI
+## F-AICOURSE-01 — Import Course from PDF
+
+**Mức ưu tiên:** P1
+**Actor:** Active Admin
+
+### Luồng bắt buộc
+
+1. Upload PDF và tạo import/generation job; chưa tạo official Course.
+2. Extract và normalize nội dung hoàn toàn server-side.
+3. AI phân tích tri thức cốt lõi và trả Course outline đã qua schema validation.
+4. Admin sửa Course metadata, add/remove/reorder Lesson hoặc regenerate outline.
+5. Chỉ sau action Continue, AI sinh content riêng cho từng Lesson dựa trên approved outline.
+6. Admin sửa/regenerate riêng từng Lesson trong Course draft.
+7. Admin publish Course + Lessons hoặc reject.
+
+### Quy tắc nghiệp vụ
+
+- Outline gồm Course title, description, learning objectives và danh sách Lesson có
+  title, summary, learning objectives/source references; chưa có full Lesson content.
+- Pipeline không có exercise, quiz, answer hoặc solution trong prompt, schema hay dữ liệu
+  persistence.
+- Regenerate một Lesson không bắt buộc regenerate Course hay các Lesson khác.
+- AI output không tự publish và mọi transition phải persist phía server.
+
+## F-AICOURSE-02 — Review and Publish AI Course Draft
+
+**Mức ưu tiên:** P1
+**Actor:** Active Admin
+
+- Outline review và Course-content review là hai checkpoint khác nhau.
+- Publish chỉ hợp lệ khi mọi Lesson bắt buộc đã generate và Course draft ở trạng thái
+  ready-to-publish.
+- Publish Course, Chapter và Lessons phải atomic; lỗi giữa chừng rollback toàn bộ.
+- Approve/publish hoặc reject phải resolve item bền vững để pending queue không hiển thị
+  lại sau reload.
+
+---
+
+# 14. AI Exercise Generation and Moderation Module
+
+## F-AIEXERCISE-01 — Tạo bài tập cho một Lesson
 
 **Mức ưu tiên:** P1  
-**Actor:** Moderator hoặc System task được kiểm soát
+**Actor:** Active Moderator hoặc Active Admin
 
 ### Input
 
 - Lesson ID.
 - Exercise type.
 - Difficulty.
-- Learning objective.
+- Learning objective của Lesson hoặc mục tiêu cụ thể trong Lesson.
 - Số lượng option.
 
 ### Luồng chính
 
-1. Moderator yêu cầu tạo bài.
+1. Moderator/Admin mở hoặc chọn đúng một Lesson và yêu cầu tạo bài.
 2. Server kiểm tra role.
-3. Lấy lesson context.
+3. Lấy title, learning objectives và content hiện tại của Lesson làm context chính.
 4. Prompt Builder tạo prompt.
 5. AI Provider trả structured response.
 6. Response validator kiểm tra schema.
@@ -686,15 +745,21 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 ### Quy tắc nghiệp vụ
 
 - Chỉ hỗ trợ hai exercise type của MVP.
+- Không sinh theo Course và không gửi toàn PDF nếu Lesson context đã đủ.
+- Mọi generated exercise phải persist đúng `lesson_id` của Lesson được chọn.
 - Correct solution phải có.
 - Generated content phải qua review.
 - Provider response sai schema bị từ chối.
 
 ---
 
-# 14. Content Moderation Module
+## F-AIEXERCISE-02 — Review và publish Exercise draft
 
-## F-MOD-01 — Xem hàng đợi bài tập AI
+Feature này sở hữu toàn bộ queue, edit, approve/reject/needs-revision và publish của
+Exercise draft. Các mục F-MOD-01/02/03 cũ bên dưới là các capability con của
+F-AIEXERCISE-02, không phải review model dùng chung với Course draft.
+
+### F-MOD-01 — Xem hàng đợi bài tập AI
 
 **Mức ưu tiên:** P1  
 **Actor:** Moderator, Admin
@@ -723,7 +788,7 @@ GET /api/moderation/generated-exercises
 
 ---
 
-## F-MOD-02 — Review bài tập AI
+### F-MOD-02 — Review bài tập AI
 
 **Mức ưu tiên:** P1  
 **Actor:** Moderator, Admin
@@ -759,7 +824,7 @@ POST /api/moderation/generated-exercises/:id/reviews
 
 ---
 
-## F-MOD-03 — Publish bài tập đã duyệt
+### F-MOD-03 — Publish bài tập đã duyệt
 
 **Mức ưu tiên:** P1  
 **Actor:** Moderator, Admin
@@ -987,9 +1052,18 @@ Course Catalog
                                 ├── Progress
                                 └── AI Explanation
 
-AI Exercise Generation
-  └── Moderation
-        └── Publish Exercise
+PDF Source
+  └── Extract
+        └── Course Outline
+              └── Admin Outline Review
+                    └── Lesson Content Generation
+                          └── Admin Course Review
+                                └── Atomic Course Publish
+
+Published/Approved Lesson
+  └── Exercise Generation
+        └── Exercise Draft Review
+              └── Publish Exercise
 
 Authentication
   └── Role Authorization
@@ -1003,7 +1077,9 @@ Ví dụ:
 
 - Không làm Roadmap trước khi có Enrollment và Progress model.
 - Không làm AI Explanation trước khi có Submission.
-- Không làm Publish trước khi có Generated Exercise và Review.
+- Không generate Lesson content trước khi Admin chấp thuận outline.
+- Không publish Course trước khi Course/Lesson review hoàn tất.
+- Không publish Exercise trước khi có Generated Exercise và Exercise review.
 - Không làm Admin role change trước khi có server-side authorization.
 
 ---
@@ -1039,9 +1115,9 @@ Ví dụ:
 - Search course.
 - Submission history.
 - AI explanation history.
-- AI exercise generation.
-- Moderator review.
-- Publish generated exercise.
+- Import Course từ PDF qua outline review và Course review.
+- AI exercise generation cho một Lesson.
+- Exercise draft review và publish.
 - Admin user management.
 - Audit log.
 - Health check.
@@ -1359,10 +1435,10 @@ Chưa triển khai feature nghiệp vụ trong phase này.
 
 ## Phase 6 — Operations Extension
 
-- F-AIGEN-01.
-- F-MOD-01.
-- F-MOD-02.
-- F-MOD-03.
+- F-AICOURSE-01.
+- F-AICOURSE-02.
+- F-AIEXERCISE-01.
+- F-AIEXERCISE-02 (bao gồm capability F-MOD-01/02/03 lịch sử).
 - F-ADMIN-01.
 - F-ADMIN-02.
 - F-ADMIN-03.

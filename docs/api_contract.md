@@ -13,16 +13,92 @@
 - Invalid IDs return `400`, missing/already archived courses return `404`, unauthenticated
   callers return `401`, and non-Admin/inactive-Admin callers return `403`.
 
-## TASK-055 Course draft batch endpoints
+## AI Course and AI Exercise contract — target behavior
 
-- `POST /api/admin/content-sources/:id/generate` với `{}` tạo Course + nhiều Lesson
-  draft; body có `targetLessonId` vẫn là compatibility path one-Lesson.
-- `GET /api/admin/course-drafts` trả `{ items: CourseDraftBatch[] }` và chỉ gồm
-  `pending_review|needs_revision`.
+Contract này thay thế semantics TASK-055 trong đó một lần gọi AI tạo đồng thời Course
+metadata và full content của mọi Lesson. Hai pipeline không dùng chung review action.
+
+### Course import state
+
+```ts
+type CourseImportStatus =
+  | "uploaded"
+  | "processing"
+  | "outline_review"
+  | "generating_content"
+  | "content_review"
+  | "ready_to_publish"
+  | "published"
+  | "failed"
+  | "rejected";
+```
+
+Tên lưu trong database có thể khác, nhưng API phải map về đúng semantics trên. Mọi
+mutation trả state đã persist; client không được tự chuyển state hoặc tự loại item khỏi
+queue khi server chưa resolve thành công.
+
+### Course import endpoints
+
+- `POST /api/admin/content-sources` upload source riêng tư và trả source/import identity.
+- `POST /api/admin/content-sources/:id/extract` extract/normalize server-side.
+- `POST /api/admin/content-sources/:id/course-outline` chỉ sinh outline; response không
+  chứa full Lesson content hoặc exercise.
+- `GET /api/admin/course-drafts` mặc định chỉ trả unresolved items ở outline/content
+  review; published/rejected/failed không quay lại pending queue sau reload.
+- `PATCH /api/admin/course-drafts/:sourceDocumentId/outline` sửa Course metadata, add,
+  remove hoặc reorder Lesson outline. Server validate toàn outline sau mutation.
+- `POST /api/admin/course-drafts/:sourceDocumentId/outline/regenerate` regenerate outline
+  và tạo revision mới; không sinh Lesson content.
+- `POST /api/admin/course-drafts/:sourceDocumentId/lessons/generate` là action Continue:
+  khóa approved outline revision và sinh content cho các Lesson thuộc revision đó.
+- `PATCH /api/admin/lesson-drafts/:id` sửa content của một Lesson draft.
+- `POST /api/admin/lesson-drafts/:id/regenerate` chỉ regenerate Lesson được chọn từ
+  normalized source, Course metadata, approved outline và source references liên quan.
 - `POST /api/admin/course-drafts/:sourceDocumentId/reviews` nhận
-  `{ decision, comment? }`; `approved` trả `status: published` và `lessonIds`.
-- `POST /api/ai/exercises/generate` tiếp tục nhận đúng một `lessonId` và trả một
-  generated exercise ở trạng thái pending.
+  `{ decision: "rejected" | "needs_revision", comment? }` để resolve/request revision,
+  hoặc `{ decision: "published", comment? }` để publish Course + Lessons atomically.
+
+`published` chỉ hợp lệ từ `ready_to_publish`; response thành công trả
+`{ sourceDocumentId, courseId, status: "published", lessonIds }`. Nếu bất kỳ Course,
+Chapter, Lesson, publication marker hoặc audit write nào lỗi, request thất bại và không
+record nào được public.
+
+### Outline DTO
+
+```ts
+interface CourseOutlineDraft {
+  title: string;
+  description: string;
+  learningObjectives: string[];
+  lessons: Array<{
+    clientKey: string;
+    title: string;
+    summary: string;
+    learningObjectives: string[];
+    sourceChunkIndexes: number[];
+  }>;
+}
+```
+
+`clientKey` là identity ổn định trong một outline revision để edit/reorder trước khi
+official Lesson tồn tại. Unknown fields, empty objective, duplicate key, invalid source
+reference và mọi field `exercise|quiz|answer|solution` đều bị từ chối.
+
+### Exercise endpoints
+
+`POST /api/ai/exercises/generate` tiếp tục nhận đúng một `lessonId` cùng exercise type,
+difficulty và learning objective. Server lấy Lesson title/objectives/content làm context
+chính và trả đúng một `generatedExercise` ở trạng thái `pending` có cùng `lessonId`.
+Review/edit/publish tiếp tục dùng `/api/moderation/generated-exercises/**`; Course draft
+API không được đọc, approve hoặc publish generated exercise.
+
+### Current implementation gap
+
+Endpoint hiện hữu `POST /api/admin/content-sources/:id/generate` với body `{}` đang tạo
+Course và full Lesson drafts trong một AI call. Đây là compatibility behavior, không phải
+target contract, và phải được thay thế khỏi Admin default flow khi triển khai pipeline
+hai-stage. Biến thể `{ targetLessonId }` chỉ phục vụ dữ liệu/workflow lịch sử và không được
+dùng như PDF-to-Course flow mới.
 
 ## Separated content destinations (TASK-050; supersedes TASK-049 UI flow)
 
@@ -1761,23 +1837,30 @@ POST /api/moderation/generated-exercises/:id/publish
 ```
 
 Giới hạn cụ thể từng endpoint được ghi tại `docs/security.md` — Mục 9.
-# Admin Document-to-Lesson API
+# Admin PDF-to-Course API
 
 Mọi route dưới đây yêu cầu active Admin, trả envelope chuẩn và
 `Cache-Control: no-store`.
 
 | Method | Route | Request | Success |
 |---|---|---|---|
-| `GET` | `/api/admin/content-targets` | — | `{ items: ContentTarget[] }` |
 | `POST` | `/api/admin/content-sources` | multipart `file` | `201 SourceDocument` |
 | `POST` | `/api/admin/content-sources/:id/extract` | — | extraction summary |
-| `POST` | `/api/admin/content-sources/:id/generate` | `{ targetLessonId }` | `201 { lessonDraftId, status }` |
-| `GET` | `/api/admin/lesson-drafts?status=` | optional status | `{ items: LessonDraft[] }` |
-| `GET` | `/api/admin/lesson-drafts/:id` | — | draft + current-revision citations |
+| `POST` | `/api/admin/content-sources/:id/course-outline` | — | `201 CourseOutlineDraft` |
+| `GET` | `/api/admin/course-drafts` | unresolved filter | `{ items: CourseDraft[] }` |
+| `PATCH` | `/api/admin/course-drafts/:id/outline` | outline mutation | new outline revision |
+| `POST` | `/api/admin/course-drafts/:id/outline/regenerate` | — | new outline revision |
+| `POST` | `/api/admin/course-drafts/:id/lessons/generate` | — | per-Lesson generation states |
+| `GET` | `/api/admin/lesson-drafts/:id` | — | content draft + citations |
 | `PATCH` | `/api/admin/lesson-drafts/:id` | structured draft | new revision/status |
-| `POST` | `/api/admin/lesson-drafts/:id/reviews` | `{ decision, comment? }` | review status |
-| `POST` | `/api/admin/lesson-drafts/:id/publish` | — | publication + course visibility |
+| `POST` | `/api/admin/lesson-drafts/:id/regenerate` | — | new content revision |
+| `POST` | `/api/admin/course-drafts/:id/reviews` | Course decision | persisted state/publication |
 
 Upload giới hạn 10 MiB và MIME theo `docs/document-to-lesson.md`. `409 INVALID_STATE`
 được dùng khi gọi sai thứ tự pipeline; invalid input trả `400`; authentication/
 authorization trả `401`/`403`.
+
+Các endpoint `content-targets`, `content-curriculum`,
+`content-sources/:id/generate { targetLessonId }` và one-Lesson review/publish là
+compatibility surface lịch sử. Chúng không thuộc Admin PDF-to-Course default flow và
+không được dùng để bỏ qua outline review hoặc tạo official curriculum trước Publish.

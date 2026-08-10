@@ -9,14 +9,24 @@
   learning history remains, then removes the archived row from the table on success.
 - Success uses `role=status`; failures use `role=alert`; buttons expose loading state.
 
-## TASK-055 Admin content states
+## AI Course / AI Exercise Admin states
 
-- Upload section nói rõ PDF chỉ tạo Course/Lessons, không tạo bài tập.
-- Pending queue hiển thị Course metadata và danh sách Lesson; từng Lesson mở editor
-  nội dung/citation. Có loading, empty, retry, error và live status.
-- Approve/reject xử lý toàn Course và item biến mất khỏi queue sau refresh.
-- Exercise section tách biệt, bắt buộc chọn đúng một Lesson đã publish và thông báo
-  kết quả đang chờ moderation riêng.
+`/admin/content` trình bày Pipeline A theo stepper server-backed:
+
+1. Upload và extract PDF.
+2. Outline review: edit Course metadata, add/remove/reorder Lesson, regenerate, reject,
+   Continue. Chưa hiển thị editor full content hoặc action Exercise.
+3. Lesson generation progress: status/retry riêng theo Lesson.
+4. Course review: edit/regenerate riêng Lesson, reject hoặc Publish.
+5. Published confirmation: link official Course; item không còn trong pending queue sau
+   reload.
+
+Mỗi state có loading/empty/error/retry, `aria-live`, keyboard reorder alternative và
+text label không phụ thuộc màu. UI không chuyển bước trước response persisted thành công.
+
+Action Generate Exercises nằm trong context của một Published/Approved Lesson (Lesson
+detail hoặc Admin Lesson row), không phải nút cấp Course/PDF. Kết quả dẫn sang moderation
+Exercise riêng và nói rõ Exercise đang pending, chưa hiển thị cho learner.
 
 ## 1. Mục tiêu
 
@@ -233,15 +243,18 @@ Key Elements:
 7. `Exercise Page` (`/exercises/:id`): Giao diện làm bài tập Predict Output / Fix Bug.
 8. `Moderator Queue` (`/moderator/queue`): Hàng đợi duyệt bài tập AI.
 9. `Admin User Management` (`/admin/users`): Quản lý người dùng & phân quyền.
-# Admin Document-to-Lesson screen
+# Admin PDF-to-Course screen
 
-Route `/admin/content` dành riêng cho Admin, gồm ba vùng responsive:
+Route `/admin/content` dành riêng cho Admin, gồm các vùng responsive:
 
-1. Form upload + chọn course/chapter/lesson đích.
-2. Queue draft với revision và trạng thái bằng text, không phụ thuộc màu.
-3. Editor section/citation với hành động save, needs revision, reject, approve và
-   transactional publish.
+1. Upload/extraction và import-job status.
+2. Outline queue/editor với Course metadata, add/remove/reorder Lesson, regenerate,
+   reject và Continue.
+3. Lesson generation status + retry riêng cho từng Lesson.
+4. Course/Lesson content editor có citation, per-Lesson regenerate, reject và atomic
+   Publish.
 
 Mọi input có label, status pipeline dùng `aria-live`, lỗi dùng `role="alert"`, button có
 loading/disabled state và focus ring. Citation hiển thị cạnh section tương ứng. Nút
-publish chỉ bật khi draft ở trạng thái `approved`; UI vẫn không thay thế server/RLS.
+Publish chỉ bật khi job ở `ready_to_publish`; UI vẫn không thay thế server/RLS. Không có
+nút generate Exercise ở cấp PDF/Course; action đó chỉ xuất hiện trong Lesson context.

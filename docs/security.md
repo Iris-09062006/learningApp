@@ -11,14 +11,31 @@
 - Destructive controls require an explicit browser confirmation and report server errors
   through an accessible alert; confirmation is UX protection, not the authorization boundary.
 
-## TASK-055 authorization boundary
+## AI Course / AI Exercise authorization boundary
 
-- Chỉ active Admin được upload/extract/generate/review Course batches.
-- Chỉ active Moderator/Admin được gọi AI exercise generation; role được kiểm tra trước
-  khi đọc Lesson context hoặc gọi provider để tránh lạm dụng chi phí AI.
-- Course provider schema/prompt không có bài tập; source chunks là untrusted data.
-- Batch RPC là `security definer`, dùng empty `search_path`, tự kiểm tra `auth.uid()`,
-  active Admin, source state, quan hệ Course/Lesson và citations.
+- Chỉ active Admin được upload, extract, generate/regenerate outline, edit outline,
+  generate/regenerate Lesson content, review và publish/reject Course import.
+- Chỉ active Moderator/Admin được gọi AI exercise generation và review/publish Exercise
+  draft. Role/active state phải được kiểm tra trước khi đọc Lesson/source context hoặc gọi
+  provider để tránh data disclosure và lạm dụng chi phí AI.
+- Course import và Exercise moderation dùng service/RPC riêng. Không có polymorphic
+  `approve` endpoint nhận type từ client rồi tự chọn domain logic.
+- Source object, extracted text, chunks, prompts, raw provider response và AI key là
+  server-only. Client chỉ nhận validated outline/content DTO và citations cần review.
+- Source chunks và Lesson content đều là untrusted reference data. System prompt phải
+  đóng khung chúng như data, không phải instruction; server validate strict schema và
+  reject unknown fields.
+- Course outline/Lesson schema tuyệt đối không có exercise, quiz, answer hoặc solution.
+  Exercise provider chỉ nhận context của Lesson được authorize, không nhận toàn PDF theo
+  mặc định.
+- Mọi state-changing RPC phải là active-Admin authorized, `security definer`, empty
+  `search_path`, revoke `PUBLIC/anon`, lock/validate current state và không tin actor,
+  role, status, Course ID hoặc Lesson ID do client tự khẳng định.
+- Publish Course là multi-record transaction: không Course/Chapter/Lesson nào public nếu
+  một record, publication mapping hoặc audit write thất bại.
+- AI outline, Lesson-content và Exercise-generation endpoints phải dùng distributed rate
+  limiter (20 provider calls/actor/hour cho mỗi endpoint family), trả `429`, có timeout và
+  không gọi provider nếu authorization/rate-limit validation thất bại.
 
 ## 1. Mục tiêu
 
@@ -297,6 +314,8 @@ AI_API_KEY=AIzaSy...
 | `POST /api/auth/forgot-password` | 5 requests / IP / 1 giờ | HTTP 429 Too Many Requests |
 | `POST /api/admin/users/:userId/recover` | 5 requests / Admin-target pair / 1 giờ | HTTP 429 Too Many Requests |
 | `POST /api/ai/explanations` | 20 requests / user / 1 giờ | HTTP 429 Rate Limited |
+| AI Course outline/Lesson generation endpoints | 20 provider calls / Admin / 1 giờ / endpoint family | HTTP 429 Rate Limited |
+| `POST /api/ai/exercises/generate` | 20 requests / Moderator hoặc Admin / 1 giờ | HTTP 429 Rate Limited |
 | `POST /api/moderation/*` | 30 requests / moderator / 1 giờ | HTTP 429 Rate Limited |
 
 Giới hạn `POST /api/auth/forgot-password` được chốt theo ADR-024.

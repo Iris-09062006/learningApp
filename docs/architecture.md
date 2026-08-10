@@ -1,11 +1,21 @@
 # Architecture
 
-## TASK-055 pipeline boundary
+## AI pipeline boundary — target architecture
 
-`content-pipeline` sở hữu PDF → Course/Lesson draft → Admin batch review. Nó không
-import AI exercise repository và không ghi bảng bài tập. `ai` tiếp tục sở hữu generation
-theo một `lessonId`; `moderation` tiếp tục sở hữu review/publish bài tập. Atomic Course
-creation/review nằm trong PostgreSQL RPC để không lộ curriculum nửa hoàn tất.
+`content-pipeline` sở hữu state machine PDF → extraction → outline → outline review →
+Lesson-content generation → Course review → atomic Course publish. Outline generation
+và Lesson-content generation là hai application use case/provider schema khác nhau;
+official curriculum chỉ được tạo trong publish transaction.
+
+`ai` sở hữu exercise generation theo đúng một `lessonId`; `moderation` sở hữu
+review/publish Exercise draft. Hai module này không import Course-import repository và
+`content-pipeline` không import exercise repository hoặc ghi bảng bài tập. Có thể reuse
+hạ tầng provider/rate-limit/audit, nhưng không reuse domain state hoặc một polymorphic
+approve service.
+
+Implementation hiện tại vẫn gọi `generateCourseDraft` để tạo Course metadata và full
+Lesson content cùng lúc rồi tạo unpublished curriculum trước review. Đây là traced gap,
+không phải kiến trúc đích.
 
 ## 1. Mục tiêu kiến trúc
 
@@ -1179,7 +1189,7 @@ Kiến trúc ưu tiên khả năng hoàn thành, kiểm thử và vận hành s�
 Service và repository nằm trong feature sở hữu nghiệp vụ. Supabase đảm nhiệm Authentication và PostgreSQL. Vercel chạy ứng dụng Next.js. Mọi thao tác nhạy cảm, chấm bài, cập nhật tiến độ, quản trị và lời gọi AI được thực hiện phía server.
 
 Cấu trúc này đủ rõ để Antigravity và Codex làm việc trên cùng workspace mà không tự suy đoán ranh giới module, đồng thời vẫn cho phép mở rộng thêm khóa học, exercise type hoặc AI provider trong tương lai.
-# Document-to-Lesson extension
+# PDF-to-Course extension
 
 Chi tiết normative nằm tại `docs/document-to-lesson.md`. Extension giữ nguyên modular
 monolith và thêm module `src/features/content-pipeline` theo chuỗi:
@@ -1193,7 +1203,10 @@ Admin UI → Admin Route Handlers → Content Pipeline Service
 
 Extraction và provider chỉ chạy trong Node.js server runtime. Source text là dữ liệu
 không tin cậy; provider không được gọi từ browser. Các RPC `replace_document_chunks`,
-`create_lesson_draft`, `review_lesson_draft`, `revise_lesson_draft` và
-`publish_lesson_draft` là transaction boundary. Course catalog tiếp tục chỉ đọc course
-có `is_published = true`; chỉ RPC publish mới được chuyển visibility sau khi kiểm tra
-toàn bộ chapter/lesson.
+state-machine persistence, outline revision, per-Lesson content revision và atomic Course
+publish là các transaction boundary riêng. Các RPC one-Lesson
+`create_lesson_draft|review_lesson_draft|revise_lesson_draft|publish_lesson_draft` và
+TASK-055 batch RPC chỉ là compatibility path cho dữ liệu lịch sử; Admin default flow mới
+không được dùng chúng để bỏ qua outline review. Course catalog tiếp tục chỉ đọc course
+có `is_published = true`; publish transaction tạo toàn bộ official curriculum hoặc
+rollback toàn bộ.

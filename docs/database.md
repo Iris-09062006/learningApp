@@ -12,15 +12,72 @@
 - The RPC never deletes enrollments, progress, submissions, exercises, source documents,
   or drafts. Referential history is preserved.
 
-## TASK-055 Course draft batch
+## AI Course import persistence — target contract
 
-- Một Course batch được nhận diện bởi `lesson_drafts.source_document_id`; mọi draft
-  trong batch phải cùng `course_id`.
-- `create_course_lesson_drafts` tạo Course/Chapter/Lessons/drafts/citations nguyên tử.
-- `review_course_draft_batch` ghi review từng Lesson và publish toàn batch hoặc reject
-  toàn batch trước khi archive source.
-- Không thêm `course_id` vào bảng bài tập. `generated_exercises.lesson_id` và
-  `exercises.lesson_id` vẫn là ownership duy nhất của bài tập.
+Migration `023` mô tả implementation một-stage hiện tại, nhưng không đủ cho product
+decision mới: nó tạo official unpublished `courses/chapters/lessons` trước review và lưu
+full Lesson content ngay sau một AI call. Target schema phải tách outline, Lesson content
+và official curriculum; không coi các row curriculum chưa publish là draft model.
+
+### Normalized draft model
+
+Migration tiếp theo phải tạo hoặc cung cấp semantics tương đương cho:
+
+```text
+source_documents
+  └── course_import_jobs
+        └── course_drafts
+              ├── course_draft_objectives
+              └── course_outline_lessons (ordered)
+                    ├── course_outline_lesson_objectives
+                    ├── course_outline_lesson_sources
+                    └── lesson_content_drafts
+                          └── lesson_content_draft_citations
+```
+
+- `course_import_jobs` là state-machine/audit identity của một lần import và tham chiếu
+  đúng một `source_document_id`.
+- `course_drafts` giữ metadata/revision của Course draft; chưa phải `courses`.
+- `course_outline_lessons` giữ Lesson identity/order/title/summary/source references để
+  add/remove/reorder độc lập trước khi sinh content.
+- `lesson_content_drafts` giữ content/revision/provider state riêng cho từng outline
+  Lesson; regenerate một Lesson không ghi đè Lesson khác.
+- Objective, Lesson order và source relation cần edit/query độc lập phải là row/column có
+  constraint; không nhét toàn bộ Course outline vào một JSON blob.
+
+### State and invariants
+
+```text
+uploaded → processing → outline_review → generating_content
+         → content_review → ready_to_publish → published
+         ↘ failed
+outline_review|content_review → rejected
+```
+
+- Transition phải compare-and-set hoặc lock job row để retry/concurrent request không
+  tạo duplicate Course/Lesson.
+- Chỉ một approved outline revision được dùng để generate Lesson content.
+- `ready_to_publish` yêu cầu mọi outline Lesson còn hiệu lực có valid content draft.
+- Pipeline A không có FK, trigger hoặc RPC insert vào `generated_exercises`, `exercises`,
+  `exercise_options` hoặc `exercise_solutions`.
+
+### Atomic publish
+
+Một RPC/transaction `publish_course_import_job` (hoặc tên tương đương được chốt trong
+migration) phải lock job ở `ready_to_publish`, tạo official Course/Chapter/Lessons từ
+approved draft, ghi publication/audit mapping và chuyển job sang `published` trong cùng
+transaction. Bất kỳ lỗi insert Lesson/audit/mapping nào phải rollback toàn bộ; retry sau
+success trả cùng published identity thay vì tạo bản sao.
+
+Reject chỉ chuyển job/draft sang `rejected`; không tạo hoặc xóa official curriculum.
+Pending query chỉ lấy `outline_review|content_review|ready_to_publish` (và revision state
+có thể hành động), nên resolved item biến mất bền vững sau reload.
+
+### Exercise ownership remains separate
+
+Không thêm `course_id` vào bảng bài tập. `generated_exercises.lesson_id` và
+`exercises.lesson_id` vẫn là ownership duy nhất của bài tập. Exercise generation/review
+không được thay đổi `course_import_jobs` hoặc Course draft state.
 
 ## TASK-050 — Separated content destination RPCs
 
@@ -96,6 +153,14 @@ Các bảng chỉ triển khai khi task tương ứng được duyệt:
 generated_exercises
 exercise_reviews
 admin_logs
+course_import_jobs
+course_drafts
+course_draft_objectives
+course_outline_lessons
+course_outline_lesson_objectives
+course_outline_lesson_sources
+lesson_content_drafts
+lesson_content_draft_citations
 ```
 
 AI generation, moderation và Admin mutation không được bật trước migration, RLS, transaction và test của nhóm bảng P1.
@@ -1163,7 +1228,7 @@ Database task chỉ hoàn thành khi:
 | RAG | Không thuộc MVP |
 
 Thiết kế này đủ để Codex triển khai từng task mà không tự suy đoán schema. Gemini/Antigravity review migration, RLS và test thông qua workflow thủ công do người dùng làm cầu nối.
-# Document-to-Lesson schema extension
+# Legacy Document-to-Lesson schema extension
 
 Migration `015_document_to_lesson.sql` bổ sung:
 
@@ -1180,6 +1245,12 @@ Tất cả bảng public bật RLS và chỉ active Admin được truy cập. C
 revoke `PUBLIC`/`anon` và chỉ grant `authenticated`. `publish_lesson_draft` khóa các row
 liên quan, yêu cầu approved revision hiện tại và citation đầy đủ trước khi cập nhật
 lesson/chapter/course trong cùng transaction.
+
+Các object migration `015` và batch RPC migration `023` được giữ cho compatibility và
+lịch sử. Chúng không đáp ứng target two-stage outline contract vì `lesson_drafts` yêu cầu
+official target Lesson và batch RPC tạo curriculum trước review. Implementation mới phải
+dùng normalized Course-import draft model và atomic publish boundary định nghĩa ở mục
+“AI Course import persistence — target contract”; không sửa ngược migration cũ.
 
 # Distributed rate-limit state
 

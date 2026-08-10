@@ -1,143 +1,164 @@
-# PDF-to-Course — Product and Technical Contract
+# PDF-to-Course and Lesson-to-Exercises Contract
 
-## 1. Outcome
+Tên file được giữ để không làm hỏng liên kết lịch sử. Nội dung này là contract chuẩn cho
+hai AI pipeline độc lập và supersede flow TASK-055 một-stage.
 
-Một tài liệu do Admin tải lên được chuyển thành đúng một Course chưa xuất bản và
-một danh sách Lesson có thứ tự. AI chỉ phân tích các chủ đề cốt lõi, bỏ nội dung
-không phù hợp và viết Course/Lesson draft có citation. Pipeline này tuyệt đối không
-tạo bài tập.
-
-Course batch phải qua Admin review. `approved` đồng nghĩa với việc Course và toàn bộ
-Lesson được xuất bản trong một transaction; `rejected` được lưu vĩnh viễn nhưng không
-hiện trong hàng chờ. Bài tập được sinh ở một flow khác, cho đúng một Lesson đã chọn.
-
-## 2. Actors and authorization
-
-- Active `admin`: upload, extract, generate Course batch, edit Lesson draft, review,
-  approve/publish hoặc reject.
-- Active `moderator` hoặc `admin`: sinh bài tập cho một Lesson và dùng hàng moderation
-  hiện hữu để review/publish bài tập.
-- Learner/guest: không truy cập source object, chunks, drafts, prompts, provider output
-  hoặc review history.
-- Server kiểm tra session, `profiles.role` và `profiles.is_active` trước khi đọc nội
-  dung đặc quyền hoặc gọi AI. Client-side role checks không phải security boundary.
-
-## 3. Source and state
-
-- MIME hỗ trợ: plain text, Markdown, PDF có text layer và DOCX.
-- Giới hạn: 10 MiB/file, tối đa 200.000 ký tự trích xuất; không OCR.
-- Storage bucket là private. Source text được chuẩn hóa, chunk và lưu hash/citation.
+## 1. Current-state trace
 
 ```text
-uploaded → extracting → extracted → generating → ready_for_review
-                  ↘ failed ←──────────────────↗
-ready_for_review → archived   (approve hoặc reject)
+Current Course flow:
+upload → extract/chunk → one AI call creates Course metadata + full Lesson contents
+→ create unpublished Course/Chapter/Lessons/drafts → batch review → atomic publish
+
+Current Exercise flow:
+selected published Lesson → AI generation → generated_exercises.lesson_id
+→ Exercise moderation → atomic publish
 ```
 
-Mỗi Lesson draft dùng state hiện hữu:
+Sai khác của Course flow hiện tại:
+
+- Không có outline-only output hoặc outline review checkpoint.
+- Admin chưa add/remove/reorder Lesson trước content generation.
+- Không có action Continue khóa approved outline revision.
+- Không regenerate content độc lập cho một Lesson từ approved outline.
+- Official unpublished curriculum được tạo trước publish thay vì chỉ tạo draft model.
+
+Exercise flow hiện đã đúng boundary chính: một Lesson, đúng `lesson_id`, moderation riêng.
+
+## 2. Pipeline A — PDF to Course
 
 ```text
-pending_review ↔ needs_revision
-pending_review → rejected
-pending_review → approved → published
+Upload PDF
+→ Extract/normalize server-side
+→ AI analyze core knowledge
+→ Generate Course outline
+→ Admin review/edit outline
+→ Generate Lesson contents
+→ Admin review/edit Course draft
+→ Atomic publish Course + Lessons
 ```
 
-## 4. Structured Course draft
+### A1 — Upload and job
+
+Upload tạo private `source_document` và một import/generation job. Không tạo official
+Course, Chapter hoặc Lesson. Job/status là server-persisted; browser local state không
+phải source of truth.
+
+### A2 — Extract
+
+Server download source, extract/normalize text, chunk, hash và lưu provenance. Raw PDF,
+source text, provider secret và raw provider response không trả về client. PDF scan cần
+OCR vẫn ngoài scope.
+
+### A3 — Outline generation
+
+Provider chỉ trả structure:
 
 ```json
 {
   "title": "Python nền tảng",
-  "description": "Khóa học nhập môn",
+  "description": "Khóa nhập môn",
+  "learningObjectives": ["Hiểu biến và kiểu dữ liệu"],
   "lessons": [
     {
+      "clientKey": "lesson-1",
       "title": "Biến",
       "summary": "Khái niệm và phép gán",
-      "estimatedMinutes": 12,
-      "sections": [
-        {
-          "heading": "Khái niệm",
-          "bodyMarkdown": "...",
-          "citationChunkIndexes": [0]
-        }
-      ]
+      "learningObjectives": ["Khai báo và cập nhật biến"],
+      "sourceChunkIndexes": [0, 1]
     }
   ]
 }
 ```
 
-Ràng buộc:
+Strict schema từ chối unknown fields, invalid citation và mọi field liên quan
+`exercise`, `quiz`, `question`, `answer` hoặc `solution`. Outline không có full Lesson
+body.
 
-- 2–20 Lesson/Course; mỗi Lesson có 1–12 section và 1–180 phút.
-- Mỗi section có ít nhất một citation thuộc các chunks đã gửi cho provider.
-- Schema không có `exercise`, `quiz`, `question`, `answer` hoặc `solution`.
-- Prompt yêu cầu bỏ nội dung lặp, quảng cáo, hành chính, đáp án mẫu và phần không thể
-  dạy thành Lesson; source text luôn là dữ liệu không tin cậy, không phải instruction.
-- Server parse và validate lại toàn bộ output trước khi ghi database.
+### A4 — Outline review
 
-## 5. Atomic persistence
+Admin có thể sửa Course title/description/objectives; sửa Lesson title/summary/objectives;
+add/remove/reorder Lesson; regenerate outline; reject; hoặc Continue. Mọi mutation tạo
+revision và persist server-side. Continue khóa approved outline revision rồi mới chuyển
+sang content generation.
 
-RPC `create_course_lesson_drafts` khóa source ở trạng thái `generating` rồi tạo trong
-cùng một transaction:
+### A5 — Lesson content generation
 
-1. một `courses` row chưa publish;
-2. một Chapter `Nội dung chính` chưa publish để tuân theo schema Course → Chapter → Lesson;
-3. các `lessons` row chưa publish theo đúng thứ tự AI trả về;
-4. một `lesson_drafts` row cho mỗi Lesson;
-5. các `lesson_draft_citations` trỏ đúng `document_chunks` của source.
+Mỗi Lesson được generate từ normalized source, Course metadata, approved outline và các
+source sections liên quan. Lesson có thể chạy/retry/regenerate độc lập. Output có title,
+summary, estimated time, sections và citations; không có Exercise.
 
-Nếu bất kỳ Lesson hoặc citation nào không hợp lệ, toàn bộ transaction rollback. RPC
-không ghi `exercises` hoặc `generated_exercises`.
+### A6 — Course review
 
-## 6. Review queue and resolution
+Admin review Course + toàn bộ Lesson content; có thể edit hoặc regenerate riêng Lesson,
+remove/add/reorder theo contract revision, reject hoặc đưa draft sang ready-to-publish.
+Không action nào tự publish.
 
-- `GET /api/admin/course-drafts` chỉ trả batch có Lesson draft ở
-  `pending_review|needs_revision` và source `ready_for_review`.
-- UI hiển thị metadata Course, filename, danh sách Lesson có thứ tự, summary, thời
-  lượng và nội dung/citation của từng Lesson.
-- Lesson draft có thể sửa qua endpoint revision hiện hữu; citation set không được đổi.
-- `POST /api/admin/course-drafts/:sourceDocumentId/reviews` nhận `approved`, `rejected`
-  hoặc `needs_revision`.
-- Approve ghi review cho từng Lesson, gọi publish Lesson cho từng draft, publish Chapter
-  và Course khi invariant đạt, ghi publication/audit log, rồi archive source — tất cả
-  trong một transaction.
-- Reject ghi review cho từng Lesson, giữ Course/Lesson chưa publish và archive source.
-- Vì hàng chờ lọc theo unresolved state, approve/reject biến mất ngay và vẫn biến mất
-  sau reload; records lịch sử không bị xóa.
+### A7 — Publish
 
-## 7. Lesson-scoped exercise generation
+Chỉ action Publish từ `ready_to_publish` mới tạo official Course/Chapter/Lessons cùng
+publication mappings và audit log trong một transaction. Failure rollback toàn bộ.
+Published/rejected item không còn trong pending queue sau reload, nhưng source/job/draft
+history vẫn tồn tại.
 
-Flow bài tập độc lập:
+Canonical semantics:
 
 ```text
-Admin/Moderator chọn một Lesson đã publish
-→ POST /api/ai/exercises/generate với lessonId
-→ server kiểm tra active role
-→ đọc title/content hiện tại của đúng Lesson
-→ gọi exercise provider
-→ insert generated_exercises.lesson_id = lessonId, status = pending
-→ review/publish riêng tại /moderation
+uploaded → processing → outline_review → generating_content
+→ content_review → ready_to_publish → published
+                  ↘ failed
+outline_review|content_review → rejected
 ```
 
-Không có flow sinh bài tập theo Course, không dùng nội dung tổng hợp của nhiều Lesson,
-và không tự publish bài tập.
+## 3. Pipeline B — Lesson to Exercises
 
-## 8. API surface
+```text
+Published/Approved Lesson
+→ Generate Exercises
+→ Exercise Drafts linked to that Lesson
+→ Review/Edit
+→ Approve/Publish
+```
 
-- `POST /api/admin/content-sources` — upload private source.
-- `POST /api/admin/content-sources/:id/extract` — extract và persist chunks.
-- `POST /api/admin/content-sources/:id/generate` với body `{}` — tạo Course batch.
-- `GET /api/admin/course-drafts` — unresolved Course review queue.
-- `POST /api/admin/course-drafts/:id/reviews` — resolve cả batch.
-- `GET/PATCH /api/admin/lesson-drafts/:id` — đọc/sửa một Lesson draft trong batch.
-- `POST /api/ai/exercises/generate` — sinh một bài tập cho một `lessonId`.
-- `/api/moderation/generated-exercises/**` — review/publish bài tập riêng.
+Primary context là Lesson title, learning objectives và content. Course title/description
+chỉ là supplementary context khi cần; không gửi toàn PDF theo mặc định. Không generate
+ở cấp Course hoặc batch nhiều Lesson. `generated_exercises.lesson_id` và
+`exercises.lesson_id` là ownership duy nhất.
 
-Các endpoint Admin dùng response envelope, `Cache-Control: no-store` và server-side
-validation. Provider chỉ được gọi từ server; source text, prompt, key và raw response
-không được log hoặc trả về client.
+Generated Exercise luôn `pending`, không hiển thị cho learner và đi qua moderation riêng.
+Publish tạo exercise/options/private solution và cập nhật generated record trong cùng
+transaction.
 
-## 9. Compatibility
+## 4. Review model
 
-Các RPC/endpoint one-Lesson cũ được giữ để không phá dữ liệu và workflow lịch sử,
-nhưng Admin UI mặc định dùng PDF-to-Course batch. Migration `023` là forward-only và
-không sửa migrations `001`–`022`.
+Course import review và Exercise draft review là hai domain:
+
+```text
+Course import queue: outline/content state, Course/Lesson revisions, Course publish
+Exercise queue: generated exercise state, Exercise review, Exercise publish
+```
+
+Infrastructure dùng chung phải dừng ở provider adapter, schema utilities, rate limiting
+hoặc audit primitives. Không dùng một approve API/service với giả định chung cho hai loại.
+
+## 5. Security and failure rules
+
+- Active Admin duy nhất được mutate Pipeline A; active Moderator/Admin được mutate
+  Pipeline B.
+- Authorization và distributed rate limit chạy trước context read/provider call.
+- Validate request, AI response, state transition và source ownership ở server.
+- Provider timeout/invalid output đưa job/draft về retryable failed state, không publish.
+- Course publish và Exercise publish là hai transaction riêng; không partial publish.
+- AI key, service-role key, source objects và private solutions luôn server-only; RLS và
+  RPC authorization vẫn là defense in depth.
+
+## 6. Implementation plan (not implemented by this documentation task)
+
+1. Thêm normalized Course-import job/outline/Lesson-content draft schema và migration.
+2. Tách provider schema/prompt outline khỏi provider schema/prompt Lesson content.
+3. Thêm endpoint/state transition cho outline edit/regenerate/Continue và per-Lesson
+   regenerate; retire `{}` one-stage generate khỏi Admin default flow.
+4. Thay UI `/admin/content` bằng outline review rồi Course review; giữ Exercise action ở
+   Lesson scope và moderation riêng.
+5. Thêm unit/integration/E2E cho state transitions, validation, authorization, timeout,
+   rollback, queue persistence và invariant “Course import creates no exercise”.

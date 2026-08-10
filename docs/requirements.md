@@ -11,14 +11,22 @@
 - Both actions require server/database authorization, confirmation in the UI, and an
   `admin_logs` entry. Existing last-active-admin protection remains mandatory.
 
-## TASK-055 clarification — PDF-to-Course and Lesson-scoped exercises
+## Product decision — AI Course và AI Exercise là hai pipeline độc lập
 
-- Một PDF tạo một Course draft và 2–20 Lesson draft có thứ tự/citation; bước này
-  không được sinh bài tập.
-- Admin review toàn batch. Approve xuất bản Course/Lessons nguyên tử; reject lưu lịch
-  sử. Hai quyết định đều loại item khỏi pending queue kể cả sau reload.
-- Bài tập chỉ được sinh qua action riêng của một Lesson, dùng title/content hiện tại
-  và lưu bằng `generated_exercises.lesson_id` để đi qua moderation riêng.
+Quyết định này supersede phần AI-generation của TASK-055.
+
+- PDF import bắt buộc đi qua: upload → extract → AI outline → Admin outline review/edit
+  → generate Lesson contents → Admin Course review/edit → atomic publish.
+- Upload/extract/outline không tạo official Course/Lesson và không tạo Exercise. Outline
+  chỉ chứa Course metadata, learning objectives và cấu trúc Lesson có source references.
+- Admin có thể add/remove/reorder Lesson, regenerate outline và chỉ action Continue mới
+  cho phép sinh content. Sau đó Admin có thể sửa hoặc regenerate riêng từng Lesson.
+- Publish tạo official Course + Lessons trong một transaction. Publish/reject resolve
+  review item bền vững; reload không làm item quay lại và lịch sử draft/source vẫn còn.
+- Exercise chỉ được sinh từ một Published/Approved Lesson, dùng Lesson context làm nguồn
+  chính, persist đúng `lesson_id`, rồi đi qua review/edit/publish riêng.
+- Không API/prompt/schema/review action nào được tạo hoặc duyệt Course và Exercise cùng
+  một pipeline.
 
 ## 1. Tổng quan dự án
 
@@ -65,20 +73,23 @@
    - Thay đổi vai trò người dùng (Learner <-> Moderator <-> Admin).
    - Kích hoạt / Vô hiệu hóa tài khoản người dùng.
    - Ghi Log quản trị (Audit Log).
-3. **Document-to-Lesson (Admin Content Pipeline):**
+3. **PDF-to-Course (Admin Content Pipeline):**
    - Admin tải tài liệu nguồn lên vùng lưu trữ riêng tư; learner và guest không được
      đọc object hoặc nội dung trích xuất.
    - Hệ thống trích xuất văn bản có giới hạn, chia thành các đoạn nguồn ổn định và
      lưu provenance để phục vụ citation; MVP không thực hiện OCR.
-   - Server gửi duy nhất các đoạn nguồn đã chọn đến 9Router qua endpoint
-     OpenAI-compatible và yêu cầu structured output cho một lesson draft.
-   - Mỗi luận điểm quan trọng trong draft phải có citation trỏ đến đoạn nguồn đã lưu;
-     output sai schema hoặc citation không hợp lệ bị từ chối.
-   - Draft luôn đi qua Admin review; Admin có thể chỉnh sửa, approve, reject hoặc yêu
-     cầu tạo lại. AI không được tự publish.
-   - Publish chạy trong một transaction, cập nhật lesson và course visibility cùng
-     các dấu vết publication. Course chỉ xuất hiện trong catalog sau khi transaction
-     hoàn tất và mọi chapter/lesson bắt buộc đã publish.
+   - Server gửi các đoạn nguồn cần thiết đến provider để tạo Course outline đã validate;
+     không sinh full Lesson content hoặc Exercise ở bước này.
+   - Admin review/edit/add/remove/reorder outline. Chỉ approved outline revision mới được
+     dùng để generate content riêng cho từng Lesson.
+   - Mỗi Lesson content draft có citation hợp lệ, revision và action regenerate độc lập;
+     output sai schema/source reference bị từ chối. AI không được tự publish.
+   - Publish chạy trong một transaction để tạo Course/Chapter/Lessons official, publication
+     mappings và audit evidence. Course chỉ xuất hiện sau khi toàn transaction hoàn tất.
+4. **Lesson-to-Exercises:**
+   - Active Moderator/Admin bắt đầu generation từ một Lesson cụ thể, không từ Course/PDF.
+   - Exercise draft persist đúng `lesson_id`, qua review/edit/approve trước publish và
+     không hiển thị cho learner khi chưa publish.
 
 ### 2.3 Ngoài phạm vi MVP (Out of Scope)
 
@@ -100,6 +111,6 @@
 | Dạng bài tập | Predict Output & Fix Bug (Chọn lựa chọn) | Fix Bug (Kéo thả) | Code Execution tự do |
 | Chấm bài | So sánh đáp án tĩnh ở Server | - | Sandbox đếm thời gian thực thi |
 | Trợ lý AI | Giải thích đáp án sai theo bối cảnh | Lưu lịch sử giải thích chi tiết | RAG trên toàn bộ tài liệu |
-| Tạo bài tập AI | - | Sinh bài tập + Hàng chờ duyệt | Tự động xuất bản bài tập AI |
-| Document-to-Lesson | - | Upload riêng tư → extraction → draft có citation → Admin review → transactional publish | AI tự publish, OCR hoặc RAG đa tài liệu |
+| Tạo bài tập AI | - | Lesson → Exercise drafts → review/edit → publish | Sinh theo Course/PDF hoặc tự động publish |
+| PDF-to-Course | - | Upload → extraction → outline review → Lesson generation → Course review → transactional publish | Exercise trong import, AI tự publish, OCR hoặc RAG đa tài liệu |
 | Phân quyền | RLS + Session + Service checks | Quản lý User + Audit Log | Quản lý permission matrix phức tạp |
