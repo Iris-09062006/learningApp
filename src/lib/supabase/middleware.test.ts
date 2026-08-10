@@ -11,7 +11,7 @@ vi.mock("@supabase/ssr", () => ({
   createServerClient: mocks.createServerClient,
 }));
 
-import { shouldRedirectToLogin, updateSession } from "./middleware";
+import { shouldRedirectToLogin, shouldRunPageSessionGuard, updateSession } from "./middleware";
 import { config as middlewareConfig } from "../../middleware";
 
 interface MiddlewareCookieAdapter {
@@ -49,6 +49,12 @@ describe("Supabase middleware route policy", () => {
     expect(middlewareConfig.matcher[0]).toContain("api(?:/|$)");
   });
 
+  it("skips Supabase middleware work for public pages and APIs", () => {
+    expect(shouldRunPageSessionGuard("/courses")).toBe(false);
+    expect(shouldRunPageSessionGuard("/api/profile")).toBe(false);
+    expect(shouldRunPageSessionGuard("/dashboard")).toBe(true);
+  });
+
   it.each([
     "/dashboard",
     "/profile",
@@ -77,15 +83,13 @@ describe("Supabase middleware route policy", () => {
                 Pragma: "no-cache",
               },
             );
-            return { data: null };
+            return { data: { claims: { sub: "user-1" } } };
           },
         },
       }),
     );
 
-    const response = await updateSession(
-      new NextRequest("http://localhost:3000/register"),
-    );
+    const response = await updateSession(new NextRequest("http://localhost:3000/dashboard"));
 
     expect(response.headers.get("cache-control")).toBe(
       "private, no-cache, no-store, must-revalidate, max-age=0",
@@ -105,5 +109,20 @@ describe("Supabase middleware route policy", () => {
     expect(response.status).toBe(200);
     expect(getClaims).toHaveBeenCalledOnce();
     expect(getUser).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the authenticated user endpoint when a session cookie has no claims", async () => {
+    const getClaims = vi.fn().mockResolvedValue({ data: null });
+    const getUser = vi.fn().mockResolvedValue({ data: { user: { id: "user-1" } } });
+    mocks.createServerClient.mockReturnValue({ auth: { getClaims, getUser } });
+    const request = new NextRequest("http://localhost:3000/dashboard", {
+      headers: { cookie: "sb-local-auth-token=e2e-session" },
+    });
+
+    const response = await updateSession(request);
+
+    expect(response.status).toBe(200);
+    expect(getClaims).toHaveBeenCalledOnce();
+    expect(getUser).toHaveBeenCalledOnce();
   });
 });
