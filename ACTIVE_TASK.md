@@ -1,7 +1,7 @@
 # Active Task Queue
 
-- **Active task:** `TASK-048` — Deploy Navigation and AI Pipeline Hotfix to Current Preview
-- **Status:** `IN_PROGRESS`
+- **Active task:** None; `TASK-048` is verified
+- **Status:** `VERIFIED`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
@@ -12,4 +12,7 @@ Reduce page-navigation latency, stabilize the Document-to-Lesson AI request/load
 
 ## Current state
 
-TASK-045/TASK-046 implementation and review pass. Deployment authorization is now explicit for the existing Vercel Preview and Supabase Development project. Production remains out of scope. Existing user changes in `AGENTS.md`, `docs/decisions.md`, and untracked probe files remain outside scope.
+TASK-045/TASK-046 are deployed to Vercel Preview and Supabase Development through
+TASK-048. Production remains unchanged. TASK-047 remains deferred until the user
+provides Stitch designs. Existing user changes in `AGENTS.md`, `docs/decisions.md`,
+and untracked probe files remain outside scope.

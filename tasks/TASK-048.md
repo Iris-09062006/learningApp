@@ -1,7 +1,7 @@
 # TASK-048 — Deploy Navigation and AI Pipeline Hotfix to Current Preview
 
 ## Status
-`IN_PROGRESS`
+`VERIFIED`
 
 ## Objective
 Deploy verified TASK-045/TASK-046 changes to the existing LearningApp Preview and its
@@ -28,3 +28,12 @@ Supabase Development project without changing Production.
 - Preview deployment reaches `READY`, health reports database connected, and public
   navigation/API negative-auth smoke passes.
 - Runtime error scan is clean or all findings are documented and resolved.
+
+## Evidence
+- Release branch: `preview/task-048`
+- Release commit: `beae14d`
+- Supabase Development migration: `20260810040645` (`018_create_lesson_content_target`)
+- Vercel Preview deployment: `dpl_7Ww2xb3tjZdd4fn9hEuvdcaDjax2`
+- Preview URL: `https://learning-2up7lse9i-iris-projects-bcfa9d19.vercel.app`
+- Reports: `reports/TASK-048-implementation.md`, `reports/TASK-048-test.md`, and
+  `reports/TASK-048-review.md`

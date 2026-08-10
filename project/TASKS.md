@@ -11,8 +11,7 @@
 
 ## Active Task
 
-`TASK-048` — Deploy Navigation and AI Pipeline Hotfix to Current Preview (`IN_PROGRESS`).
-Production promotion is out of scope.
+None. `TASK-048` is verified; Production promotion was not performed.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
@@ -29,6 +28,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-048` | Deploy Navigation and AI Pipeline Hotfix to Current Preview | VERIFIED | Hotfix release | `reports/TASK-048-implementation.md`, `reports/TASK-048-review.md`, `reports/TASK-048-test.md` |
 | `TASK-041` | Preview Deployment and Smoke Verification | VERIFIED | Phase 7 | `reports/TASK-041-implementation.md`, `reports/TASK-041-review.md`, `reports/TASK-041-test.md` |
 | `TASK-042` | Restore Public Onboarding and Product Navigation | VERIFIED | Critical hotfix | `reports/TASK-042-implementation.md`, `reports/TASK-042-review.md`, `reports/TASK-042-test.md` |
 | `TASK-035` | Self-service Password Recovery | VERIFIED | Feature completion | `reports/TASK-035-implementation.md`, `reports/TASK-035-review.md`, `reports/TASK-035-test.md` |
