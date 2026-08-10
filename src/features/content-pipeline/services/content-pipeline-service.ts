@@ -2,11 +2,6 @@ import "server-only";
 
 import { createHash, randomUUID } from "node:crypto";
 
-import {
-  chunkDocumentText,
-  DocumentExtractionError,
-  extractDocumentText,
-} from "@/features/content-pipeline/extraction/document-extractor";
 import { NineRouterLessonDraftProvider, type LessonDraftProvider } from "@/features/content-pipeline/providers/lesson-draft-provider";
 import {
   createContentTarget,
@@ -109,13 +104,17 @@ export async function extractContentSource(value: unknown) {
   if (!(["uploaded", "failed"] as const).includes(document.status as "uploaded" | "failed")) throw new ContentPipelineError("INVALID_STATE", "Source document cannot be extracted in its current state.");
   await updateSourceStatus(id, "extracting");
   try {
+    const extractor = await import("@/features/content-pipeline/extraction/document-extractor");
     const buffer = await downloadSourceObject(document.storage_bucket, document.storage_path);
-    const text = await extractDocumentText(buffer, document.mimeType);
-    const chunks = chunkDocumentText(text);
+    const text = await extractor.extractDocumentText(buffer, document.mimeType);
+    const chunks = extractor.chunkDocumentText(text);
     await replaceDocumentChunks(id, createHash("sha256").update(buffer).digest("hex"), text.length, chunks);
     return { documentId: id, status: "extracted" as const, chunkCount: chunks.length, characterCount: text.length };
   } catch (error: unknown) {
-    const errorCode = error instanceof DocumentExtractionError ? error.code : "EXTRACTION_FAILED";
+    const extractionCode = error instanceof Error && error.name === "DocumentExtractionError"
+      ? (error as Error & { code?: unknown }).code
+      : undefined;
+    const errorCode = typeof extractionCode === "string" ? extractionCode : "EXTRACTION_FAILED";
     await updateSourceStatus(id, "failed", errorCode).catch(() => undefined);
     throw new ContentPipelineError("EXTRACTION_ERROR", "Unable to extract this document.");
   }

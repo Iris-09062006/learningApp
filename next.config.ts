@@ -6,6 +6,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // pdf-parse relies on a native canvas binding. Keep both packages out of the
+  // Route Handler bundle so Vercel's file tracer includes the native runtime.
+  serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"],
 } satisfies NextConfig;
 
 export default nextConfig;

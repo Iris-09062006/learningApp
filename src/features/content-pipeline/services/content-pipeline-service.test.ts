@@ -3,17 +3,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createContentTarget: vi.fn(),
   createServerSupabaseClient: vi.fn(),
+  listContentChapters: vi.fn(),
+  listContentTargets: vi.fn(),
 }));
 
 vi.mock("@/features/content-pipeline/repositories/content-pipeline-repository", () => ({
   createContentTarget: mocks.createContentTarget,
+  listContentChapters: mocks.listContentChapters,
+  listContentTargets: mocks.listContentTargets,
 }));
+
+vi.mock("@/features/content-pipeline/extraction/document-extractor", () => {
+  throw new Error("Document extractor must be loaded lazily.");
+});
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: mocks.createServerSupabaseClient,
 }));
 
-import { ContentPipelineError, createNewContentTarget } from "./content-pipeline-service";
+import { ContentPipelineError, createNewContentTarget, getContentTargets } from "./content-pipeline-service";
 
 describe("createNewContentTarget", () => {
   beforeEach(() => {
@@ -49,5 +57,12 @@ describe("createNewContentTarget", () => {
     await expect(createNewContentTarget({ chapterId: 2, title: "   " }))
       .rejects.toMatchObject({ code: "VALIDATION_ERROR" } satisfies Partial<ContentPipelineError>);
     expect(mocks.createContentTarget).not.toHaveBeenCalled();
+  });
+
+  it("lists content targets without loading the document parser", async () => {
+    mocks.listContentTargets.mockResolvedValue([]);
+    mocks.listContentChapters.mockResolvedValue([]);
+
+    await expect(getContentTargets()).resolves.toEqual({ items: [], chapters: [] });
   });
 });
