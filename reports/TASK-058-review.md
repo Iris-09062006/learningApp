@@ -22,6 +22,9 @@ PASS — no open Critical, High or Medium finding.
 - Allowed published drafts through the service precheck so retry reaches the idempotent RPC.
 - Hardened SQL validation against missing keys and non-string scalar fields.
 
-## Residual limitation
+## Remote rollout review
 
-Migration `026` is locally reviewed and statically tested, not applied to shared Supabase.
+Migrations `024`–`026` are applied to project `yzucdzlgaucmduoghjft`. Post-apply catalog checks
+confirm the intended functions, empty search paths, grants and removed direct write privileges.
+The database currently has no Course/Lesson rows, so an authenticated end-to-end generation and
+publish smoke test requires content to be created through the application first.

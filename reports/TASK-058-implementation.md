@@ -16,7 +16,9 @@ Implemented the independent Published Lesson → Exercise draft → moderation �
 - Added structured moderation editing, immutable review history and approved-only publish UX.
 - Publication creates ordered options and stores the real correct option ID server-side.
 
-## Rollout limitation
+## Supabase rollout
 
-Migration `026` was added and statically verified but was not applied to a shared Supabase project.
-No push or deployment was performed.
+Supabase MCP applied the missing dependency chain `024_admin_course_archival`,
+`025_pdf_to_course_pipeline`, and `026_lesson_to_exercise_pipeline` to project
+`yzucdzlgaucmduoghjft` on 2026-08-10. Migration history and the remote catalog confirm all three.
+No application deployment or Git push was performed.

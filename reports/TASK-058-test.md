@@ -16,6 +16,13 @@
 - Migration static tests verify empty search paths, locked transactional transitions, revoked
   direct writes, real option-ID mapping, idempotency and no Course-import mutation.
 
-## Environment note
+## Remote Supabase verification
 
-The SQL migration was not executed against a shared database; rollout remains a separate action.
+- Migration history includes `024`, `025`, and `026` in order.
+- All five Lesson-to-Exercise functions exist with empty `search_path`; the four public RPCs are
+  `SECURITY DEFINER` and execute is limited to `authenticated`, not `anon`.
+- `anon` and `authenticated` have no direct INSERT/UPDATE/DELETE privilege on
+  `generated_exercises` or `exercise_reviews`; only Moderator/Admin SELECT policies remain.
+- Course-import tables and `courses.archived_at` exist remotely with RLS enabled.
+- Security advisors report no ERROR. The four new WARN entries are intentional because these
+  role-checking RPCs must be callable by `authenticated` before enforcing active Moderator/Admin.

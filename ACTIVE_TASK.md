@@ -10,6 +10,8 @@
 
 TASK-058 is verified locally. The Lesson-specific flow now generates strict pending Exercise
 drafts, preserves immutable atomic review history, and publishes approved drafts idempotently.
+Migrations `024`, `025`, and `026` were applied through Supabase MCP to project
+`yzucdzlgaucmduoghjft` on 2026-08-10 and verified against the remote catalog.
 
 ## Current state
 
