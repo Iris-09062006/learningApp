@@ -11,12 +11,10 @@
 
 ## Active Task
 
-`TASK-049` — Bootstrap Empty Content Curriculum (`IN_PROGRESS`). Production remains
-out of scope.
+No task is currently active. Production remains out of scope.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-049` | Bootstrap Empty Content Curriculum | IN_PROGRESS | Content operations hotfix | `TASK-048` |
 | `TASK-045` | Reduce Page Navigation Latency | VERIFIED | Performance hotfix | None |
 | `TASK-046` | Stabilize AI Content Pipeline and New Lesson Targets | VERIFIED | Content operations hotfix | `TASK-043` |
 
@@ -30,6 +28,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-049` | Bootstrap Empty Content Curriculum | VERIFIED | Content operations hotfix | `reports/TASK-049-implementation.md`, `reports/TASK-049-review.md`, `reports/TASK-049-test.md` |
 | `TASK-048` | Deploy Navigation and AI Pipeline Hotfix to Current Preview | VERIFIED | Hotfix release | `reports/TASK-048-implementation.md`, `reports/TASK-048-review.md`, `reports/TASK-048-test.md` |
 | `TASK-041` | Preview Deployment and Smoke Verification | VERIFIED | Phase 7 | `reports/TASK-041-implementation.md`, `reports/TASK-041-review.md`, `reports/TASK-041-test.md` |
 | `TASK-042` | Restore Public Onboarding and Product Navigation | VERIFIED | Critical hotfix | `reports/TASK-042-implementation.md`, `reports/TASK-042-review.md`, `reports/TASK-042-test.md` |

@@ -1,7 +1,7 @@
 # TASK-049 — Bootstrap Empty Content Curriculum
 
 ## Status
-`IN_PROGRESS`
+`VERIFIED`
 
 ## Objective
 Remove the Document-to-Lesson dead end when Supabase has no courses or chapters by
