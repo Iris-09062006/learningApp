@@ -11,10 +11,8 @@
 
 ## Active Task
 
-No task is currently active. `TASK-041` is `VERIFIED`: release commit `a4880d8`
-is pushed, exact-tree Preview deployment is Ready, environment and migration checks
-pass, all learner/moderator/admin authorization assertions pass, and disposable
-accounts/sessions were removed. Production is untouched.
+`TASK-044` — Fix Supabase Auth Email Redirects on Preview (`READY_FOR_REVIEW`).
+Code and local gates pass; clean Preview and live email-link verification remain.
 
 ## Verified and Completed Tasks
 

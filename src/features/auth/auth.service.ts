@@ -17,6 +17,27 @@ type ProfileLookupResult = {
   error: unknown;
 };
 
+function getAuthRedirectOrigin(): string {
+  const previewUrl = process.env.VERCEL_ENV === "preview"
+    ? process.env.VERCEL_URL
+    : undefined;
+  const configuredUrl =
+    previewUrl ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.VERCEL_URL ??
+    "http://localhost:3000";
+  const urlWithProtocol = /^https?:\/\//i.test(configuredUrl)
+    ? configuredUrl
+    : `https://${configuredUrl}`;
+  const parsedUrl = new URL(urlWithProtocol);
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    throw new Error("INVALID_AUTH_REDIRECT_URL");
+  }
+
+  return parsedUrl.origin;
+}
+
 async function fetchProfileForUser(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   userId: string,
@@ -59,6 +80,7 @@ export class AuthService {
         data: {
           username: input.username,
         },
+        emailRedirectTo: `${getAuthRedirectOrigin()}/login`,
       },
     });
 
@@ -179,10 +201,7 @@ export class AuthService {
   ): Promise<ForgotPasswordResponse> {
     const supabase = await createServerSupabaseClient();
 
-    const origin = process.env.NEXT_PUBLIC_SITE_URL;
-    const redirectTo = origin
-      ? `${origin.replace(/\/+$/, "")}/reset-password`
-      : undefined;
+    const redirectTo = `${getAuthRedirectOrigin()}/reset-password`;
 
     const { error } = await supabase.auth.resetPasswordForEmail(input.email, {
       redirectTo,

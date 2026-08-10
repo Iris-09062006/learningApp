@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthService } from "./auth.service";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -17,8 +17,23 @@ function asServerSupabaseClient(mock: unknown): ServerSupabaseClient {
 
 describe("AuthService Unit Tests", () => {
   const service = new AuthService();
+  const originalVercelEnv = process.env.VERCEL_ENV;
+  const originalVercelUrl = process.env.VERCEL_URL;
+  const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  afterEach(() => {
+    if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = originalVercelEnv;
+    if (originalVercelUrl === undefined) delete process.env.VERCEL_URL;
+    else process.env.VERCEL_URL = originalVercelUrl;
+    if (originalSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+  });
 
   it("register creates user via Supabase Auth and returns RegisterResponse", async () => {
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_URL = "learning-preview-team.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://example.com";
     const mockSupabase = {
       auth: {
         signUp: vi.fn().mockResolvedValue({
@@ -56,8 +71,77 @@ describe("AuthService Unit Tests", () => {
         data: {
           username: "testuser",
         },
+        emailRedirectTo: "https://learning-preview-team.vercel.app/login",
       },
     });
+  });
+
+  it("register prefers the configured site URL outside Preview", async () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_URL = "learning-generated.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://learn.example.com/base-path";
+    const mockSupabase = {
+      auth: {
+        signUp: vi.fn().mockResolvedValue({
+          data: {
+            user: { id: "usr_456", email: "site@example.com" },
+            session: null,
+          },
+          error: null,
+        }),
+      },
+    };
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
+
+    await service.register({
+      email: "site@example.com",
+      password: "password123",
+      username: "siteuser",
+    });
+
+    expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          emailRedirectTo: "https://learn.example.com/login",
+        }),
+      }),
+    );
+  });
+
+  it("register falls back to localhost when no deployment URL is configured", async () => {
+    delete process.env.VERCEL_ENV;
+    delete process.env.VERCEL_URL;
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    const mockSupabase = {
+      auth: {
+        signUp: vi.fn().mockResolvedValue({
+          data: {
+            user: { id: "usr_local", email: "local@example.com" },
+            session: null,
+          },
+          error: null,
+        }),
+      },
+    };
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce(
+      asServerSupabaseClient(mockSupabase),
+    );
+
+    await service.register({
+      email: "local@example.com",
+      password: "password123",
+      username: "localuser",
+    });
+
+    expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          emailRedirectTo: "http://localhost:3000/login",
+        }),
+      }),
+    );
   });
 
   it("login authenticates user and returns CurrentUser", async () => {
@@ -211,6 +295,8 @@ describe("AuthService Unit Tests", () => {
   });
 
   it("forgotPassword calls resetPasswordForEmail and returns a generic response", async () => {
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_URL = "learning-preview-team.vercel.app";
     const mockSupabase = {
       auth: {
         resetPasswordForEmail: vi.fn().mockResolvedValue({
@@ -230,7 +316,9 @@ describe("AuthService Unit Tests", () => {
     expect(result).toEqual({ submitted: true });
     expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
       "test@example.com",
-      expect.any(Object),
+      {
+        redirectTo: "https://learning-preview-team.vercel.app/reset-password",
+      },
     );
   });
 
