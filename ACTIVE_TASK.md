@@ -1,7 +1,7 @@
 # Active Task Queue
 
-- **Latest tasks:** `TASK-045`, `TASK-046`
-- **Status:** `VERIFIED`
+- **Active task:** `TASK-048` — Deploy Navigation and AI Pipeline Hotfix to Current Preview
+- **Status:** `IN_PROGRESS`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
@@ -12,4 +12,4 @@ Reduce page-navigation latency, stabilize the Document-to-Lesson AI request/load
 
 ## Current state
 
-Implementation and review pass. Lint, typecheck, 423 tests, production build, and diff checks pass. Migration `018_create_lesson_content_target.sql` is committed locally but intentionally not applied to Supabase Cloud because deployment was not requested. Existing user changes in `AGENTS.md`, `docs/decisions.md`, and untracked probe files remain outside scope.
+TASK-045/TASK-046 implementation and review pass. Deployment authorization is now explicit for the existing Vercel Preview and Supabase Development project. Production remains out of scope. Existing user changes in `AGENTS.md`, `docs/decisions.md`, and untracked probe files remain outside scope.

@@ -11,6 +11,9 @@
 
 ## Active Task
 
+`TASK-048` — Deploy Navigation and AI Pipeline Hotfix to Current Preview (`IN_PROGRESS`).
+Production promotion is out of scope.
+
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
 | `TASK-045` | Reduce Page Navigation Latency | VERIFIED | Performance hotfix | None |
