@@ -32,3 +32,15 @@ The existing local entry should remain: `http://localhost:3000/**`.
 - `project/TASKS.md`
 - TASK-044 reports
 
+## Deployment
+- GitHub branch: `preview/task-044-email-redirect`
+- Commit: `59b8318`
+- Vercel deployment: `dpl_GcaLxar1dmrsobKc5Yabrtcgftbb`
+- Preview URL: `https://learning-11g0rzruv-iris-projects-bcfa9d19.vercel.app`
+- Status: `READY`; Production untouched.
+
+## Remaining blocker
+
+An authorized Supabase Auth URL Configuration surface and a fresh confirmation email
+are required to verify the real email link. The reported `otp_expired` link is not
+reusable and cannot validate the new deployment.

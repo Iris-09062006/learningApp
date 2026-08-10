@@ -14,9 +14,9 @@
 - Local development falls back to `http://localhost:3000`.
 - Password recovery shares the Preview resolver and preserves `/reset-password`.
 
-## Pending runtime evidence
-- New Vercel Preview reaches `READY`.
-- Supabase health remains connected.
-- A newly generated confirmation email uses the Preview origin; old OTP links are
-  single-use/expiring and cannot validate this fix.
-
+## Runtime evidence
+- Vercel Preview `dpl_GcaLxar1dmrsobKc5Yabrtcgftbb` — `READY`.
+- `/api/system/health` — PASS, `database: connected`.
+- Deployment warning/error/fatal scan — clean.
+- Live confirmation email — BLOCKED pending Supabase Redirect URLs verification and
+  a newly generated link; old OTP links are single-use/expiring.

@@ -11,8 +11,9 @@
 
 ## Active Task
 
-`TASK-044` — Fix Supabase Auth Email Redirects on Preview (`READY_FOR_REVIEW`).
-Code and local gates pass; clean Preview and live email-link verification remain.
+`TASK-044` — Fix Supabase Auth Email Redirects on Preview (`BLOCKED`). Code, tests,
+push and Preview deployment pass; final email-link verification requires the
+Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 ## Verified and Completed Tasks
 

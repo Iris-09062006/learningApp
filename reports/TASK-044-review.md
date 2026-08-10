@@ -2,9 +2,9 @@
 
 ## Verdict
 
-`PASS` for the implementation diff. No Critical, High or Medium code findings remain.
-Preview deployment and the external Supabase allowlist/link check are still required
-before the task can become `VERIFIED`.
+`PASS` for the implementation diff and Preview runtime. No Critical, High or Medium
+code findings remain. Overall task status is `BLOCKED` only on the external Supabase
+allowlist and fresh-link verification required before `VERIFIED`.
 
 ## Review evidence
 - Scope: only TASK-044 auth code, regression tests and task artifacts are included.
@@ -21,4 +21,3 @@ before the task can become `VERIFIED`.
 Supabase's Redirect URLs allowlist must contain
 `https://*-iris-projects-bcfa9d19.vercel.app/**`. This cannot be safely mutated through
 the available tools because the only CLI write is a broad project-config push.
-

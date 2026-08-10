@@ -1,7 +1,7 @@
 # TASK-044 — Fix Supabase Auth Email Redirects on Preview
 
 ## Status
-`READY_FOR_REVIEW`
+`BLOCKED`
 
 ## Phase
 Critical deployment hotfix
@@ -55,3 +55,13 @@ Vercel Preview origin instead of the Supabase localhost Site URL.
 - Supabase Auth URL Configuration cannot be read or changed through the available
   MCP tools; the in-app browser has no active session, and CLI `config push` is
   intentionally not used because it can overwrite unrelated Auth settings.
+
+## Deployment outcome
+- Commit `59b8318` is pushed to `preview/task-044-email-redirect`.
+- Vercel Preview `dpl_GcaLxar1dmrsobKc5Yabrtcgftbb` is `READY` at
+  `https://learning-11g0rzruv-iris-projects-bcfa9d19.vercel.app`.
+- Runtime health reports `database: connected`; the deployment has no warning,
+  error or fatal runtime log in the verification window.
+- Final email-link verification is blocked until the Supabase Auth Redirect URLs
+  allowlist is confirmed and a fresh confirmation email is generated. The expired
+  OTP link cannot be reused as evidence.
