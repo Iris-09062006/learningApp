@@ -1,15 +1,15 @@
 # Active Task Queue
 
 - **Active task:** None
-- **Status:** `READY`
+- **Status:** No task currently active
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
 
 ## Current objective
 
-No task is currently active. TASK-057 is verified locally and ready for migration rollout
-when explicitly requested.
+TASK-058 is verified locally. The Lesson-specific flow now generates strict pending Exercise
+drafts, preserves immutable atomic review history, and publishes approved drafts idempotently.
 
 ## Current state
 

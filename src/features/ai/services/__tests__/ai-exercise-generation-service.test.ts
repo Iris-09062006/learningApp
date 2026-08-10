@@ -65,7 +65,14 @@ describe("Lesson-scoped AI exercise generation", () => {
 
   it("uses only the selected Lesson context and persists its lesson_id", async () => {
     mocks.createServerSupabaseClient.mockResolvedValue(serverClient({ role: "admin", is_active: true }));
-    mocks.fetchLessonContextForGeneration.mockResolvedValue({ title: "Biến", content: "x = 1" });
+    mocks.fetchLessonContextForGeneration.mockResolvedValue({
+      lessonId: 51,
+      lessonTitle: "Biến",
+      lessonContent: "x = 1",
+      learningObjectives: ["Hiểu phép gán"],
+      courseTitle: "Python cơ bản",
+      courseDescription: "Nhập môn Python",
+    });
     mocks.createGeneratedExerciseRecord.mockResolvedValue({ id: 88, lessonId: 51 });
     const provider: AIProvider = {
       generateExplanation: vi.fn(),
@@ -73,6 +80,7 @@ describe("Lesson-scoped AI exercise generation", () => {
         content: {
           title: "Dự đoán",
           description: "Kết quả là gì?",
+          codeSnippet: "x = 1\nprint(x)",
           options: ["1", "2"],
           correctAnswer: "1",
           explanation: "x nhận 1",
@@ -92,10 +100,12 @@ describe("Lesson-scoped AI exercise generation", () => {
     expect(provider.generateExercise).toHaveBeenCalledWith(expect.objectContaining({
       lessonTitle: "Biến",
       lessonContent: "x = 1",
+      lessonLearningObjectives: ["Hiểu phép gán"],
+      courseTitle: "Python cơ bản",
+      courseDescription: "Nhập môn Python",
     }));
     expect(mocks.createGeneratedExerciseRecord).toHaveBeenCalledWith(expect.objectContaining({
       lesson_id: 51,
-      status: "pending",
     }));
   });
 

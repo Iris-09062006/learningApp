@@ -9,9 +9,6 @@ import type {
   SubmitReviewInput,
 } from "../types";
 
-type GeneratedExerciseUpdate =
-  Database["public"]["Tables"]["generated_exercises"]["Update"];
-
 export class ModerationRepository {
   async getQueueItemById(
     client: SupabaseClient<Database>,
@@ -27,7 +24,27 @@ export class ModerationRepository {
       return null;
     }
 
-    return this.mapToQueueItem(data);
+    const { data: reviews, error: reviewsError } = await client
+      .from("exercise_reviews")
+      .select("*")
+      .eq("generated_exercise_id", id)
+      .order("reviewed_at", { ascending: false });
+
+    if (reviewsError) {
+      throw new Error(`Failed to load exercise review history: ${reviewsError.message}`);
+    }
+
+    return {
+      ...this.mapToQueueItem(data),
+      reviews: (reviews ?? []).map((review) => ({
+        id: review.id,
+        generatedExerciseId: review.generated_exercise_id,
+        reviewerId: review.reviewer_id,
+        status: review.status,
+        feedback: review.comment,
+        createdAt: review.reviewed_at,
+      })),
+    };
   }
 
   async listQueueItems(
@@ -65,61 +82,37 @@ export class ModerationRepository {
 
   async createReview(
     client: SupabaseClient<Database>,
-    reviewerId: string,
+    _reviewerId: string,
     input: SubmitReviewInput
   ): Promise<ExerciseReviewRecord> {
-    const editedSnapshot = this.createEditedSnapshot(input);
+    const { data: reviewData, error: reviewError } = await client.rpc(
+      "review_generated_exercise_draft",
+      {
+        p_generated_exercise_id: input.generatedExerciseId,
+        p_decision: input.status,
+        p_comment: input.feedback ?? null,
+        p_edited_draft: input.editedDraft as unknown as Database["public"]["Functions"]["review_generated_exercise_draft"]["Args"]["p_edited_draft"],
+      }
+    );
 
-    const { data: reviewData, error: reviewError } = await client
-      .from("exercise_reviews")
-      .insert({
-        generated_exercise_id: input.generatedExerciseId,
-        reviewer_id: reviewerId,
-        status: input.status,
-        comment: input.feedback ?? null,
-        edited_snapshot: editedSnapshot as unknown as Database["public"]["Tables"]["exercise_reviews"]["Insert"]["edited_snapshot"],
-      })
-      .select("*")
-      .single();
-
-    if (reviewError || !reviewData) {
-      throw new Error(`Failed to create exercise review: ${reviewError?.message}`);
+    if (reviewError || !reviewData || typeof reviewData !== "object" || Array.isArray(reviewData)) {
+      throw new Error(`Failed to review generated exercise: ${reviewError?.message ?? "invalid RPC response"}`);
     }
 
-    const updates: GeneratedExerciseUpdate = {
-      status: input.status,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (input.editedContent) {
-      updates.content =
-        input.editedContent as unknown as GeneratedExerciseUpdate["content"];
-    }
-
-    if (input.editedTitle !== undefined) {
-      updates.title = input.editedTitle;
-    }
-
-    if (input.editedDescription !== undefined) {
-      updates.description = input.editedDescription;
-    }
-
-    const { error: updateError } = await client
-      .from("generated_exercises")
-      .update(updates)
-      .eq("id", input.generatedExerciseId);
-
-    if (updateError) {
-      throw new Error(`Failed to update generated exercise: ${updateError.message}`);
+    const result = reviewData as Record<string, unknown>;
+    if (typeof result.id !== "number" || typeof result.generatedExerciseId !== "number" ||
+      typeof result.reviewerId !== "string" || typeof result.createdAt !== "string" ||
+      !["approved", "rejected", "needs_revision"].includes(String(result.status))) {
+      throw new Error("Failed to review generated exercise: invalid RPC response");
     }
 
     return {
-      id: reviewData.id,
-      generatedExerciseId: reviewData.generated_exercise_id,
-      reviewerId: reviewData.reviewer_id,
-      status: reviewData.status,
-      feedback: reviewData.comment,
-      createdAt: reviewData.reviewed_at,
+      id: result.id,
+      generatedExerciseId: result.generatedExerciseId,
+      reviewerId: result.reviewerId,
+      status: result.status as ExerciseReviewRecord["status"],
+      feedback: typeof result.feedback === "string" ? result.feedback : null,
+      createdAt: result.createdAt,
     };
   }
 
@@ -158,24 +151,6 @@ export class ModerationRepository {
       status: "published",
       publishedAt: result.publishedAt,
     };
-  }
-
-  private createEditedSnapshot(input: SubmitReviewInput): Record<string, unknown> | null {
-    const snapshot: Record<string, unknown> = {};
-
-    if (input.editedContent) {
-      snapshot.content = input.editedContent;
-    }
-
-    if (input.editedTitle !== undefined) {
-      snapshot.title = input.editedTitle;
-    }
-
-    if (input.editedDescription !== undefined) {
-      snapshot.description = input.editedDescription;
-    }
-
-    return Object.keys(snapshot).length > 0 ? snapshot : null;
   }
 
   private mapToQueueItem(

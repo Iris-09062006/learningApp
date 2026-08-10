@@ -120,24 +120,15 @@ describe("content pipeline Admin", () => {
     expect(screen.getByRole("link", { name: "Mở Course" })).toHaveAttribute("href", "/courses/31");
   });
 
-  it("keeps exercise generation scoped to one published Lesson", async () => {
-    let exerciseBody: Record<string, unknown> | null = null;
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+  it("moves exercise generation out of the Course/PDF pipeline", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
       if (url === "/api/admin/course-drafts") return json({ success: true, data: { items: [] } });
-      if (url === "/api/admin/content-targets") return json({ success: true, data: { items: [{ courseId: 31, courseTitle: "Python", chapterId: 41, chapterTitle: "Chính", lessonId: 51, lessonTitle: "Biến", isPublished: true }] } });
-      if (url === "/api/ai/exercises/generate") {
-        exerciseBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
-        return json({ generatedExercise: { id: 88, lessonId: 51, title: "Dự đoán", status: "pending" } }, 201);
-      }
       throw new Error(`Unexpected request: ${url}`);
     });
     render(<ContentPipelineAdmin />);
-    await screen.findByRole("option", { name: "Python · Biến" });
-    fireEvent.change(screen.getByLabelText("Lesson"), { target: { value: "51" } });
-    fireEvent.change(screen.getByLabelText("Mục tiêu học tập"), { target: { value: "Hiểu phép gán" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sinh bài tập cho Lesson này" }));
-    expect(await screen.findByText(/Lesson #51/u)).toBeInTheDocument();
-    expect(exerciseBody).toMatchObject({ lessonId: 51, learningObjective: "Hiểu phép gán" });
+    expect(await screen.findByRole("link", { name: "Mở danh sách Lesson" })).toHaveAttribute("href", "/moderation/lessons");
+    expect(screen.queryByLabelText("Lesson")).not.toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalledWith("/api/ai/exercises/generate", expect.anything());
   });
 });

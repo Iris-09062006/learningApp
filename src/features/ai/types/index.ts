@@ -67,10 +67,34 @@ export interface GenerateExerciseInput {
 export interface GeneratedExerciseContent {
   title: string;
   description: string;
-  codeSnippet?: string;
-  options?: string[];
+  codeSnippet: string;
+  options: string[];
   correctAnswer: string;
   explanation: string;
+}
+
+export interface GeneratedExerciseDraft {
+  title: string;
+  description: string;
+  exerciseType: DbExerciseType;
+  difficulty: DbDifficultyLevel;
+  content: GeneratedExerciseContent;
+}
+
+export interface ExerciseGenerationContext {
+  lessonId: number;
+  lessonTitle: string;
+  lessonContent: string;
+  learningObjectives: string[];
+  courseTitle: string;
+  courseDescription: string | null;
+}
+
+export interface ExerciseLessonTarget {
+  lessonId: number;
+  lessonTitle: string;
+  courseId: number;
+  courseTitle: string;
 }
 
 export interface GeneratedExerciseRecord {

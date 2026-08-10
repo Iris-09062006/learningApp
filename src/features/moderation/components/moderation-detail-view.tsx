@@ -132,7 +132,7 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
           &larr; Back to Queue
         </Link>
 
-        {item.status !== "published" && (
+        {item.status === "approved" && (
           <button
             onClick={handlePublish}
             disabled={publishing}
@@ -165,7 +165,7 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
               {item.title}
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              ID: #{item.id} | Lesson ID: #{item.lessonId}
+              ID: #{item.id} | Lesson: {item.lessonTitle ?? `#${item.lessonId}`}
             </p>
           </div>
           <span
@@ -229,13 +229,34 @@ export function ModerationDetailView({ id }: ModerationDetailViewProps) {
         </div>
       </div>
 
-      <ModerationReviewForm
-        exerciseId={item.id}
-        initialTitle={item.title}
-        initialDescription={item.description}
-        initialContent={item.content}
-        onSuccess={fetchDetail}
-      />
+      {item.reviews && item.reviews.length > 0 && (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Lịch sử kiểm duyệt</h2>
+          <ol className="mt-4 space-y-3">
+            {item.reviews.map((review) => (
+              <li key={review.id} className="rounded-md border border-slate-200 p-3 text-sm dark:border-slate-700">
+                <div className="flex justify-between gap-3">
+                  <strong>{review.status.replace("_", " ")}</strong>
+                  <time>{new Date(review.createdAt).toLocaleString()}</time>
+                </div>
+                {review.feedback && <p className="mt-1 text-slate-600 dark:text-slate-300">{review.feedback}</p>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {item.status !== "published" && (
+        <ModerationReviewForm
+          exerciseId={item.id}
+          initialTitle={item.title}
+          initialDescription={item.description}
+          initialExerciseType={item.exerciseType}
+          initialDifficulty={item.difficulty}
+          initialContent={item.content}
+          onSuccess={fetchDetail}
+        />
+      )}
     </div>
   );
 }

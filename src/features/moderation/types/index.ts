@@ -3,6 +3,7 @@ import type {
   DbExerciseType,
   DbGeneratedExerciseStatus,
   GeneratedExerciseContent,
+  GeneratedExerciseDraft,
 } from "@/features/ai/types";
 
 export type ReviewStatus = "approved" | "rejected" | "needs_revision";
@@ -24,6 +25,7 @@ export interface ModerationQueueItem {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  reviews?: ExerciseReviewRecord[];
 }
 
 export interface ModerationQueueFilter {
@@ -44,9 +46,7 @@ export interface SubmitReviewInput {
   generatedExerciseId: number;
   status: ReviewStatus;
   feedback?: string;
-  editedContent?: GeneratedExerciseContent;
-  editedTitle?: string;
-  editedDescription?: string;
+  editedDraft?: GeneratedExerciseDraft;
 }
 
 export interface ExerciseReviewRecord {

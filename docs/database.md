@@ -960,6 +960,12 @@ Không triển khai logic này bằng trigger rời rạc sau mỗi insert vì k
 
 ## 10.6 publish_generated_exercise RPC hoặc transaction service — P1
 
+Migration `026_lesson_to_exercise_pipeline.sql` triển khai contract này bằng
+`SECURITY DEFINER`, empty `search_path`, row/advisory locks và idempotent retry. Cùng migration
+thu hồi direct INSERT/UPDATE/DELETE trên `generated_exercises` và `exercise_reviews`; create,
+review/edit và publish chỉ đi qua các RPC đã grant cho `authenticated` và tự kiểm tra active
+Moderator/Admin.
+
 Thực hiện nguyên tử:
 
 1. Xác thực actor và kiểm tra role Moderator/Admin.

@@ -11,6 +11,7 @@ import {
   fetchCourseRecommendationData,
   createGeneratedExerciseRecord,
   fetchLessonContextForGeneration,
+  listPublishedExerciseLessonTargets,
 } from "@/features/ai/repositories/ai-repository";
 import type {
   AiExplanationRecord,
@@ -18,7 +19,10 @@ import type {
   CourseRecommendationResult,
   GenerateExerciseInput,
   GenerateExerciseResponse,
+  ExerciseGenerationContext,
+  ExerciseLessonTarget,
 } from "@/features/ai/types";
+import { validateGeneratedExerciseContent } from "@/features/ai/validation/exercise-draft";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limiter";
 
@@ -36,6 +40,31 @@ export class AiServiceError extends Error {
     super(message);
     this.name = "AiServiceError";
   }
+}
+
+async function requireExerciseGenerator(): Promise<string> {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) throw new AiServiceError("UNAUTHENTICATED", "Authentication is required.");
+  const { data: profile, error: profileError } = await supabase.from("profiles")
+    .select("role, is_active").eq("id", authData.user.id).maybeSingle();
+  if (profileError || !profile?.is_active || !["moderator", "admin"].includes(profile.role)) {
+    throw new AiServiceError("FORBIDDEN", "Active Moderator or Admin role required.");
+  }
+  return authData.user.id;
+}
+
+export async function getExerciseGenerationContext(lessonId: number): Promise<ExerciseGenerationContext> {
+  await requireExerciseGenerator();
+  if (!Number.isSafeInteger(lessonId) || lessonId < 1) throw new AiServiceError("NOT_FOUND", "Lesson not found.");
+  try { return await fetchLessonContextForGeneration(lessonId); }
+  catch { throw new AiServiceError("NOT_FOUND", "Published Lesson not found."); }
+}
+
+export async function getExerciseLessonTargets(): Promise<ExerciseLessonTarget[]> {
+  await requireExerciseGenerator();
+  try { return await listPublishedExerciseLessonTargets(); }
+  catch { throw new AiServiceError("DATABASE_ERROR", "Unable to list published Lessons."); }
 }
 
 function asAiServiceError(error: unknown): AiServiceError | null {
@@ -236,27 +265,8 @@ export async function generateExercise(
   input: GenerateExerciseInput,
   provider: AIProvider = createAIProvider()
 ): Promise<GenerateExerciseResponse> {
-  const supabase = await createServerSupabaseClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !authData.user) {
-    throw new AiServiceError("UNAUTHENTICATED", "Authentication is required.");
-  }
-
-  const { data: generatorProfile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role, is_active")
-    .eq("id", authData.user.id)
-    .maybeSingle();
-  if (
-    profileError ||
-    !generatorProfile?.is_active ||
-    !["moderator", "admin"].includes(generatorProfile.role)
-  ) {
-    throw new AiServiceError("FORBIDDEN", "Active Moderator or Admin role required.");
-  }
-
-  const rateLimit = await checkRateLimit("ai:exercise-generation", authData.user.id);
+  const actorId = await requireExerciseGenerator();
+  const rateLimit = await checkRateLimit("ai:exercise-generation", actorId);
   if (!rateLimit.allowed) {
     throw new AiServiceError("RATE_LIMITED", `Rate limit exceeded. Retry after ${rateLimit.retryAfterSeconds} seconds.`);
   }
@@ -277,23 +287,22 @@ export async function generateExercise(
 
   try {
     const generated = await provider.generateExercise({
-      lessonTitle: lessonContext.title,
-      lessonContent: lessonContext.content ?? "",
+      lessonTitle: lessonContext.lessonTitle,
+      lessonContent: lessonContext.lessonContent,
+      lessonLearningObjectives: lessonContext.learningObjectives,
+      courseTitle: lessonContext.courseTitle,
+      courseDescription: lessonContext.courseDescription,
       exerciseType: input.exerciseType,
       difficulty: input.difficulty,
       learningObjective: input.learningObjective,
       topicHint: input.topicHint ?? null,
     });
-
+    const content = validateGeneratedExerciseContent(generated.content);
     const record = await createGeneratedExerciseRecord({
       lesson_id: input.lessonId,
-      requested_by: authData.user.id,
-      title: generated.content.title,
-      description: generated.content.description,
       exercise_type: input.exerciseType,
       difficulty: input.difficulty,
-      content: generated.content,
-      status: "pending",
+      content,
       provider: generated.provider,
       model: generated.model,
     });
@@ -303,8 +312,11 @@ export async function generateExercise(
     if (error instanceof Error && error.message === "FORBIDDEN") {
       throw new AiServiceError("FORBIDDEN", "Moderator or Admin role required.");
     }
-    if (error instanceof Error && error.message === "AI_RESPONSE_INVALID") {
+    if (error instanceof Error && ["AI_RESPONSE_INVALID", "EXERCISE_DRAFT_INVALID"].includes(error.message)) {
       throw new AiServiceError("AI_PROVIDER_ERROR", "Invalid response from AI provider.");
+    }
+    if (error instanceof Error && error.message === "DATABASE_ERROR") {
+      throw new AiServiceError("DATABASE_ERROR", "Unable to persist the Exercise draft.");
     }
     throw new AiServiceError("AI_PROVIDER_ERROR", "Unable to generate exercise at this time.");
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ModerationQueueItem, ModerationQueueResult } from "../types";
 import { ModerationQueueItemCard } from "./moderation-queue-item-card";
+import Link from "next/link";
 
 const statusOptions = [
   { value: "pending", label: "Chờ duyệt" },
@@ -79,6 +80,7 @@ export function ModerationQueueView() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link href="/moderation/lessons" className="rounded-md bg-violet-700 px-3 py-2 text-sm font-semibold text-white">Tạo Exercise</Link>
           <label
             htmlFor="status-filter"
             className="text-sm font-medium text-slate-700 dark:text-slate-300"

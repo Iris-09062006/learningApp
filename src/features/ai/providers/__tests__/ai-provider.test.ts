@@ -19,6 +19,22 @@ const mockSubmission: SubmissionDetailsForAi = {
 };
 
 describe("ai provider", () => {
+  it("keeps both mock exercise types valid", async () => {
+    const provider = new MockAIProvider();
+    const result = await provider.generateExercise!({
+      lessonTitle: "Hàm",
+      lessonContent: "return",
+      lessonLearningObjectives: ["Sửa hàm"],
+      courseTitle: "Python cơ bản",
+      courseDescription: null,
+      exerciseType: "fix_the_bug",
+      difficulty: "easy",
+      learningObjective: "Sửa hàm",
+      topicHint: null,
+    });
+    expect(result.content.options).toContain(result.content.correctAnswer);
+  });
+
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -148,12 +164,40 @@ describe("ai provider", () => {
         provider.generateExercise!({
           lessonTitle: "Biến",
           lessonContent: "Nội dung biến",
+          lessonLearningObjectives: ["Hiểu biến"],
+          courseTitle: "Python cơ bản",
+          courseDescription: null,
           exerciseType: "predict_output",
           difficulty: "easy",
           learningObjective: "Hiểu biến",
           topicHint: null,
         })
       ).rejects.toThrow("AI_RESPONSE_INVALID");
+    });
+
+    it("aborts exercise generation after the provider timeout", async () => {
+      vi.useFakeTimers();
+      vi.spyOn(globalThis, "fetch").mockImplementationOnce((_input, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+        })
+      );
+      const provider = new OpenAIApiProvider("test-key");
+      const pending = expect(provider.generateExercise!({
+        lessonTitle: "Biến",
+        lessonContent: "x = 1",
+        lessonLearningObjectives: ["Hiểu biến"],
+        courseTitle: "Python cơ bản",
+        courseDescription: null,
+        exerciseType: "predict_output",
+        difficulty: "easy",
+        learningObjective: "Hiểu biến",
+        topicHint: null,
+      })).rejects.toThrow("aborted");
+
+      await vi.advanceTimersByTimeAsync(45_000);
+      await pending;
+      vi.useRealTimers();
     });
 
     it("throws AI_RESPONSE_INVALID when generating exercise is missing fields", async () => {
@@ -169,6 +213,9 @@ describe("ai provider", () => {
         provider.generateExercise!({
           lessonTitle: "Biến",
           lessonContent: "Nội dung biến",
+          lessonLearningObjectives: ["Hiểu biến"],
+          courseTitle: "Python cơ bản",
+          courseDescription: null,
           exerciseType: "predict_output",
           difficulty: "easy",
           learningObjective: "Hiểu biến",
@@ -203,6 +250,9 @@ describe("ai provider", () => {
         provider.generateExercise!({
           lessonTitle: "Biến",
           lessonContent: "Nội dung biến",
+          lessonLearningObjectives: ["Hiểu biến"],
+          courseTitle: "Python cơ bản",
+          courseDescription: null,
           exerciseType: "predict_output",
           difficulty: "easy",
           learningObjective: "Hiểu biến",
@@ -239,6 +289,9 @@ describe("ai provider", () => {
       const result = await provider.generateExercise!({
         lessonTitle: "Biến",
         lessonContent: "Nội dung biến",
+        lessonLearningObjectives: ["Hiểu biến"],
+        courseTitle: "Python cơ bản",
+        courseDescription: null,
         exerciseType: "predict_output",
         difficulty: "easy",
         learningObjective: "Hiểu khai báo let",

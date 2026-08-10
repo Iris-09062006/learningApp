@@ -7,7 +7,8 @@ import type {
   GeneratedExerciseContent,
   DbExerciseType,
   DbDifficultyLevel,
-  DbGeneratedExerciseStatus,
+  ExerciseGenerationContext,
+  ExerciseLessonTarget,
 } from "@/features/ai/types";
 import type { Database } from "@/generated/database.types";
 
@@ -366,13 +367,9 @@ export async function createAiExplanationRecord(
 
 export interface CreateGeneratedExercisePayload {
   lesson_id: number;
-  requested_by: string;
-  title: string;
-  description: string;
   exercise_type: DbExerciseType;
   difficulty: DbDifficultyLevel;
   content: GeneratedExerciseContent;
-  status: DbGeneratedExerciseStatus;
   provider: string;
   model: string | null;
 }
@@ -381,66 +378,51 @@ export async function createGeneratedExerciseRecord(
   payload: CreateGeneratedExercisePayload
 ): Promise<GeneratedExerciseRecord> {
   const supabase = await createServerSupabaseClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !authData.user) {
-    throw new Error("UNAUTHENTICATED");
-  }
-
-  if (payload.requested_by !== authData.user.id) {
-    throw new Error("FORBIDDEN");
-  }
-
-  // Check role: must be moderator or admin
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, is_active")
-    .eq("id", authData.user.id)
-    .single();
-
-  if (!profile?.is_active || !["moderator", "admin"].includes(profile.role)) {
-    throw new Error("FORBIDDEN");
-  }
-
   const { data, error } = await supabase
-    .from("generated_exercises")
-    .insert(payload as unknown as Database["public"]["Tables"]["generated_exercises"]["Insert"])
-    .select("*")
-    .single();
+    .rpc("create_generated_exercise_draft", {
+      p_lesson_id: payload.lesson_id,
+      p_exercise_type: payload.exercise_type,
+      p_difficulty: payload.difficulty,
+      p_content: payload.content as unknown as Database["public"]["Functions"]["create_generated_exercise_draft"]["Args"]["p_content"],
+      p_provider: payload.provider,
+      p_model: payload.model,
+    });
 
   if (error || !data) {
     throw new Error("DATABASE_ERROR");
   }
 
-  return {
-    id: data.id,
-    lessonId: data.lesson_id,
-    exerciseType: data.exercise_type,
-    difficulty: data.difficulty,
-    title: data.title,
-    description: data.description,
-    content: data.content as unknown as GeneratedExerciseContent,
-    status: data.status,
-    provider: data.provider,
-    model: data.model,
-    requestedBy: data.requested_by,
-    publishedExerciseId: data.published_exercise_id,
-    publishedAt: data.published_at,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+  return data as unknown as GeneratedExerciseRecord;
 }
 
-export async function fetchLessonContextForGeneration(lessonId: number) {
+export async function fetchLessonContextForGeneration(lessonId: number): Promise<ExerciseGenerationContext> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
-    .from("lessons")
-    .select("title, content")
-    .eq("id", lessonId)
-    .single();
+    .rpc("get_lesson_exercise_generation_context", { p_lesson_id: lessonId });
 
   if (error || !data) {
     throw new Error("NOT_FOUND");
   }
-  return data;
+  return data as unknown as ExerciseGenerationContext;
+}
+
+export async function listPublishedExerciseLessonTargets(): Promise<ExerciseLessonTarget[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("id, title, chapters!inner(course_id, is_published, courses!inner(id, title, is_published, archived_at))")
+    .eq("is_published", true)
+    .eq("chapters.is_published", true)
+    .eq("chapters.courses.is_published", true)
+    .is("chapters.courses.archived_at", null)
+    .order("id");
+  if (error) throw new Error("DATABASE_ERROR");
+  return ((data ?? []) as unknown as Array<{
+    id: number; title: string; chapters: { courses: { id: number; title: string } };
+  }>).map((lesson) => ({
+    lessonId: lesson.id,
+    lessonTitle: lesson.title,
+    courseId: lesson.chapters.courses.id,
+    courseTitle: lesson.chapters.courses.title,
+  }));
 }

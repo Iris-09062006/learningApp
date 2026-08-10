@@ -722,6 +722,7 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 
 **Mức ưu tiên:** P1  
 **Actor:** Active Moderator hoặc Active Admin
+**Implementation:** `VERIFIED` bởi TASK-058 (migration `026` và Lesson-specific UI)
 
 ### Input
 
@@ -729,11 +730,10 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 - Exercise type.
 - Difficulty.
 - Learning objective của Lesson hoặc mục tiêu cụ thể trong Lesson.
-- Số lượng option.
 
 ### Luồng chính
 
-1. Moderator/Admin mở hoặc chọn đúng một Lesson và yêu cầu tạo bài.
+1. Moderator/Admin mở `/moderation/lessons`, chọn đúng một Lesson đã publish và yêu cầu tạo bài.
 2. Server kiểm tra role.
 3. Lấy title, learning objectives và content hiện tại của Lesson làm context chính.
 4. Prompt Builder tạo prompt.
@@ -750,6 +750,9 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 - Correct solution phải có.
 - Generated content phải qua review.
 - Provider response sai schema bị từ chối.
+- Draft có 2–6 option text duy nhất; `correctAnswer` phải khớp chính xác một option.
+- Provider có timeout 45 giây; timeout/response lỗi không được persist draft.
+- Client không được INSERT/UPDATE trực tiếp generated draft; mọi transition đi qua RPC.
 
 ---
 
@@ -758,6 +761,9 @@ Chỉ dùng AI recommendation khi có yêu cầu rõ ràng sau.
 Feature này sở hữu toàn bộ queue, edit, approve/reject/needs-revision và publish của
 Exercise draft. Các mục F-MOD-01/02/03 cũ bên dưới là các capability con của
 F-AIEXERCISE-02, không phải review model dùng chung với Course draft.
+
+**Implementation:** `VERIFIED` bởi TASK-058. Review/edit là một transaction có row lock;
+publish approved draft là transaction idempotent và solution lưu option ID thật.
 
 ### F-MOD-01 — Xem hàng đợi bài tập AI
 

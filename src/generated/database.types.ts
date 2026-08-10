@@ -1102,6 +1102,17 @@ export type Database = {
         Args: { p_chapter_title: string; p_course_id: number }
         Returns: Json
       }
+      create_generated_exercise_draft: {
+        Args: {
+          p_content: Json
+          p_difficulty: Database["public"]["Enums"]["difficulty_level"]
+          p_exercise_type: Database["public"]["Enums"]["exercise_type"]
+          p_lesson_id: number
+          p_model?: string | null
+          p_provider: string
+        }
+        Returns: Json
+      }
       create_lesson_content_target: {
         Args: { p_chapter_id: number; p_title: string }
         Returns: Json
@@ -1150,6 +1161,10 @@ export type Database = {
         Args: { required_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
+      get_lesson_exercise_generation_context: {
+        Args: { p_lesson_id: number }
+        Returns: Json
+      }
       publish_generated_exercise: {
         Args: { p_generated_exercise_id: number }
         Returns: Json
@@ -1174,6 +1189,15 @@ export type Database = {
           p_lesson_draft_id: number
         }
         Returns: Database["public"]["Enums"]["lesson_draft_status"]
+      }
+      review_generated_exercise_draft: {
+        Args: {
+          p_comment?: string | null
+          p_decision: Database["public"]["Enums"]["review_status"]
+          p_edited_draft?: Json | null
+          p_generated_exercise_id: number
+        }
+        Returns: Json
       }
       review_course_draft_batch: {
         Args: {

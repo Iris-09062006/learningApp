@@ -9,6 +9,7 @@ import type {
   PublishResult,
   SubmitReviewInput,
 } from "../types";
+import { validateGeneratedExerciseDraft } from "@/features/ai/validation/exercise-draft";
 
 export class ModerationService {
   constructor(
@@ -60,6 +61,14 @@ export class ModerationService {
       throw new Error("Review status is required");
     }
 
+    if (input.feedback && input.feedback.length > 2000) {
+      throw new Error("Review feedback must be at most 2000 characters");
+    }
+
+    if (input.editedDraft) {
+      input = { ...input, editedDraft: validateGeneratedExerciseDraft(input.editedDraft) };
+    }
+
     const item = await this.repository.getQueueItemById(
       client,
       input.generatedExerciseId
@@ -95,7 +104,7 @@ export class ModerationService {
       throw new Error(`Generated exercise with ID ${generatedExerciseId} not found`);
     }
 
-    if (item.status !== "approved") {
+    if (item.status !== "approved" && item.status !== "published") {
       throw new Error("Only approved exercises can be published");
     }
 

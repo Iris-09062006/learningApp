@@ -65,24 +65,42 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { status, feedback } = body;
+    const { decision, status, comment, feedback, editedDraft } = body;
+    const reviewDecision = decision ?? status;
+    const reviewComment = comment ?? feedback;
 
-    if (!["approved", "rejected", "needs_revision"].includes(status)) {
+    if (!["approved", "rejected", "needs_revision"].includes(reviewDecision)) {
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
     const client = await supabase;
     const result = await moderationService.submitReview(client, access.user.id, {
       generatedExerciseId: id,
-      status: status as ReviewStatus,
-      feedback: typeof feedback === "string" ? feedback : undefined,
+      status: reviewDecision as ReviewStatus,
+      feedback: typeof reviewComment === "string" ? reviewComment : undefined,
+      editedDraft: editedDraft && typeof editedDraft === "object" ? editedDraft : undefined,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      reviewId: result.id,
+      generatedExerciseId: result.generatedExerciseId,
+      reviewerId: result.reviewerId,
+      decision: result.status,
+      status: result.status,
+      comment: result.feedback,
+      reviewedAt: result.createdAt,
+    });
   } catch (error: unknown) {
     console.error("[Moderation API - POST generated-exercises/:id/reviews]", error);
     if (error instanceof Error && error.message.includes("not found")) {
         return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    }
+    if (error instanceof Error && (
+      error.message.includes("EXERCISE_DRAFT_INVALID") ||
+      error.message.includes("at most 2000") ||
+      error.message.includes("Review status")
+    )) {
+      return NextResponse.json({ error: "Invalid review payload" }, { status: 400 });
     }
     return NextResponse.json(
       { error: "Internal Server Error" },

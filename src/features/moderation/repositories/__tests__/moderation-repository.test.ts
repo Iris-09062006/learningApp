@@ -20,13 +20,17 @@ describe("ModerationRepository", () => {
       const mockData = {
         id: 1,
         lesson_id: 1,
-        exercise_type: "quiz",
-        difficulty: "beginner",
+        exercise_type: "predict_output",
+        difficulty: "easy",
         title: "Test",
-        content: { type: "quiz", questions: [] },
+        description: "Description",
+        content: { title: "Test", description: "Description", codeSnippet: "print(1)", options: ["1", "2"], correctAnswer: "1", explanation: "Because" },
         status: "pending",
         provider: "openai",
         model: "gpt-4",
+        requested_by: "user-1",
+        published_exercise_id: null,
+        published_at: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         lessons: { title: "Test Lesson" },
@@ -37,9 +41,13 @@ describe("ModerationRepository", () => {
           maybeSingle: vi.fn().mockResolvedValue({ data: mockData, error: null }),
         }),
       };
-      mockClient.from.mockReturnValue({
-        select: vi.fn().mockReturnValue(selectMock),
+      const reviewOrder = vi.fn().mockResolvedValue({
+        data: [{ id: 3, generated_exercise_id: 1, reviewer_id: "user-1", status: "approved", comment: "Good", reviewed_at: "2026-08-10T00:00:00Z" }],
+        error: null,
       });
+      mockClient.from
+        .mockReturnValueOnce({ select: vi.fn().mockReturnValue(selectMock) })
+        .mockReturnValueOnce({ select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ order: reviewOrder }) }) });
 
       const result = await repository.getQueueItemById(
         mockClient as unknown as SupabaseClient<Database>,
@@ -48,6 +56,7 @@ describe("ModerationRepository", () => {
       expect(result).toBeDefined();
       expect(result?.id).toBe(1);
       expect(result?.lessonTitle).toBe("Test Lesson");
+      expect(result?.reviews).toHaveLength(1);
     });
 
     it("should return null when not found", async () => {
@@ -143,42 +152,22 @@ describe("ModerationRepository", () => {
   });
 
   describe("createReview", () => {
-    it("should insert review and update exercise", async () => {
+    it("should review and edit exercise atomically through RPC", async () => {
       const mockInput = {
         generatedExerciseId: 1,
         status: "approved" as const,
         feedback: "Good job",
-        editedTitle: "Updated Title",
+        editedDraft: {
+          title: "Updated Title",
+          description: "Updated description",
+          exerciseType: "predict_output" as const,
+          difficulty: "easy" as const,
+          content: { title: "Updated Title", description: "Updated description", codeSnippet: "print(1)", options: ["1", "2"], correctAnswer: "1", explanation: "Because" },
+        },
       };
-
-      const insertMock = {
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: 1,
-              generated_exercise_id: 1,
-              reviewer_id: "user-1",
-              status: "approved",
-              comment: "Good job",
-              reviewed_at: new Date().toISOString(),
-            },
-            error: null,
-          }),
-        }),
-      };
-
-      const updateMock = {
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      };
-
-      mockClient.from.mockImplementation((table) => {
-        if (table === "exercise_reviews") {
-          return { insert: vi.fn().mockReturnValue(insertMock) };
-        }
-        if (table === "generated_exercises") {
-          return { update: vi.fn().mockReturnValue(updateMock) };
-        }
-        return {};
+      mockClient.rpc.mockResolvedValue({
+        data: { id: 1, generatedExerciseId: 1, reviewerId: "user-1", status: "approved", feedback: "Good job", createdAt: "2026-08-10T00:00:00Z" },
+        error: null,
       });
 
       const result = await repository.createReview(
@@ -188,6 +177,12 @@ describe("ModerationRepository", () => {
       );
       expect(result.id).toBe(1);
       expect(result.status).toBe("approved");
+      expect(mockClient.rpc).toHaveBeenCalledWith("review_generated_exercise_draft", {
+        p_generated_exercise_id: 1,
+        p_decision: "approved",
+        p_comment: "Good job",
+        p_edited_draft: mockInput.editedDraft,
+      });
     });
   });
 

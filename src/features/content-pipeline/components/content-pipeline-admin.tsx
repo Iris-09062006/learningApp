@@ -4,7 +4,6 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import type {
-  ContentTarget,
   CourseImportDraft,
   CourseImportLessonDraft,
   CourseImportOutlineLesson,
@@ -14,7 +13,6 @@ import type {
 
 interface ApiEnvelope<T> { success: boolean; data: T; message?: string; error?: { message?: string } }
 interface PendingGeneration { sourceDocumentId: number; sourceFilename: string }
-interface GeneratedExerciseSummary { id: number; lessonId: number; title: string; status: string }
 
 const CHECKPOINT_KEY = "learningapp.course-outline-generation";
 
@@ -28,13 +26,6 @@ export async function requestPipelineApi<T>(url: string, init?: RequestInit): Pr
     throw new Error(payload?.error?.message ?? payload?.message ?? "Không thể xử lý yêu cầu.");
   }
   return payload.data;
-}
-
-async function requestExerciseApi(url: string, init: RequestInit) {
-  const response = await fetch(url, init);
-  const payload = await response.json().catch(() => null) as { generatedExercise?: GeneratedExerciseSummary; message?: string } | null;
-  if (!response.ok || !payload?.generatedExercise) throw new Error(payload?.message ?? "Không thể sinh bài tập.");
-  return payload.generatedExercise;
 }
 
 function readCheckpoint(): PendingGeneration | null {
@@ -64,18 +55,11 @@ function outlinePayload(draft: CourseImportDraft): StructuredCourseOutline {
 
 export function ContentPipelineAdmin() {
   const [imports, setImports] = useState<CourseImportDraft[]>([]);
-  const [targets, setTargets] = useState<ContentTarget[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [selectedOutlineLessonId, setSelectedOutlineLessonId] = useState<number | null>(null);
   const [pendingGeneration, setPendingGeneration] = useState<PendingGeneration | null>(null);
   const [published, setPublished] = useState<ReviewCourseDraftBatchResult | null>(null);
   const [reviewComment, setReviewComment] = useState("");
-  const [exerciseLessonId, setExerciseLessonId] = useState("");
-  const [exerciseType, setExerciseType] = useState("predict_output");
-  const [difficulty, setDifficulty] = useState("easy");
-  const [learningObjective, setLearningObjective] = useState("");
-  const [topicHint, setTopicHint] = useState("");
-  const [generatedExercise, setGeneratedExercise] = useState<GeneratedExerciseSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("Đang tải dữ liệu...");
   const [error, setError] = useState<string | null>(null);
@@ -86,15 +70,9 @@ export function ContentPipelineAdmin() {
   );
   const selectedOutlineLesson = selectedImport?.lessons.find((lesson) => lesson.id === selectedOutlineLessonId) ?? null;
   const selectedContent = selectedOutlineLesson?.contentDraft ?? null;
-  const publishedTargets = useMemo(() => targets.filter((target) => target.isPublished), [targets]);
-
   const refresh = useCallback(async () => {
-    const [importData, targetData] = await Promise.all([
-      requestPipelineApi<{ items: CourseImportDraft[] }>("/api/admin/course-drafts"),
-      requestPipelineApi<{ items: ContentTarget[] }>("/api/admin/content-targets"),
-    ]);
+    const importData = await requestPipelineApi<{ items: CourseImportDraft[] }>("/api/admin/course-drafts");
     setImports(importData.items);
-    setTargets(targetData.items);
     setSelectedJobId((current) => current && importData.items.some((item) => item.jobId === current)
       ? current : importData.items[0]?.jobId ?? null);
     const checkpoint = readCheckpoint();
@@ -258,20 +236,6 @@ export function ContentPipelineAdmin() {
     finally { setBusy(false); }
   }
 
-  async function generateExercise(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(null); setGeneratedExercise(null);
-    try {
-      const result = await requestExerciseApi("/api/ai/exercises/generate", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-          lessonId: Number(exerciseLessonId), exerciseType, difficulty, learningObjective,
-          topicHint: topicHint.trim() || undefined,
-        }),
-      });
-      setGeneratedExercise(result); setMessage("Bài tập đã được lưu đúng Lesson và đang chờ moderation riêng.");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Không thể sinh bài tập."); }
-    finally { setBusy(false); }
-  }
-
   const canEditOutline = selectedImport?.status === "outline_review";
   const canReviewContent = selectedImport && ["content_review", "ready_to_publish"].includes(selectedImport.status);
 
@@ -360,19 +324,10 @@ export function ContentPipelineAdmin() {
     {selectedContent && selectedOutlineLesson ? <ContentEditor content={selectedContent} onChange={(content) => editLesson(selectedOutlineLesson.id, { contentDraft: content })}
       onSave={() => saveContent(selectedContent)} onRegenerate={() => regenerateLesson(selectedOutlineLesson.id)} busy={busy} /> : null}
 
-    <section className="rounded-2xl border border-violet-200 bg-violet-50 p-6" aria-labelledby="exercise-generation-title">
-      <h2 id="exercise-generation-title" className="text-xl font-semibold text-slate-950">Tạo bài tập riêng cho từng Lesson</h2>
-      <p className="mt-2 text-sm text-slate-700">Pipeline độc lập: chọn đúng một Lesson đã publish; kết quả chờ moderation riêng.</p>
-      <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={generateExercise}>
-        <label className="text-sm font-medium">Lesson<select className="mt-1 w-full rounded-lg border bg-white p-2" value={exerciseLessonId} onChange={(e) => setExerciseLessonId(e.target.value)} required>
-          <option value="">Chọn Lesson</option>{publishedTargets.map((target) => <option key={target.lessonId} value={target.lessonId}>{target.courseTitle} · {target.lessonTitle}</option>)}</select></label>
-        <label className="text-sm font-medium">Loại bài tập<select className="mt-1 w-full rounded-lg border bg-white p-2" value={exerciseType} onChange={(e) => setExerciseType(e.target.value)}><option value="predict_output">Predict the Output</option><option value="fix_the_bug">Fix the Bug</option></select></label>
-        <label className="text-sm font-medium">Độ khó<select className="mt-1 w-full rounded-lg border bg-white p-2" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
-        <label className="text-sm font-medium">Mục tiêu học tập<input className="mt-1 w-full rounded-lg border p-2" value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} required /></label>
-        <label className="text-sm font-medium md:col-span-2">Gợi ý chủ đề (không bắt buộc)<input className="mt-1 w-full rounded-lg border p-2" value={topicHint} onChange={(e) => setTopicHint(e.target.value)} /></label>
-        <button className="w-fit rounded-lg bg-violet-700 px-5 py-2.5 text-sm font-semibold text-white" type="submit" disabled={busy || !exerciseLessonId}>Sinh bài tập cho Lesson này</button>
-      </form>
-      {generatedExercise ? <p className="mt-4 text-sm">Đã tạo “{generatedExercise.title}” cho Lesson #{generatedExercise.lessonId}. <Link className="font-semibold underline" href={`/moderation/${generatedExercise.id}`}>Mở hàng duyệt bài tập</Link></p> : null}
+    <section className="rounded-2xl border border-violet-200 bg-violet-50 p-6">
+      <h2 className="text-xl font-semibold text-slate-950">Lesson → Exercise là pipeline riêng</h2>
+      <p className="mt-2 text-sm text-slate-700">Chọn một Lesson đã publish từ khu vực moderation để tạo và duyệt bài tập.</p>
+      <Link className="mt-4 inline-flex rounded-lg bg-violet-700 px-5 py-2.5 text-sm font-semibold text-white" href="/moderation/lessons">Mở danh sách Lesson</Link>
     </section>
   </div>;
 }

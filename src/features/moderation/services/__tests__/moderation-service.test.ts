@@ -135,5 +135,20 @@ describe("ModerationService", () => {
       const result = await service.publishExercise(mockClient, 1);
       expect(result.publishedExerciseId).toBe(5);
     });
+
+    it("delegates a published draft to the idempotent publish RPC", async () => {
+      mockGetQueueItemById.mockResolvedValue({ id: 1, status: "published" });
+      mockPublishExercise.mockResolvedValue({
+        generatedExerciseId: 1,
+        publishedExerciseId: 5,
+        status: "published",
+        publishedAt: "2026-08-10T00:00:00Z",
+      });
+
+      await expect(service.publishExercise(mockClient, 1)).resolves.toEqual(
+        expect.objectContaining({ publishedExerciseId: 5 })
+      );
+      expect(mockPublishExercise).toHaveBeenCalledWith(mockClient, 1);
+    });
   });
 });

@@ -66,8 +66,9 @@ export async function POST(request: NextRequest) {
     !DIFFICULTY_SET.has(difficulty) ||
     typeof learningObjective !== "string" ||
     !learningObjective.trim() ||
+    learningObjective.trim().length > 500 ||
     (topicHint !== undefined &&
-      (typeof topicHint !== "string" || !topicHint.trim()))
+      (typeof topicHint !== "string" || !topicHint.trim() || topicHint.trim().length > 500))
   ) {
     return NextResponse.json(
       {
@@ -94,9 +95,11 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: unknown) {
     if (error instanceof AiServiceError) {
+      const status = mapAiServiceError(error);
+      const retryAfter = status === 429 ? error.message.match(/(\d+) seconds/)?.[1] : undefined;
       return NextResponse.json(
         { error: error.code, message: error.message },
-        { status: mapAiServiceError(error) }
+        { status, headers: retryAfter ? { "Retry-After": retryAfter } : undefined }
       );
     }
 

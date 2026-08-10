@@ -1020,8 +1020,8 @@ interface ExerciseBase {
   id: number;
   lessonId: number;
   title: string;
-  description: string | null;
-  type: ExerciseType;
+  description: string;
+  exerciseType: ExerciseType;
   difficulty: DifficultyLevel;
   codeSnippet: string | null;
   order: number;
@@ -1347,7 +1347,7 @@ GET /api/moderation/generated-exercises
 Query:
 
 ```text
-?status=pending&page=1&pageSize=20
+?status=pending&page=1&limit=20
 ```
 
 Response item:
@@ -1358,7 +1358,7 @@ interface GeneratedExerciseSummary {
   lessonId: number;
   lessonTitle: string;
   title: string;
-  type: ExerciseType;
+  exerciseType: ExerciseType;
   difficulty: DifficultyLevel;
   status: GeneratedExerciseStatus;
   provider: string;
@@ -1396,19 +1396,18 @@ interface GeneratedExerciseDetail {
 }
 
 interface GeneratedExerciseContent {
-  codeSnippet?: string;
-  options: Array<{
-    content: string;
-    order: number;
-  }>;
-  solution: Record<string, unknown>;
-  explanation?: string;
+  title: string;
+  description: string;
+  codeSnippet: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
 }
 
 interface GeneratedExerciseDraft {
   title: string;
-  description: string | null;
-  type: ExerciseType;
+  description: string;
+  exerciseType: ExerciseType;
   difficulty: DifficultyLevel;
   content: GeneratedExerciseContent;
 }
@@ -1416,13 +1415,13 @@ interface GeneratedExerciseDraft {
 interface ExerciseReviewSummary {
   id: number;
   reviewerId: string;
-  decision: "approved" | "rejected" | "needsRevision";
-  comment: string | null;
-  reviewedAt: string;
+  status: "approved" | "rejected" | "needs_revision";
+  feedback: string | null;
+  createdAt: string;
 }
 ```
 
-`solution` chỉ xuất hiện trong endpoint Moderator/Admin này sau khi server đã kiểm tra role. Không reuse DTO này cho Learner UI.
+`correctAnswer` chỉ xuất hiện trong endpoint Moderator/Admin này sau khi server đã kiểm tra role. Khi publish, server ánh xạ text này sang `exercise_options.id` thật và chỉ lưu ID trong `exercise_solutions`. Không reuse DTO này cho Learner UI.
 
 ---
 
@@ -1436,7 +1435,7 @@ Request:
 
 ```ts
 interface ReviewGeneratedExerciseRequest {
-  decision: "approved" | "rejected" | "needsRevision";
+  decision: "approved" | "rejected" | "needs_revision";
   comment?: string;
   editedDraft?: GeneratedExerciseDraft;
 }
@@ -1449,7 +1448,7 @@ interface ExerciseReviewResponse {
   reviewId: number;
   generatedExerciseId: number;
   reviewerId: string;
-  decision: "approved" | "rejected" | "needsRevision";
+  decision: "approved" | "rejected" | "needs_revision";
   status: GeneratedExerciseStatus;
   reviewedAt: string;
 }
@@ -1458,7 +1457,7 @@ interface ExerciseReviewResponse {
 Nghiệp vụ:
 
 - Chỉ review generated exercise chưa `published`.
-- Nếu có `editedDraft`, validate toàn bộ title, description, type, difficulty, options, solution và explanation.
+- Nếu có `editedDraft`, validate toàn bộ title, description, exerciseType, difficulty, options, correctAnswer và explanation.
 - Cập nhật generated exercise thành snapshot mới trong cùng transaction với review.
 - Lưu full edited snapshot vào review history khi có chỉnh sửa.
 - `approved` không đồng nghĩa đã publish.
@@ -1507,7 +1506,7 @@ Toàn bộ thao tác phải chạy trong transaction/RPC, tạo exercise, option
 Nếu request bị gửi lại sau khi đã publish:
 
 ```text
-409 CONFLICT
+200 OK với cùng `publishedExerciseId` (idempotent retry)
 ```
 
 ---

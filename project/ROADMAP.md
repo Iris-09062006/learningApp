@@ -2,7 +2,7 @@
 
 ## Current State
 
-- **Current phase:** Phase 6 complete; Phase 7 is planned.
+- **Current phase:** Feature completion in progress before Phase 7.
 - **Completed:** Phases 0–6, including the audited TASK-033 migration sequence.
 - **In progress:** None.
 - **Queued next:** Complete selected feature gaps, then execute Phase 7 hardening and release preparation.
@@ -72,6 +72,7 @@
 | `TASK-035` | F-AUTH-04 self-service password recovery | DRAFT — contract required |
 | `TASK-036` | F-EXERCISE-03 accessible drag-and-drop using the existing `selectedOptionId` grading contract | READY |
 | `TASK-037` | F-ADMIN-04 admin-triggered password reset | DRAFT — P2 and contract required |
+| `TASK-058` | Published Lesson → Exercise draft → atomic moderation/publish | VERIFIED |
 
 Already implemented and therefore not replanned: F-SUBMISSION-02, F-AI-02, F-AI-03, F-PROFILE-02, F-ADMIN-05, F-SYSTEM-01 and audit writes required by F-SYSTEM-02.
 
