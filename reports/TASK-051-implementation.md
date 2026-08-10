@@ -2,10 +2,10 @@
 
 ## Outcome
 
-`FIXED_FOR_REVIEW`. GitHub `main` was fast-forwarded to the verified TASK-050
-lineage and deployed to Vercel Production. The first GitHub Actions run exposed a
-stale lockfile; the deterministic clean-install fix is implemented and locally
-verified. Production database health remains under investigation.
+`VERIFIED`. GitHub `main` contains the verified release and deterministic
+clean-install fix. GitHub Actions passes, and the corrected commit is live on
+Vercel Production with healthy Supabase connectivity and functioning distributed
+login rate limiting.
 
 ## CI fix
 
@@ -22,8 +22,23 @@ verified. Production database health remains under investigation.
 
 - Published application commit: `d565586`
 - Initial production deployment: `dpl_6iY8Umb5Cv1QqTAVt7AeH6zHNKCj`
-- Deployment URL: `https://learning-hqahd53mj-iris-projects-bcfa9d19.vercel.app`
-- Status: `READY`; database health: `degraded / unavailable`
+- Corrected release commit: `5389039`
+- GitHub Actions run: `31362387357`
+- Final production deployment: `dpl_EWaxn3whDXbWXKeLhz9bzz2kChnw`
+- Production URL: `https://learing-app1.vercel.app`
+- Status: `READY`; database health: `ok / connected`
+
+## Production credential and rate-limit correction
+
+- Supabase MCP confirmed the sole connected project is active and healthy, the
+  `profiles` table exists, and `service_role` has SELECT privilege.
+- Supabase API logs showed Production health and `consume_rate_limit` calls failing
+  with `401`, proving the Vercel service-role credential was invalid.
+- Replaced only the Vercel Production `SUPABASE_SERVICE_ROLE_KEY` using a locally
+  validated key passed through stdin; the secret was never printed or committed.
+- Redeployed the same verified Git tree. Health now reports connected, an invalid
+  login returns `401 UNAUTHENTICATED`, and the limiter RPC returns `200`.
+- Preserved the contract limit of 10 login requests per IP per 10 minutes.
 
 ## Scope protection
 

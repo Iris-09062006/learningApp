@@ -2,9 +2,7 @@
 
 ## Verdict
 
-`PASS` for the CI correction diff. No open Critical, High, or Medium code findings.
-TASK-051 remains `FIXED_FOR_REVIEW` until GitHub Actions passes and production
-database health is resolved.
+`PASS`. No open Critical, High, or Medium findings. TASK-051 is `VERIFIED`.
 
 ## Findings resolved
 
@@ -19,8 +17,20 @@ database health is resolved.
 - Regression evidence: clean `npm ci` and all local gates, including 9 E2E tests,
   pass.
 
-## Remaining release condition
+### High — Production database and rate limiter returned unavailable
 
-The production deployment is `READY`, but `/api/system/health` reports
-`database: unavailable`. This is an operational release blocker, not a finding in
-the CI correction diff, and must be resolved before TASK-051 can become `VERIFIED`.
+- Evidence: health reported `database: unavailable`; Supabase API logs showed 401
+  responses for `profiles` and `consume_rate_limit`, causing login to fail closed
+  as `429 RATE_LIMITED`.
+- Root cause: the Vercel Production service-role credential was invalid. The
+  Supabase project, schema, migration history, and database privilege were healthy.
+- Fix: atomically replaced only the Production service-role variable and redeployed
+  the verified release.
+- Regression evidence: health is connected, invalid login returns the expected 401,
+  and the distributed limiter RPC returns 200.
+
+## Residual risk
+
+Vercel Production and Preview currently use the same sole Supabase project, as
+explicitly authorized by the user. A separate Production Supabase project remains
+the recommended isolation improvement when production data separation is required.

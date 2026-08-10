@@ -18,6 +18,14 @@
 
 ## Remote verification
 
-- Corrected GitHub Actions run — pending push.
-- Corrected Vercel Production deployment — pending remote CI and release commit.
-- Initial production health — `degraded`; database `unavailable`.
+- GitHub Actions run `31362387357` — PASS.
+- `Lint, typecheck, test, and build` job `93373682987` — PASS.
+- `Deterministic Chromium E2E` job `93373993806` — PASS.
+- Vercel deployment `dpl_EWaxn3whDXbWXKeLhz9bzz2kChnw` — `READY`, Production.
+- `GET /` and `GET /courses` through the production deployment — PASS.
+- `GET /api/system/health` — PASS; `status: ok`, `database: connected`.
+- Unauthenticated content-target and lesson-draft APIs — PASS; returned structured
+  `UNAUTHENTICATED` errors.
+- Invalid login probe using an `.invalid` email — PASS; returned
+  `401 UNAUTHENTICATED` with no `Retry-After`, not `429 RATE_LIMITED`.
+- Supabase API log after the login probe — PASS; `consume_rate_limit` returned 200.

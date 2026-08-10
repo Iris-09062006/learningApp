@@ -1,7 +1,7 @@
 # TASK-051 — Publish Verified Release to GitHub and Vercel Production
 
 ## Status
-`FIXED_FOR_REVIEW`
+`VERIFIED`
 
 ## Objective
 Publish the latest verified LearningApp release commit to GitHub `main`, deploy it
@@ -31,3 +31,12 @@ to the linked Vercel Production project, and verify the production deployment.
 - GitHub `main` points to the recorded release commit.
 - Vercel Production deployment reaches `READY` and its smoke checks pass.
 - Deployment logs contain no unresolved release-related errors.
+
+## Evidence
+
+- Published CI fix commit: `5389039`
+- GitHub Actions: `31362387357` — quality gates and Chromium E2E passed
+- Vercel Production: `dpl_EWaxn3whDXbWXKeLhz9bzz2kChnw`
+- Production URL: `https://learing-app1.vercel.app`
+- Health: `ok / connected`
+- Login negative-auth probe: `401 UNAUTHENTICATED`; distributed limiter RPC: `200`

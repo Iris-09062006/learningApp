@@ -1,27 +1,23 @@
 # Active Task Queue
 
-- **Active task:** `TASK-051` — Publish Verified Release to GitHub and Vercel Production
-- **Status:** `FIXED_FOR_REVIEW` — CI clean-install fix passed all local gates
+- **Active task:** None
+- **Status:** `VERIFIED` — `TASK-051` published and production-verified
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
 
 ## Current objective
 
-Publish the verified TASK-050 release lineage to GitHub `main`, deploy the exact
-published commit to Vercel Production, and verify the production deployment.
+Wait for the user-provided Stitch designs before implementing `TASK-047`.
 
 ## Current state
 
-TASK-050 is verified on Supabase Development and Vercel Preview. TASK-051 is the
-explicitly authorized production release. New mode creates a
+TASK-051 is verified on GitHub and Vercel Production. GitHub Actions quality gates
+and deterministic Chromium E2E pass. Production health is `ok` with the database
+connected, and login rate limiting no longer fails closed because the Vercel
+service-role credential was corrected. New mode creates a
 new course plus a source-named chapter/lesson; existing mode appends a source-named
 chapter/lesson to the selected course. The user-created `phương pháp tính / Nội suy
-lagrange` records remain unchanged. Production remains unchanged; TASK-047 remains
-deferred until Stitch designs arrive. Existing user changes in `AGENTS.md`,
+lagrange` records remain unchanged. TASK-047 remains deferred until Stitch designs
+arrive. Existing user changes in `AGENTS.md`,
 `docs/decisions.md`, and untracked probe files remain outside scope.
-
-The first production deployment is `READY`, but its health endpoint reports the
-database unavailable. GitHub Actions run `31361233448` failed before tests because
-the lockfile omitted overridden optional dependencies. The lockfile/runtime fix has
-passed `npm ci` and every local gate and is awaiting remote CI verification.
