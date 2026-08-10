@@ -1,7 +1,7 @@
 # TASK-050 — Separate New Course and Existing Lesson Upload Flows
 
 ## Status
-`IN_PROGRESS`
+`VERIFIED`
 
 ## Objective
 Make the Document-to-Lesson target choice match the product model explicitly:
