@@ -1,5 +1,15 @@
 # Database
 
+## TASK-055 Course draft batch
+
+- Một Course batch được nhận diện bởi `lesson_drafts.source_document_id`; mọi draft
+  trong batch phải cùng `course_id`.
+- `create_course_lesson_drafts` tạo Course/Chapter/Lessons/drafts/citations nguyên tử.
+- `review_course_draft_batch` ghi review từng Lesson và publish toàn batch hoặc reject
+  toàn batch trước khi archive source.
+- Không thêm `course_id` vào bảng bài tập. `generated_exercises.lesson_id` và
+  `exercises.lesson_id` vẫn là ownership duy nhất của bài tập.
+
 ## TASK-050 — Separated content destination RPCs
 
 `create_content_curriculum(p_course_title text, p_course_slug text,

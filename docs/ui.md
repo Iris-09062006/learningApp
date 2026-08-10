@@ -1,5 +1,14 @@
 # UI Specification
 
+## TASK-055 Admin content states
+
+- Upload section nói rõ PDF chỉ tạo Course/Lessons, không tạo bài tập.
+- Pending queue hiển thị Course metadata và danh sách Lesson; từng Lesson mở editor
+  nội dung/citation. Có loading, empty, retry, error và live status.
+- Approve/reject xử lý toàn Course và item biến mất khỏi queue sau refresh.
+- Exercise section tách biệt, bắt buộc chọn đúng một Lesson đã publish và thông báo
+  kết quả đang chờ moderation riêng.
+
 ## 1. Mục tiêu
 
 Tài liệu này định nghĩa ngôn ngữ thiết kế, thiết kế hệ thống component, layout các màn hình và quy tắc trải nghiệm người dùng (UX) cho dự án **LearningApp**.

@@ -394,11 +394,11 @@ export async function createGeneratedExerciseRecord(
   // Check role: must be moderator or admin
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_active")
     .eq("id", authData.user.id)
     .single();
 
-  if (!profile || !["moderator", "admin"].includes(profile.role)) {
+  if (!profile?.is_active || !["moderator", "admin"].includes(profile.role)) {
     throw new Error("FORBIDDEN");
   }
 

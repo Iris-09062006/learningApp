@@ -989,6 +989,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_course_lesson_drafts: {
+        Args: {
+          p_course_description: string
+          p_course_slug: string
+          p_course_title: string
+          p_lessons: Json
+          p_model: string
+          p_provider: string
+          p_source_document_id: number
+        }
+        Returns: Json
+      }
       create_content_curriculum: {
         Args: {
           p_chapter_title: string
@@ -1073,6 +1085,14 @@ export type Database = {
           p_lesson_draft_id: number
         }
         Returns: Database["public"]["Enums"]["lesson_draft_status"]
+      }
+      review_course_draft_batch: {
+        Args: {
+          p_comment?: string
+          p_decision: Database["public"]["Enums"]["lesson_draft_review_decision"]
+          p_source_document_id: number
+        }
+        Returns: Json
       }
       revise_lesson_draft: {
         Args: {

@@ -12,7 +12,7 @@ No implementation task is currently active.
 
 ## Current state
 
-TASK-054 is verified locally. The create → lesson-draft review → transactional
-publish → learner-link flow passes focused, full-unit, E2E, and build gates.
-Migration `022` is intentionally not applied to shared Supabase, and no deployment
-was performed. Existing user changes remain outside scope.
+TASK-055 is verified locally. PDF-to-Course batch generation, persistent review
+resolution, per-Lesson exercise generation, authorization hardening, focused/full
+unit tests, E2E, lint, typecheck, build, and diff review pass. Migration `023` is
+intentionally not applied to shared Supabase, and no deployment was performed.

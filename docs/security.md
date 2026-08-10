@@ -1,5 +1,14 @@
 # Security Specification
 
+## TASK-055 authorization boundary
+
+- Chỉ active Admin được upload/extract/generate/review Course batches.
+- Chỉ active Moderator/Admin được gọi AI exercise generation; role được kiểm tra trước
+  khi đọc Lesson context hoặc gọi provider để tránh lạm dụng chi phí AI.
+- Course provider schema/prompt không có bài tập; source chunks là untrusted data.
+- Batch RPC là `security definer`, dùng empty `search_path`, tự kiểm tra `auth.uid()`,
+  active Admin, source state, quan hệ Course/Lesson và citations.
+
 ## 1. Mục tiêu
 
 Tài liệu này định nghĩa mô hình bảo mật của hệ thống.

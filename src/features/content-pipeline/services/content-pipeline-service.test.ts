@@ -5,11 +5,15 @@ const mocks = vi.hoisted(() => ({
   createContentCurriculum: vi.fn(),
   createServerSupabaseClient: vi.fn(),
   getGenerationContext: vi.fn(),
+  getCourseGenerationContext: vi.fn(),
   getSourceDocument: vi.fn(),
   listContentChapters: vi.fn(),
   listContentCourses: vi.fn(),
   listContentTargets: vi.fn(),
   persistGeneratedDraft: vi.fn(),
+  persistGeneratedCourseDraft: vi.fn(),
+  listCourseDraftBatches: vi.fn(),
+  reviewCourseDraftBatch: vi.fn(),
   updateSourceStatus: vi.fn(),
 }));
 
@@ -17,11 +21,15 @@ vi.mock("@/features/content-pipeline/repositories/content-pipeline-repository", 
   createContentTarget: mocks.createContentTarget,
   createContentCurriculum: mocks.createContentCurriculum,
   getGenerationContext: mocks.getGenerationContext,
+  getCourseGenerationContext: mocks.getCourseGenerationContext,
   getSourceDocument: mocks.getSourceDocument,
   listContentChapters: mocks.listContentChapters,
   listContentCourses: mocks.listContentCourses,
   listContentTargets: mocks.listContentTargets,
   persistGeneratedDraft: mocks.persistGeneratedDraft,
+  persistGeneratedCourseDraft: mocks.persistGeneratedCourseDraft,
+  listCourseDraftBatches: mocks.listCourseDraftBatches,
+  reviewCourseDraftBatch: mocks.reviewCourseDraftBatch,
   updateSourceStatus: mocks.updateSourceStatus,
 }));
 
@@ -38,6 +46,9 @@ import {
   createNewContentCurriculum,
   createNewContentTarget,
   generateLessonDraft,
+  generateCourseDraft,
+  getCourseDraftQueue,
+  submitCourseDraftReview,
   getContentTargets,
 } from "./content-pipeline-service";
 
@@ -162,5 +173,72 @@ describe("generateLessonDraft retry", () => {
 
     await expect(generateLessonDraft(9, 51, { generateLessonDraft: vi.fn() }))
       .rejects.toMatchObject({ code: "INVALID_STATE" } satisfies Partial<ContentPipelineError>);
+  });
+});
+
+describe("Course draft batches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null }) },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({ data: { role: "admin", is_active: true } }),
+          }),
+        }),
+      }),
+    });
+    mocks.getCourseGenerationContext.mockResolvedValue({
+      document: { status: "extracted", error_code: null, original_filename: "python.pdf" },
+      chunks: [{ id: 1, chunk_index: 0, content: "Biến và kiểu dữ liệu" }],
+    });
+    mocks.updateSourceStatus.mockResolvedValue(undefined);
+    mocks.persistGeneratedCourseDraft.mockResolvedValue({
+      sourceDocumentId: 9,
+      courseId: 31,
+      chapterId: 41,
+      lessonDraftIds: [71, 72],
+      status: "pending_review",
+    });
+  });
+
+  it("generates multiple Lesson drafts without an exercise generation contract", async () => {
+    const provider = {
+      generateLessonDraft: vi.fn(),
+      generateCourseDraft: vi.fn().mockResolvedValue({
+        draft: {
+          title: "Python nền tảng",
+          description: "Khóa nhập môn",
+          lessons: [
+            { title: "Biến", summary: "Tóm tắt", estimatedMinutes: 10, sections: [{ heading: "Khái niệm", bodyMarkdown: "Nội dung", citationChunkIndexes: [0] }] },
+            { title: "Kiểu dữ liệu", summary: "Tóm tắt", estimatedMinutes: 12, sections: [{ heading: "Khái niệm", bodyMarkdown: "Nội dung", citationChunkIndexes: [0] }] },
+          ],
+        },
+        provider: "9router",
+        model: "model",
+      }),
+    };
+
+    await expect(generateCourseDraft(9, provider)).resolves.toMatchObject({
+      courseId: 31,
+      lessonDraftIds: [71, 72],
+    });
+    expect(mocks.persistGeneratedCourseDraft).toHaveBeenCalledWith(expect.objectContaining({
+      sourceDocumentId: 9,
+      draft: expect.objectContaining({ lessons: expect.arrayContaining([expect.objectContaining({ title: "Biến" })]) }),
+    }));
+    expect(provider.generateLessonDraft).not.toHaveBeenCalled();
+  });
+
+  it("lists only unresolved Course batches through the repository", async () => {
+    mocks.listCourseDraftBatches.mockResolvedValue([{ sourceDocumentId: 9 }]);
+    await expect(getCourseDraftQueue()).resolves.toEqual([{ sourceDocumentId: 9 }]);
+  });
+
+  it("submits the batch decision with a bounded comment", async () => {
+    mocks.reviewCourseDraftBatch.mockResolvedValue({ status: "rejected" });
+    await submitCourseDraftReview(9, { decision: "rejected", comment: "Không phù hợp" });
+    expect(mocks.reviewCourseDraftBatch).toHaveBeenCalledWith(9, "rejected", "Không phù hợp");
   });
 });

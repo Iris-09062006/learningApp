@@ -241,6 +241,19 @@ export async function generateExercise(
     throw new AiServiceError("UNAUTHENTICATED", "Authentication is required.");
   }
 
+  const { data: generatorProfile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+  if (
+    profileError ||
+    !generatorProfile?.is_active ||
+    !["moderator", "admin"].includes(generatorProfile.role)
+  ) {
+    throw new AiServiceError("FORBIDDEN", "Active Moderator or Admin role required.");
+  }
+
   let lessonContext;
   try {
     lessonContext = await fetchLessonContextForGeneration(input.lessonId);

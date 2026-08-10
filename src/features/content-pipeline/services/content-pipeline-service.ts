@@ -8,18 +8,22 @@ import {
   createContentCurriculum,
   createSourceDocument,
   downloadSourceObject,
+  getCourseGenerationContext,
   getGenerationContext,
   getLessonDraft,
   getSourceDocument,
   listLessonDrafts,
+  listCourseDraftBatches,
   listContentChapters,
   listContentCourses,
   listContentTargets,
   persistGeneratedDraft,
+  persistGeneratedCourseDraft,
   publishLessonDraft,
   removeSourceObject,
   replaceDocumentChunks,
   reviewLessonDraft,
+  reviewCourseDraftBatch,
   reviseLessonDraft,
   updateSourceStatus,
   uploadSourceObject,
@@ -169,11 +173,82 @@ export async function generateLessonDraft(
   }
 }
 
+export async function generateCourseDraft(
+  sourceDocumentIdValue: unknown,
+  provider: LessonDraftProvider = new NineRouterLessonDraftProvider()
+) {
+  await requireAdmin();
+  const sourceDocumentId = asPositiveId(sourceDocumentIdValue, "documentId");
+  const context = await getCourseGenerationContext(sourceDocumentId);
+  if (!context) throw new ContentPipelineError("NOT_FOUND", "Source document not found.");
+  const retryableGenerationFailure = context.document.status === "failed"
+    && context.document.error_code === "GENERATION_FAILED";
+  if (context.document.status !== "extracted" && !retryableGenerationFailure) {
+    throw new ContentPipelineError("INVALID_STATE", "Source document must be extracted before generation.");
+  }
+  if (!context.chunks.length) {
+    throw new ContentPipelineError("INVALID_STATE", "Source document has no extracted chunks.");
+  }
+  await updateSourceStatus(sourceDocumentId, "generating");
+  try {
+    if (!provider.generateCourseDraft) throw new Error("AI_PROVIDER_UNSUPPORTED");
+    const selectedChunks = [] as typeof context.chunks;
+    let selectedCharacters = 0;
+    for (const chunk of context.chunks) {
+      if (selectedCharacters + chunk.content.length > 80_000 && selectedChunks.length > 0) break;
+      selectedChunks.push(chunk);
+      selectedCharacters += chunk.content.length;
+    }
+    const generated = await provider.generateCourseDraft({
+      documentTitle: context.document.original_filename,
+      chunks: selectedChunks.map((chunk) => ({
+        chunkIndex: chunk.chunk_index,
+        content: chunk.content,
+      })),
+    });
+    return await persistGeneratedCourseDraft({
+      sourceDocumentId,
+      courseSlug: curriculumSlug(generated.draft.title),
+      draft: generated.draft,
+      provider: generated.provider,
+      model: generated.model,
+    });
+  } catch {
+    await updateSourceStatus(sourceDocumentId, "failed", "GENERATION_FAILED").catch(() => undefined);
+    throw new ContentPipelineError("AI_PROVIDER_ERROR", "Unable to generate a valid cited Course draft.");
+  }
+}
+
+export async function getCourseDraftQueue() {
+  await requireAdmin();
+  return listCourseDraftBatches();
+}
+
+export async function submitCourseDraftReview(sourceDocumentIdValue: unknown, body: unknown) {
+  await requireAdmin();
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Review body is invalid.");
+  }
+  const record = body as Record<string, unknown>;
+  const decisions: LessonDraftReviewDecision[] = ["approved", "rejected", "needs_revision"];
+  if (
+    !decisions.includes(record.decision as LessonDraftReviewDecision) ||
+    (record.comment !== undefined && record.comment !== null && typeof record.comment !== "string")
+  ) {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Review decision is invalid.");
+  }
+  return reviewCourseDraftBatch(
+    asPositiveId(sourceDocumentIdValue, "sourceDocumentId"),
+    record.decision as LessonDraftReviewDecision,
+    typeof record.comment === "string" ? record.comment.slice(0, 2000) : null
+  );
+}
+
 export async function getLessonDraftQueue(status?: string) {
   await requireAdmin();
   const allowed = ["pending_review", "needs_revision", "rejected", "approved", "published"];
   if (status && !allowed.includes(status)) throw new ContentPipelineError("VALIDATION_ERROR", "Invalid draft status.");
-  return listLessonDrafts(status as Parameters<typeof listLessonDrafts>[0]);
+  return listLessonDrafts((status ?? "pending_review") as Parameters<typeof listLessonDrafts>[0]);
 }
 
 export async function getLessonDraftDetail(value: unknown) {

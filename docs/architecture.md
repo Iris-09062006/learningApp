@@ -1,5 +1,12 @@
 # Architecture
 
+## TASK-055 pipeline boundary
+
+`content-pipeline` sở hữu PDF → Course/Lesson draft → Admin batch review. Nó không
+import AI exercise repository và không ghi bảng bài tập. `ai` tiếp tục sở hữu generation
+theo một `lessonId`; `moderation` tiếp tục sở hữu review/publish bài tập. Atomic Course
+creation/review nằm trong PostgreSQL RPC để không lộ curriculum nửa hoàn tất.
+
 ## 1. Mục tiêu kiến trúc
 
 Hệ thống được thiết kế theo hướng đơn giản, dễ triển khai và phù hợp với quy mô đồ án nhỏ đến vừa.

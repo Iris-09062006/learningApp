@@ -1,5 +1,16 @@
 # API Contract
 
+## TASK-055 Course draft batch endpoints
+
+- `POST /api/admin/content-sources/:id/generate` với `{}` tạo Course + nhiều Lesson
+  draft; body có `targetLessonId` vẫn là compatibility path one-Lesson.
+- `GET /api/admin/course-drafts` trả `{ items: CourseDraftBatch[] }` và chỉ gồm
+  `pending_review|needs_revision`.
+- `POST /api/admin/course-drafts/:sourceDocumentId/reviews` nhận
+  `{ decision, comment? }`; `approved` trả `status: published` và `lessonIds`.
+- `POST /api/ai/exercises/generate` tiếp tục nhận đúng một `lessonId` và trả một
+  generated exercise ở trạng thái pending.
+
 ## Separated content destinations (TASK-050; supersedes TASK-049 UI flow)
 
 `GET /api/admin/content-targets` additionally returns `courses`, containing

@@ -1,5 +1,14 @@
 # Product Requirements Document (PRD)
 
+## TASK-055 clarification — PDF-to-Course and Lesson-scoped exercises
+
+- Một PDF tạo một Course draft và 2–20 Lesson draft có thứ tự/citation; bước này
+  không được sinh bài tập.
+- Admin review toàn batch. Approve xuất bản Course/Lessons nguyên tử; reject lưu lịch
+  sử. Hai quyết định đều loại item khỏi pending queue kể cả sau reload.
+- Bài tập chỉ được sinh qua action riêng của một Lesson, dùng title/content hiện tại
+  và lưu bằng `generated_exercises.lesson_id` để đi qua moderation riêng.
+
 ## 1. Tổng quan dự án
 
 - **Tên dự án:** LearningApp (Nền tảng học lập trình Python tương tác tích hợp AI).

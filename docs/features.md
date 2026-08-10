@@ -1,5 +1,16 @@
 # Features Specification
 
+## F-CONTENT-02 — PDF-to-Course batch generation
+
+Active Admin tải một PDF, hệ thống trích xuất/chunk, AI chọn chủ đề cốt lõi và tạo một
+Course với nhiều Lesson có citation. Admin review toàn batch; approve publish nguyên tử,
+reject lưu quyết định. Không tạo bài tập trong feature này.
+
+## F-AIGEN-01 clarification
+
+AI exercise generation luôn bắt đầu từ một Lesson đã chọn, đọc title/content hiện tại
+của Lesson và lưu `generated_exercises.lesson_id`; kết quả vẫn phải qua moderation.
+
 ## 1. Mục tiêu
 
 Tài liệu này định nghĩa chi tiết toàn bộ tính năng của hệ thống.

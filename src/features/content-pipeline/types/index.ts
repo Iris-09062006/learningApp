@@ -55,6 +55,49 @@ export interface LessonDraftGenerationResponse {
   model: string;
 }
 
+export interface StructuredCourseDraft {
+  title: string;
+  description: string;
+  lessons: StructuredLessonDraft[];
+}
+
+export interface CourseDraftGenerationRequest {
+  documentTitle: string;
+  chunks: Array<{ chunkIndex: number; content: string }>;
+}
+
+export interface CourseDraftGenerationResponse {
+  draft: StructuredCourseDraft;
+  provider: string;
+  model: string;
+}
+
+export interface CourseDraftBatch {
+  sourceDocumentId: number;
+  sourceFilename: string;
+  courseId: number;
+  courseTitle: string;
+  courseDescription: string | null;
+  status: "pending_review" | "needs_revision";
+  createdAt: string;
+  lessons: LessonDraftRecord[];
+}
+
+export interface CreateCourseDraftBatchResult {
+  sourceDocumentId: number;
+  courseId: number;
+  chapterId: number;
+  lessonDraftIds: number[];
+  status: "pending_review";
+}
+
+export interface ReviewCourseDraftBatchResult {
+  sourceDocumentId: number;
+  courseId: number;
+  status: "published" | "rejected" | "needs_revision";
+  lessonIds: number[];
+}
+
 export interface SourceDocumentRecord {
   id: number;
   originalFilename: string;
@@ -106,6 +149,7 @@ export interface ContentTarget {
   chapterTitle: string;
   courseId: number;
   courseTitle: string;
+  isPublished?: boolean;
 }
 
 export interface ContentChapterTarget {

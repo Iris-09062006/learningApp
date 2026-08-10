@@ -121,7 +121,7 @@ test("provides role-route smoke coverage for moderator and admin", async ({ brow
   await adminContext.close();
 });
 
-test("creates, reviews, and publishes a lesson draft with learner destination links", async ({ page }) => {
+test("creates and atomically publishes a Course with multiple Lesson drafts", async ({ page }) => {
   let draftGenerated = false;
   let draftStatus: "pending_review" | "approved" | "published" = "pending_review";
   const draft = () => ({
@@ -154,28 +154,30 @@ test("creates, reviews, and publishes a lesson draft with learner destination li
       body: JSON.stringify({ success: true, data }),
     });
 
-    if (pathname === "/api/admin/content-targets") return respond({ items: [], chapters: [], courses: [] });
-    if (pathname === "/api/admin/lesson-drafts") return respond({ items: draftGenerated ? [draft()] : [] });
-    if (pathname === "/api/admin/content-sources") return respond({ id: 9 }, 201);
+    if (pathname === "/api/admin/content-targets") return respond({ items: [] });
+    if (pathname === "/api/admin/course-drafts") return respond({ items: draftGenerated && draftStatus === "pending_review" ? [{
+      sourceDocumentId: 9,
+      sourceFilename: "lagrange.txt",
+      courseId: 31,
+      courseTitle: "Phương pháp tính",
+      courseDescription: "Khóa học nội suy.",
+      status: "pending_review",
+      createdAt: "2026-08-10T00:00:00.000Z",
+      lessons: [draft()],
+    }] : [] });
+    if (pathname === "/api/admin/content-sources") return respond({ id: 9, originalFilename: "lagrange.txt" }, 201);
     if (pathname === "/api/admin/content-sources/9/extract") return respond({ status: "extracted" });
-    if (pathname === "/api/admin/content-curriculum") return respond({ courseId: 31, chapterId: 41, lessonId: 51 }, 201);
     if (pathname === "/api/admin/content-sources/9/generate") {
       draftGenerated = true;
-      return respond({ lessonDraftId: 71, status: "pending_review" });
+      return respond({ sourceDocumentId: 9, courseId: 31, chapterId: 41, lessonDraftIds: [71], status: "pending_review" });
     }
-    if (pathname === "/api/admin/lesson-drafts/71/reviews") {
-      draftStatus = "approved";
-      return respond({ status: "approved" });
-    }
-    if (pathname === "/api/admin/lesson-drafts/71/publish") {
+    if (pathname === "/api/admin/course-drafts/9/reviews") {
       draftStatus = "published";
       return respond({
-        lessonDraftId: 71,
-        lessonId: 51,
+        sourceDocumentId: 9,
         courseId: 31,
         status: "published",
-        coursePublished: true,
-        publishedAt: "2026-08-10T01:00:00.000Z",
+        lessonIds: [51],
       });
     }
     if (pathname === "/api/admin/lesson-drafts/71") return respond(draft());
@@ -187,23 +189,18 @@ test("creates, reviews, and publishes a lesson draft with learner destination li
   await expect(page.getByRole("link", { name: "Duyệt bài tập" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Tạo & duyệt bài học" })).toBeVisible();
 
-  await page.getByLabel("Tài liệu nguồn").setInputFiles({
+  await page.locator('input[name="source"]').setInputFiles({
     name: "lagrange.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("Nội suy Lagrange"),
   });
-  await page.getByLabel("Tên course mới").fill("Phương pháp tính");
-  await page.getByRole("button", { name: "Upload & tạo draft" }).click();
+  await page.getByRole("button", { name: "Tạo Course draft" }).click();
 
-  await expect(page.getByLabel("Tiêu đề", { exact: true })).toHaveValue("Nội suy Lagrange");
-  await page.getByRole("button", { name: "Duyệt", exact: true }).click();
-  const publishButton = page.getByRole("button", { name: "Xuất bản bài học (transaction)" });
-  await expect(publishButton).toBeEnabled();
-  await publishButton.click();
+  await expect(page.getByRole("heading", { name: "Phương pháp tính" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /1\. Nội suy Lagrange/u })).toBeVisible();
+  await page.getByRole("button", { name: "Duyệt & xuất bản Course" }).click();
 
-  await expect(page.getByText("Bài học đã hiển thị cho người học.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Mở khóa học" })).toHaveAttribute("href", "/courses/31");
-  await expect(page.getByRole("link", { name: "Mở lộ trình" })).toHaveAttribute("href", "/courses/31/roadmap");
-  await expect(page.getByRole("link", { name: "Mở bài học" })).toHaveAttribute("href", "/lessons/51");
+  await expect(page.getByText("Hàng chờ trống.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Mở Course" })).toHaveAttribute("href", "/courses/31");
   await expectNoSeriousA11yViolations(page);
 });

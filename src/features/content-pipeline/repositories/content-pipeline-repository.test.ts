@@ -18,6 +18,7 @@ import {
   listContentChapters,
   listContentCourses,
   listContentTargets,
+  listCourseDraftBatches,
 } from "./content-pipeline-repository";
 
 function maybeSingleQuery(data: unknown) {
@@ -122,5 +123,44 @@ describe("getGenerationContext", () => {
     ]);
     expect(mocks.createAdminSupabaseClient).toHaveBeenCalledTimes(3);
     expect(mocks.createServerSupabaseClient).not.toHaveBeenCalled();
+  });
+
+  it("groups unresolved Lesson drafts into one Course batch per source document", async () => {
+    const rows = [1, 2].map((id) => ({
+      id: 70 + id,
+      source_document_id: 9,
+      course_id: 31,
+      chapter_id: 41,
+      target_lesson_id: 50 + id,
+      title: id === 1 ? "Biến" : "Hàm",
+      summary: "Tóm tắt",
+      estimated_minutes: 10,
+      sections: [],
+      status: "pending_review",
+      revision: 1,
+      approved_revision: null,
+      provider: "9router",
+      model: "model",
+      published_at: null,
+      created_at: "2026-08-10T00:00:00Z",
+      updated_at: "2026-08-10T00:00:00Z",
+      source_documents: { original_filename: "python.pdf", status: "ready_for_review" },
+      courses: { title: "Python", description: "Khóa học" },
+    }));
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue({ data: rows, error: null }),
+    };
+    mocks.createAdminSupabaseClient.mockReturnValue({ from: vi.fn().mockReturnValue(query) });
+
+    await expect(listCourseDraftBatches()).resolves.toMatchObject([{
+      sourceDocumentId: 9,
+      courseId: 31,
+      courseTitle: "Python",
+      lessons: [{ id: 71 }, { id: 72 }],
+    }]);
   });
 });

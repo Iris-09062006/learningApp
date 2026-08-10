@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { contentPipelineErrorResponse, readPipelineJson } from "@/app/api/admin/content-pipeline-route-utils";
-import { ContentPipelineError, generateLessonDraft } from "@/features/content-pipeline/services/content-pipeline-service";
+import { ContentPipelineError, generateCourseDraft, generateLessonDraft } from "@/features/content-pipeline/services/content-pipeline-service";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,8 +12,11 @@ export async function POST(request: Request, context: RouteContext) {
     const body = await readPipelineJson(request);
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new ContentPipelineError("VALIDATION_ERROR", "Generation body is invalid.");
     const targetLessonId = (body as Record<string, unknown>).targetLessonId;
+    const data = targetLessonId === undefined
+      ? await generateCourseDraft((await context.params).id)
+      : await generateLessonDraft((await context.params).id, targetLessonId);
     return NextResponse.json(
-      { success: true, data: await generateLessonDraft((await context.params).id, targetLessonId) },
+      { success: true, data },
       { status: 201, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {

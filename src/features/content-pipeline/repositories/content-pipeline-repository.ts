@@ -3,6 +3,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
+  CourseDraftBatch,
+  CreateCourseDraftBatchResult,
   ContentChapterTarget,
   ContentCourseTarget,
   ContentCurriculum,
@@ -11,8 +13,10 @@ import type {
   LessonDraftRecord,
   LessonDraftReviewDecision,
   PublishLessonDraftResult,
+  ReviewCourseDraftBatchResult,
   SourceDocumentRecord,
   StructuredLessonDraft,
+  StructuredCourseDraft,
   SupportedSourceMimeType,
 } from "@/features/content-pipeline/types";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -197,6 +201,104 @@ export async function getGenerationContext(sourceDocumentId: number, lessonId: n
   };
 }
 
+export async function getCourseGenerationContext(sourceDocumentId: number) {
+  const supabase = adminClient();
+  const [documentResult, chunksResult] = await Promise.all([
+    supabase.from("source_documents").select("*").eq("id", sourceDocumentId).maybeSingle(),
+    supabase.from("document_chunks").select("id, chunk_index, content").eq("source_document_id", sourceDocumentId).order("chunk_index"),
+  ]);
+  if (documentResult.error || chunksResult.error) throw new Error("DATABASE_ERROR");
+  if (!documentResult.data) return null;
+  return {
+    document: documentResult.data as SourceDocumentRow,
+    chunks: (chunksResult.data ?? []) as DocumentChunkRow[],
+  };
+}
+
+export async function persistGeneratedCourseDraft(input: {
+  sourceDocumentId: number;
+  courseSlug: string;
+  draft: StructuredCourseDraft;
+  provider: string;
+  model: string;
+}): Promise<CreateCourseDraftBatchResult> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("create_course_lesson_drafts", {
+    p_source_document_id: input.sourceDocumentId,
+    p_course_title: input.draft.title,
+    p_course_slug: input.courseSlug,
+    p_course_description: input.draft.description,
+    p_lessons: input.draft.lessons,
+    p_provider: input.provider,
+    p_model: input.model,
+  });
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  const result = data as unknown as CreateCourseDraftBatchResult;
+  if (
+    !Number.isSafeInteger(result.courseId) || result.courseId <= 0 ||
+    !Array.isArray(result.lessonDraftIds) || result.lessonDraftIds.length < 1
+  ) {
+    throw new Error("DATABASE_ERROR");
+  }
+  return result;
+}
+
+export async function listCourseDraftBatches(): Promise<CourseDraftBatch[]> {
+  const supabase = adminClient();
+  const { data, error } = await supabase
+    .from("lesson_drafts")
+    .select("*, source_documents!inner(original_filename, status), courses!inner(title, description)")
+    .in("status", ["pending_review", "needs_revision"])
+    .eq("source_documents.status", "ready_for_review")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw new Error("DATABASE_ERROR");
+
+  const groups = new Map<number, CourseDraftBatch>();
+  for (const raw of data ?? []) {
+    const row = raw as unknown as LessonDraftRow & {
+      source_documents: { original_filename: string; status: string };
+      courses: { title: string; description: string | null };
+    };
+    const existing = groups.get(row.source_document_id);
+    const draft = mapDraft(row);
+    if (existing) {
+      existing.lessons.push(draft);
+      if (draft.status === "needs_revision") existing.status = "needs_revision";
+      continue;
+    }
+    groups.set(row.source_document_id, {
+      sourceDocumentId: row.source_document_id,
+      sourceFilename: row.source_documents.original_filename,
+      courseId: row.course_id,
+      courseTitle: row.courses.title,
+      courseDescription: row.courses.description,
+      status: draft.status === "needs_revision" ? "needs_revision" : "pending_review",
+      createdAt: row.created_at,
+      lessons: [draft],
+    });
+  }
+  return [...groups.values()].map((batch) => ({
+    ...batch,
+    lessons: batch.lessons.sort((left, right) => left.id - right.id),
+  }));
+}
+
+export async function reviewCourseDraftBatch(
+  sourceDocumentId: number,
+  decision: LessonDraftReviewDecision,
+  comment: string | null
+): Promise<ReviewCourseDraftBatchResult> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("review_course_draft_batch", {
+    p_source_document_id: sourceDocumentId,
+    p_decision: decision,
+    p_comment: comment,
+  });
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  return data as unknown as ReviewCourseDraftBatchResult;
+}
+
 export async function persistGeneratedDraft(input: {
   sourceDocumentId: number;
   courseId: number;
@@ -302,13 +404,14 @@ export async function listContentTargets(): Promise<ContentTarget[]> {
   const supabase = adminClient();
   const { data, error } = await supabase
     .from("lessons")
-    .select("id, title, chapter_id, chapters!inner(id, title, course_id, courses!inner(id, title))")
+    .select("id, title, chapter_id, is_published, chapters!inner(id, title, course_id, courses!inner(id, title))")
     .order("id", { ascending: true });
   if (error) throw new Error("DATABASE_ERROR");
   return ((data ?? []) as unknown as Array<{
     id: number;
     title: string;
     chapter_id: number;
+    is_published: boolean;
     chapters: { id: number; title: string; course_id: number; courses: { id: number; title: string } };
   }>).map((row) => ({
     lessonId: row.id,
@@ -317,6 +420,7 @@ export async function listContentTargets(): Promise<ContentTarget[]> {
     chapterTitle: row.chapters.title,
     courseId: row.chapters.courses.id,
     courseTitle: row.chapters.courses.title,
+    isPublished: row.is_published,
   }));
 }
 
