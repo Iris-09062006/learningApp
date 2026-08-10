@@ -989,6 +989,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_content_curriculum: {
+        Args: {
+          p_chapter_title: string
+          p_course_slug: string
+          p_course_title: string
+        }
+        Returns: Json
+      }
+      create_lesson_content_target: {
+        Args: { p_chapter_id: number; p_title: string }
+        Returns: Json
+      }
       admin_change_user_role: {
         Args: {
           p_role: Database["public"]["Enums"]["user_role"]

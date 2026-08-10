@@ -1,5 +1,13 @@
 # Database
 
+## TASK-049 — Empty curriculum bootstrap RPC
+
+`create_content_curriculum(p_course_title text, p_course_slug text,
+p_chapter_title text)` creates one unpublished course and its first unpublished
+chapter in a single active-Admin-authorized transaction. The server owns slug
+generation; `PUBLIC` and `anon` have no execute permission. The operation records
+`content_curriculum.created` in `admin_logs`.
+
 ## TASK-046 — New lesson content target RPC
 
 `create_lesson_content_target(p_chapter_id bigint, p_title text)` is an

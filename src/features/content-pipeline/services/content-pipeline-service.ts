@@ -5,6 +5,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { NineRouterLessonDraftProvider, type LessonDraftProvider } from "@/features/content-pipeline/providers/lesson-draft-provider";
 import {
   createContentTarget,
+  createContentCurriculum,
   createSourceDocument,
   downloadSourceObject,
   getGenerationContext,
@@ -255,5 +256,41 @@ export async function createNewContentTarget(body: unknown) {
       throw new ContentPipelineError("NOT_FOUND", "Target chapter was not found.");
     }
     throw new ContentPipelineError("DATABASE_ERROR", "Unable to create the target lesson.");
+  }
+}
+
+function curriculumSlug(title: string) {
+  const base = title
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 140) || "course";
+  return `${base}-${randomUUID().slice(0, 8)}`;
+}
+
+export async function createNewContentCurriculum(body: unknown) {
+  await requireAdmin();
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Curriculum body is invalid.");
+  }
+  const record = body as Record<string, unknown>;
+  if (typeof record.courseTitle !== "string" || typeof record.chapterTitle !== "string") {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Course and chapter titles are required.");
+  }
+  const courseTitle = record.courseTitle.trim();
+  const chapterTitle = record.chapterTitle.trim();
+  if (!courseTitle || courseTitle.length > 150 || !chapterTitle || chapterTitle.length > 150) {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Course and chapter titles must be between 1 and 150 characters.");
+  }
+  try {
+    return await createContentCurriculum({
+      courseTitle,
+      courseSlug: curriculumSlug(courseTitle),
+      chapterTitle,
+    });
+  } catch {
+    throw new ContentPipelineError("DATABASE_ERROR", "Unable to create the course and chapter.");
   }
 }

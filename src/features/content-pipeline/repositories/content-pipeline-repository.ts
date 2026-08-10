@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   ContentChapterTarget,
+  ContentCurriculum,
   ContentTarget,
   DocumentChunkInput,
   LessonDraftRecord,
@@ -346,4 +347,24 @@ export async function createContentTarget(input: {
     throw new Error("DATABASE_ERROR");
   }
   return target;
+}
+
+export async function createContentCurriculum(input: {
+  courseTitle: string;
+  courseSlug: string;
+  chapterTitle: string;
+}): Promise<ContentCurriculum> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("create_content_curriculum", {
+    p_course_title: input.courseTitle,
+    p_course_slug: input.courseSlug,
+    p_chapter_title: input.chapterTitle,
+  });
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  const curriculum = data as unknown as ContentCurriculum;
+  if (!Number.isSafeInteger(curriculum.courseId) || curriculum.courseId <= 0
+    || !Number.isSafeInteger(curriculum.chapterId) || curriculum.chapterId <= 0) {
+    throw new Error("DATABASE_ERROR");
+  }
+  return curriculum;
 }

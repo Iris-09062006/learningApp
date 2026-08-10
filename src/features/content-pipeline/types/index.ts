@@ -114,3 +114,5 @@ export interface ContentChapterTarget {
   courseId: number;
   courseTitle: string;
 }
+
+export type ContentCurriculum = ContentChapterTarget;

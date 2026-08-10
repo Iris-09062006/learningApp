@@ -1,7 +1,7 @@
 # Active Task Queue
 
-- **Active task:** None; `TASK-048` is verified
-- **Status:** `VERIFIED`
+- **Active task:** `TASK-049` — Bootstrap Empty Content Curriculum
+- **Status:** `IN_PROGRESS`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
@@ -12,7 +12,9 @@ Reduce page-navigation latency, stabilize the Document-to-Lesson AI request/load
 
 ## Current state
 
-TASK-045/TASK-046 are deployed to Vercel Preview and Supabase Development through
-TASK-048. Production remains unchanged. TASK-047 remains deferred until the user
-provides Stitch designs. Existing user changes in `AGENTS.md`, `docs/decisions.md`,
-and untracked probe files remain outside scope.
+Supabase Development currently has zero courses, chapters, and lessons, leaving the
+Document-to-Lesson target selector empty. TASK-049 adds the smallest Admin-controlled
+bootstrap path for an unpublished course and first chapter. Production remains
+unchanged; TASK-047 remains deferred until Stitch designs arrive. Existing user
+changes in `AGENTS.md`, `docs/decisions.md`, and untracked probe files remain outside
+scope.

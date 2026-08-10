@@ -1,5 +1,16 @@
 # Document-to-Lesson — Product and Technical Contract
 
+## TASK-049 extension — Empty curriculum bootstrap
+
+- If no chapter exists, the Admin UI must present an explicit course/chapter creation
+  action instead of an empty selector with a blocked upload button.
+- The bootstrap action creates an unpublished course and its first unpublished
+  chapter transactionally, then selects the returned chapter for target creation.
+- Clients provide only course and chapter titles; the server generates the course
+  slug. The RPC validates again, authorizes an active Admin, and writes an audit log.
+- This is not general curriculum CRUD: editing, deletion, reordering, and adding a
+  chapter to an existing course remain outside this extension.
+
 ## TASK-046 extension — New lesson targets and resilient responses
 
 - Admin may select an existing lesson or create a new target inside an existing

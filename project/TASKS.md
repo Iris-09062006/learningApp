@@ -11,10 +11,12 @@
 
 ## Active Task
 
-None. `TASK-048` is verified; Production promotion was not performed.
+`TASK-049` — Bootstrap Empty Content Curriculum (`IN_PROGRESS`). Production remains
+out of scope.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+| `TASK-049` | Bootstrap Empty Content Curriculum | IN_PROGRESS | Content operations hotfix | `TASK-048` |
 | `TASK-045` | Reduce Page Navigation Latency | VERIFIED | Performance hotfix | None |
 | `TASK-046` | Stabilize AI Content Pipeline and New Lesson Targets | VERIFIED | Content operations hotfix | `TASK-043` |
 

@@ -64,6 +64,8 @@ export function ContentPipelineAdmin() {
   const [targetLessonId, setTargetLessonId] = useState("");
   const [newChapterId, setNewChapterId] = useState("");
   const [newLessonTitle, setNewLessonTitle] = useState("");
+  const [newCourseTitle, setNewCourseTitle] = useState("");
+  const [firstChapterTitle, setFirstChapterTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("Đang tải dữ liệu...");
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +134,34 @@ export function ContentPipelineAdmin() {
       setMessage("Draft đã sẵn sàng để kiểm duyệt.");
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Pipeline không thể hoàn tất.");
+      setMessage("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createCurriculum() {
+    const courseTitle = newCourseTitle.trim();
+    const chapterTitle = firstChapterTitle.trim();
+    if (!courseTitle || !chapterTitle) {
+      setError("Hãy nhập tên course và chapter đầu tiên.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setMessage("Đang tạo course và chapter chưa publish...");
+    try {
+      const curriculum = await requestPipelineApi<ContentChapterTarget>("/api/admin/content-curriculum", {
+        method: "POST",
+        body: JSON.stringify({ courseTitle, chapterTitle }),
+      });
+      await refresh();
+      setNewChapterId(String(curriculum.chapterId));
+      setNewCourseTitle("");
+      setFirstChapterTitle("");
+      setMessage("Đã tạo và chọn chapter mới. Bạn có thể tiếp tục upload tài liệu.");
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "Không thể tạo course và chapter.");
       setMessage("");
     } finally {
       setBusy(false);
@@ -245,6 +275,11 @@ export function ContentPipelineAdmin() {
                 <label className="flex items-center gap-2 text-sm"><input type="radio" name="target-mode" checked={targetMode === "new"} onChange={() => setTargetMode("new")} />Tạo bài học mới</label>
                 <label className="flex items-center gap-2 text-sm"><input type="radio" name="target-mode" checked={targetMode === "existing"} onChange={() => setTargetMode("existing")} />Dùng bài học hiện có</label>
               </div>
+              {!chapters.length ? (
+                <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  Chưa có course/chapter nào. Hãy tạo cấu trúc đầu tiên bên dưới trước khi upload.
+                </div>
+              ) : null}
               {targetMode === "new" ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
@@ -268,8 +303,26 @@ export function ContentPipelineAdmin() {
                   </select>
                 </div>
               )}
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">
+                  {chapters.length ? "Tạo thêm course và chapter đầu tiên" : "Tạo course và chapter đầu tiên"}
+                </p>
+                <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                  <div>
+                    <label htmlFor="new-course-title" className="mb-1 block text-sm font-medium">Tên course</label>
+                    <input id="new-course-title" value={newCourseTitle} onChange={(event) => setNewCourseTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void createCurriculum(); } }} maxLength={150} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" />
+                  </div>
+                  <div>
+                    <label htmlFor="first-chapter-title" className="mb-1 block text-sm font-medium">Tên chapter đầu tiên</label>
+                    <input id="first-chapter-title" value={firstChapterTitle} onChange={(event) => setFirstChapterTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void createCurriculum(); } }} maxLength={150} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" />
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => void createCurriculum()} disabled={busy}>
+                    Tạo course/chapter
+                  </Button>
+                </div>
+              </div>
             </fieldset>
-            <Button type="submit" isLoading={busy}>Upload & tạo draft</Button>
+            <Button type="submit" isLoading={busy} disabled={busy || (targetMode === "new" ? !chapters.length : !targets.length)}>Upload & tạo draft</Button>
           </form>
         </CardContent>
       </Card>

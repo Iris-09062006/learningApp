@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createContentTarget: vi.fn(),
+  createContentCurriculum: vi.fn(),
   createServerSupabaseClient: vi.fn(),
   listContentChapters: vi.fn(),
   listContentTargets: vi.fn(),
@@ -9,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/features/content-pipeline/repositories/content-pipeline-repository", () => ({
   createContentTarget: mocks.createContentTarget,
+  createContentCurriculum: mocks.createContentCurriculum,
   listContentChapters: mocks.listContentChapters,
   listContentTargets: mocks.listContentTargets,
 }));
@@ -21,7 +23,12 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: mocks.createServerSupabaseClient,
 }));
 
-import { ContentPipelineError, createNewContentTarget, getContentTargets } from "./content-pipeline-service";
+import {
+  ContentPipelineError,
+  createNewContentCurriculum,
+  createNewContentTarget,
+  getContentTargets,
+} from "./content-pipeline-service";
 
 describe("createNewContentTarget", () => {
   beforeEach(() => {
@@ -64,5 +71,23 @@ describe("createNewContentTarget", () => {
     mocks.listContentChapters.mockResolvedValue([]);
 
     await expect(getContentTargets()).resolves.toEqual({ items: [], chapters: [] });
+  });
+
+  it("creates an unpublished curriculum container with a server-generated slug", async () => {
+    mocks.createContentCurriculum.mockResolvedValue({ courseId: 3, chapterId: 4 });
+
+    await createNewContentCurriculum({ courseTitle: "  Đại số tuyến tính  ", chapterTitle: "  Nội suy  " });
+
+    expect(mocks.createContentCurriculum).toHaveBeenCalledWith({
+      courseTitle: "Đại số tuyến tính",
+      courseSlug: expect.stringMatching(/^ai-so-tuyen-tinh-[a-f0-9]{8}$/),
+      chapterTitle: "Nội suy",
+    });
+  });
+
+  it("rejects an incomplete curriculum before repository access", async () => {
+    await expect(createNewContentCurriculum({ courseTitle: "", chapterTitle: "Nội suy" }))
+      .rejects.toMatchObject({ code: "VALIDATION_ERROR" } satisfies Partial<ContentPipelineError>);
+    expect(mocks.createContentCurriculum).not.toHaveBeenCalled();
   });
 });

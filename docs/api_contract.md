@@ -1,5 +1,18 @@
 # API Contract
 
+## Empty curriculum bootstrap (TASK-049)
+
+`POST /api/admin/content-curriculum` accepts:
+
+```json
+{ "courseTitle": "Toán ứng dụng", "chapterTitle": "Nội suy" }
+```
+
+It returns `201` with `{ courseId, courseTitle, chapterId, chapterTitle }`. Both rows
+are unpublished. Only an active Admin may create them; validation errors return
+`400`, and unexpected persistence failures return `500` in the standard JSON
+envelope.
+
 ## Document-to-Lesson target extension (TASK-046)
 
 `GET /api/admin/content-targets` returns the standard envelope with both `items`
