@@ -24,7 +24,8 @@ generation context query.
 - Preserve public published-content policies and all write boundaries.
 - Add migration regression coverage.
 - Run local quality gates and review.
-- Prepare the matching RLS migration for a separately authorized database release.
+- Apply the matching RLS migration to the configured Supabase project after the
+  user explicitly authorizes its shared-database impact.
 
 ## Out of Scope
 - Browser-side or unauthorized service-role access, curriculum write grants, role
@@ -38,6 +39,7 @@ generation context query.
 - `lint`, `typecheck`, `test`, `build`, migration tests, and review pass.
 - A read-only live-data probe proves the server-side generation context can resolve
   the extracted source and unpublished target locally.
+- Cloud verification confirms migration `021` and all three SELECT-only policies.
 
 ## Allowed Files
 - `supabase/migrations/021_allow_active_admins_read_curriculum.sql`

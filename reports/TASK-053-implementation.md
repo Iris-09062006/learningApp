@@ -29,6 +29,6 @@ A read-only probe against the configured Supabase data resolved source document
 
 ## Release scope
 
-Migration `021` was not applied remotely because the local Supabase CLI has no
-project access token. No push, deployment, environment update, or cloud mutation
-was performed. The server-side fix does not require that migration for local use.
+After explicit user authorization, migration `021_allow_active_admins_read_curriculum`
+was applied through Supabase MCP to project `yzucdzlgaucmduoghjft`. No application
+push, Vercel deployment, or environment update was performed.

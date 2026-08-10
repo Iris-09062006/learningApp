@@ -29,9 +29,9 @@
 - Fix: renamed it to `021_allow_active_admins_read_curriculum.sql`.
 - Verification: migration regression and the full test suite pass.
 
-## Remaining limitation
+## Cloud verification
 
-Migration `021` is prepared but not applied to the shared Supabase project because
-CLI project authorization is unavailable. The local server-side fix is verified;
-shipping the defense-in-depth RLS policy requires a separately authorized database
-release.
+Migration `021` is present in Supabase migration history. The three live policies
+match the reviewed SQL: command `SELECT`, role `authenticated`, and predicates for
+the current profile's Admin role and active status. No curriculum write policy was
+added.

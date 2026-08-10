@@ -23,5 +23,10 @@
 The configured source `5` and lesson `1` were resolved together using a read-only
 server-side query. No credentials or document content were printed.
 
+Supabase migration history records version `20260810114321` with name
+`021_allow_active_admins_read_curriculum`. `pg_policies` confirms one `SELECT`
+policy for each of `courses`, `chapters`, and `lessons`, restricted to
+`authenticated` active Admin profiles.
+
 Expected stderr from tests that intentionally exercise error responses remained
 present; no test failed.
