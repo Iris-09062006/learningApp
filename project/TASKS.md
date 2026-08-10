@@ -11,14 +11,16 @@
 
 ## Active Task
 
-`TASK-041` — Preview Deployment and Smoke Verification (`BLOCKED`). Project
-`learning_app` and Preview environment values now exist; deployment must wait for the
-new TASK-037/038 release commit and non-Production migration `017` rollout.
+No task is currently active. `TASK-041` is `VERIFIED`: release commit `a4880d8`
+is pushed, exact-tree Preview deployment is Ready, environment and migration checks
+pass, all learner/moderator/admin authorization assertions pass, and disposable
+accounts/sessions were removed. Production is untouched.
 
 ## Verified and Completed Tasks
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-041` | Preview Deployment and Smoke Verification | VERIFIED | Phase 7 | `reports/TASK-041-implementation.md`, `reports/TASK-041-review.md`, `reports/TASK-041-test.md` |
 | `TASK-042` | Restore Public Onboarding and Product Navigation | VERIFIED | Critical hotfix | `reports/TASK-042-implementation.md`, `reports/TASK-042-review.md`, `reports/TASK-042-test.md` |
 | `TASK-035` | Self-service Password Recovery | VERIFIED | Feature completion | `reports/TASK-035-implementation.md`, `reports/TASK-035-review.md`, `reports/TASK-035-test.md` |
 | `TASK-036` | Accessible Fix-the-Bug Drag-and-Drop | VERIFIED | Feature completion | `reports/TASK-036-implementation.md`, `reports/TASK-036-review.md`, `reports/TASK-036-test.md` |
@@ -64,7 +66,6 @@ new TASK-037/038 release commit and non-Production migration `017` rollout.
 
 | Task ID | Title | Status | Phase | Blocker or dependency |
 |---|---|---|---|---|
-| `TASK-041` | Preview Deployment and Smoke Verification | BLOCKED | Phase 7 | Cần push release commit mới và áp migration `017` vào Supabase non-Production trước Preview smoke |
 
 ## Planned Work
 

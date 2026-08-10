@@ -1,7 +1,7 @@
 # Active Task Queue
 
 - **Active task:** `TASK-041` — Preview Deployment and Smoke Verification
-- **Status:** `BLOCKED`
+- **Status:** `VERIFIED`
 - **Owner:** Codex
 - **Previous task:** `TASK-040` — Performance and Release Readiness (`VERIFIED`)
 
@@ -19,8 +19,11 @@ separation, health, critical smoke flows, logs and rollback evidence.
 
 ## Current state
 
-TASK-037 and TASK-038 are verified locally with 408 tests, a clean production build,
-and Supabase local migration/RLS assertions. Vercel project `learning_app` now has
-Preview environment values. TASK-041 remains blocked until the new release commit is
-pushed and migration `017` is applied to the non-Production Supabase project;
-Production is untouched.
+TASK-041 is verified. TASK-037 and TASK-038 are committed and pushed to
+`preview/task-041` at `a4880d8`. The replacement Vercel project `learning-app`
+successfully built Preview deployment `dpl_DzH7cr8iR8pKqXdk7dLJcmXhRome` from an
+archive of that exact commit. Preview env is complete and newline-free, Supabase
+health is connected, Gemini OpenAI compatibility returns HTTP 200, and Development
+migration `017` has the intended RLS/grants. Authenticated learner, moderator and
+admin authorization smoke passed all nine assertions. The three disposable users
+were logged out and deleted, with profile cleanup verified. Production is untouched.
