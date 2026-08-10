@@ -15,6 +15,7 @@ import type {
   StructuredLessonDraft,
   SupportedSourceMimeType,
 } from "@/features/content-pipeline/types";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 interface SourceDocumentRow {
@@ -57,6 +58,10 @@ interface LessonDraftRow {
 
 async function client(): Promise<SupabaseClient> {
   return (await createServerSupabaseClient()) as unknown as SupabaseClient;
+}
+
+function adminClient(): SupabaseClient {
+  return createAdminSupabaseClient() as unknown as SupabaseClient;
 }
 
 function mapSource(row: SourceDocumentRow): SourceDocumentRecord {
@@ -168,7 +173,10 @@ export async function replaceDocumentChunks(
 }
 
 export async function getGenerationContext(sourceDocumentId: number, lessonId: number) {
-  const supabase = await client();
+  // generateLessonDraft authorizes an active Admin before entering this
+  // repository. Use the server-only client so a newly created unpublished lesson
+  // cannot disappear behind the public publish-only curriculum policies.
+  const supabase = adminClient();
   const [documentResult, chunksResult, lessonResult] = await Promise.all([
     supabase.from("source_documents").select("*").eq("id", sourceDocumentId).maybeSingle(),
     supabase.from("document_chunks").select("id, chunk_index, content").eq("source_document_id", sourceDocumentId).order("chunk_index"),
@@ -291,7 +299,7 @@ export async function publishLessonDraft(id: number): Promise<PublishLessonDraft
 }
 
 export async function listContentTargets(): Promise<ContentTarget[]> {
-  const supabase = await client();
+  const supabase = adminClient();
   const { data, error } = await supabase
     .from("lessons")
     .select("id, title, chapter_id, chapters!inner(id, title, course_id, courses!inner(id, title))")
@@ -313,7 +321,7 @@ export async function listContentTargets(): Promise<ContentTarget[]> {
 }
 
 export async function listContentChapters(): Promise<ContentChapterTarget[]> {
-  const supabase = await client();
+  const supabase = adminClient();
   const { data, error } = await supabase
     .from("chapters")
     .select("id, title, course_id, courses!inner(id, title)")
@@ -333,7 +341,7 @@ export async function listContentChapters(): Promise<ContentChapterTarget[]> {
 }
 
 export async function listContentCourses(): Promise<ContentCourseTarget[]> {
-  const supabase = await client();
+  const supabase = adminClient();
   const { data, error } = await supabase
     .from("courses")
     .select("id, title")

@@ -30,6 +30,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-053` | Allow Active Admins to Read Draft Curriculum Targets | VERIFIED | Content operations hotfix | `reports/TASK-053-implementation.md`, `reports/TASK-053-review.md`, `reports/TASK-053-test.md` |
 | `TASK-052` | Fix Production PDF Extraction Runtime | VERIFIED | Content operations hotfix | `reports/TASK-052-implementation.md`, `reports/TASK-052-review.md`, `reports/TASK-052-test.md` |
 | `TASK-051` | Publish Verified Release to GitHub and Vercel Production | VERIFIED | Production release | `reports/TASK-051-implementation.md`, `reports/TASK-051-review.md`, `reports/TASK-051-test.md` |
 | `TASK-050` | Separate New Course and Existing Lesson Upload Flows | VERIFIED | Content operations hotfix | `reports/TASK-050-implementation.md`, `reports/TASK-050-review.md`, `reports/TASK-050-test.md` |
