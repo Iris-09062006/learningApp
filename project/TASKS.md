@@ -11,6 +11,13 @@
 
 ## Active Task
 
+| Task ID | Title | Status | Phase | Dependency |
+|---|---|---|---|---|
+| `TASK-045` | Reduce Page Navigation Latency | VERIFIED | Performance hotfix | None |
+| `TASK-046` | Stabilize AI Content Pipeline and New Lesson Targets | VERIFIED | Content operations hotfix | `TASK-043` |
+
+`TASK-045` and `TASK-046` passed review and all required local gates. The prior task below remains externally blocked.
+
 `TASK-044` — Fix Supabase Auth Email Redirects on Preview (`BLOCKED`). Code, tests,
 push and Preview deployment pass; final email-link verification requires the
 Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
@@ -65,6 +72,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Blocker or dependency |
 |---|---|---|---|---|
+| `TASK-047` | Stitch-led UI Redesign | DRAFT | UI refresh | Awaiting user-provided Stitch screens and states |
 
 ## Planned Work
 

@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
+  ContentChapterTarget,
   ContentTarget,
   DocumentChunkInput,
   LessonDraftRecord,
@@ -307,4 +308,42 @@ export async function listContentTargets(): Promise<ContentTarget[]> {
     courseId: row.chapters.courses.id,
     courseTitle: row.chapters.courses.title,
   }));
+}
+
+export async function listContentChapters(): Promise<ContentChapterTarget[]> {
+  const supabase = await client();
+  const { data, error } = await supabase
+    .from("chapters")
+    .select("id, title, course_id, courses!inner(id, title)")
+    .order("id", { ascending: true });
+  if (error) throw new Error("DATABASE_ERROR");
+  return ((data ?? []) as unknown as Array<{
+    id: number;
+    title: string;
+    course_id: number;
+    courses: { id: number; title: string };
+  }>).map((row) => ({
+    chapterId: row.id,
+    chapterTitle: row.title,
+    courseId: row.courses.id,
+    courseTitle: row.courses.title,
+  }));
+}
+
+export async function createContentTarget(input: {
+  chapterId: number;
+  title: string;
+}): Promise<ContentTarget> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("create_lesson_content_target", {
+    p_chapter_id: input.chapterId,
+    p_title: input.title,
+  });
+  if (error?.code === "P0002") throw new Error("CHAPTER_NOT_FOUND");
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  const target = data as unknown as ContentTarget;
+  if (!Number.isSafeInteger(target.lessonId) || target.lessonId <= 0) {
+    throw new Error("DATABASE_ERROR");
+  }
+  return target;
 }

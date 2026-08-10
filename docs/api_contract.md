@@ -1,5 +1,21 @@
 # API Contract
 
+## Document-to-Lesson target extension (TASK-046)
+
+`GET /api/admin/content-targets` returns the standard envelope with both `items`
+(existing lesson targets) and `chapters` (allowed parents for a new target). Active
+Admin only; no-store.
+
+`POST /api/admin/content-targets` accepts:
+
+```json
+{ "chapterId": 12, "title": "Vòng lặp while" }
+```
+
+It returns `201` with a `ContentTarget`. The lesson is unpublished and receives the
+next available order in its chapter. Invalid input returns `400`; a missing chapter
+returns `404`.
+
 ## 1. Mục tiêu
 
 Tài liệu này quy định hợp đồng giao tiếp giữa giao diện, server và các module nghiệp vụ của hệ thống.

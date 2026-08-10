@@ -9,12 +9,14 @@ import {
 } from "@/features/content-pipeline/extraction/document-extractor";
 import { NineRouterLessonDraftProvider, type LessonDraftProvider } from "@/features/content-pipeline/providers/lesson-draft-provider";
 import {
+  createContentTarget,
   createSourceDocument,
   downloadSourceObject,
   getGenerationContext,
   getLessonDraft,
   getSourceDocument,
   listLessonDrafts,
+  listContentChapters,
   listContentTargets,
   persistGeneratedDraft,
   publishLessonDraft,
@@ -226,5 +228,33 @@ export async function publishApprovedLessonDraft(idValue: unknown) {
 
 export async function getContentTargets() {
   await requireAdmin();
-  return listContentTargets();
+  const [items, chapters] = await Promise.all([
+    listContentTargets(),
+    listContentChapters(),
+  ]);
+  return { items, chapters };
+}
+
+export async function createNewContentTarget(body: unknown) {
+  await requireAdmin();
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Target body is invalid.");
+  }
+  const record = body as Record<string, unknown>;
+  const chapterId = asPositiveId(record.chapterId, "chapterId");
+  if (typeof record.title !== "string") {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Lesson title is required.");
+  }
+  const title = record.title.trim();
+  if (!title || title.length > 150) {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Lesson title must be between 1 and 150 characters.");
+  }
+  try {
+    return await createContentTarget({ chapterId, title });
+  } catch (error) {
+    if (error instanceof Error && error.message === "CHAPTER_NOT_FOUND") {
+      throw new ContentPipelineError("NOT_FOUND", "Target chapter was not found.");
+    }
+    throw new ContentPipelineError("DATABASE_ERROR", "Unable to create the target lesson.");
+  }
 }

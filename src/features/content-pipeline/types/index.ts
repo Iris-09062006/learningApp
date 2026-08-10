@@ -107,3 +107,10 @@ export interface ContentTarget {
   courseId: number;
   courseTitle: string;
 }
+
+export interface ContentChapterTarget {
+  chapterId: number;
+  chapterTitle: string;
+  courseId: number;
+  courseTitle: string;
+}

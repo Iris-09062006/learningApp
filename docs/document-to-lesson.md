@@ -1,5 +1,17 @@
 # Document-to-Lesson — Product and Technical Contract
 
+## TASK-046 extension — New lesson targets and resilient responses
+
+- Admin may select an existing lesson or create a new target inside an existing
+  chapter before generation.
+- New targets are created server-side through `create_lesson_content_target`; clients
+  provide only `chapterId` and a trimmed title of 1–150 characters.
+- The RPC authorizes an active Admin, locks the chapter, allocates the next
+  `lesson_order`, inserts `is_published = false`, and writes an Admin audit log. The
+  lesson stays hidden until the approved draft is published by the existing RPC.
+- HTML or malformed provider/gateway responses are invalid upstream responses. The UI
+  shows a stable retry message and always clears the loading announcement.
+
 ## 1. Outcome
 
 Biến tài liệu do Admin cung cấp thành nội dung bài học có thể kiểm chứng mà không đưa

@@ -46,19 +46,15 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Keep session verification adjacent to client creation so cookie refreshes remain reliable.
+  const { data: claimsData } = await supabase.auth.getClaims();
 
   const { pathname } = request.nextUrl;
 
   // Route Handlers own their JSON authentication and authorization contract.
   // Redirecting an API request to an HTML login page breaks auth submissions
   // and hides the endpoint's intended 401/403 response from API consumers.
-  if (shouldRedirectToLogin(pathname, Boolean(user))) {
+  if (shouldRedirectToLogin(pathname, Boolean(claimsData?.claims.sub))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";

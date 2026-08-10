@@ -45,4 +45,24 @@ describe("NineRouterLessonDraftProvider", () => {
       chunks: [{ chunkIndex: 0, content: "Nguồn hợp lệ" }],
     })).rejects.toThrow("AI_RESPONSE_INVALID");
   });
+
+  it("maps an HTML provider response to a stable provider error", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("<!DOCTYPE html><title>Gateway timeout</title>", {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      }),
+    );
+    const provider = new NineRouterLessonDraftProvider(
+      "secret",
+      "https://router.test/v1/chat/completions",
+      "test-model",
+    );
+
+    await expect(provider.generateLessonDraft({
+      documentTitle: "Nguồn",
+      lessonTitle: "Bài",
+      chunks: [{ chunkIndex: 0, content: "Nguồn hợp lệ" }],
+    })).rejects.toThrow("AI_PROVIDER_RESPONSE_INVALID");
+  });
 });

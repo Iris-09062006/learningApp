@@ -12,6 +12,7 @@ vi.mock("@supabase/ssr", () => ({
 }));
 
 import { shouldRedirectToLogin, updateSession } from "./middleware";
+import { config as middlewareConfig } from "../../middleware";
 
 interface MiddlewareCookieAdapter {
   setAll: (
@@ -44,6 +45,10 @@ describe("Supabase middleware route policy", () => {
     expect(shouldRedirectToLogin(pathname, false)).toBe(false);
   });
 
+  it("excludes API requests from the middleware matcher", () => {
+    expect(middlewareConfig.matcher[0]).toContain("api(?:/|$)");
+  });
+
   it.each([
     "/dashboard",
     "/profile",
@@ -63,7 +68,7 @@ describe("Supabase middleware route policy", () => {
     mocks.createServerClient.mockImplementation(
       (_url: string, _key: string, options: { cookies: MiddlewareCookieAdapter }) => ({
         auth: {
-          getUser: async () => {
+          getClaims: async () => {
             options.cookies.setAll(
               [{ name: "session", value: "refreshed", options: { path: "/" } }],
               {
@@ -72,7 +77,7 @@ describe("Supabase middleware route policy", () => {
                 Pragma: "no-cache",
               },
             );
-            return { data: { user: null } };
+            return { data: null };
           },
         },
       }),
@@ -88,5 +93,17 @@ describe("Supabase middleware route policy", () => {
     expect(response.headers.get("expires")).toBe("0");
     expect(response.headers.get("pragma")).toBe("no-cache");
     expect(response.cookies.get("session")?.value).toBe("refreshed");
+  });
+
+  it("uses verified JWT claims instead of a remote user lookup", async () => {
+    const getClaims = vi.fn().mockResolvedValue({ data: { claims: { sub: "user-1" } } });
+    const getUser = vi.fn();
+    mocks.createServerClient.mockReturnValue({ auth: { getClaims, getUser } });
+
+    const response = await updateSession(new NextRequest("http://localhost:3000/dashboard"));
+
+    expect(response.status).toBe(200);
+    expect(getClaims).toHaveBeenCalledOnce();
+    expect(getUser).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,14 @@
 # Database
 
+## TASK-046 — New lesson content target RPC
+
+`create_lesson_content_target(p_chapter_id bigint, p_title text)` is an
+`authenticated`-only security-definer RPC with an empty search path. It verifies an
+active Admin, locks the selected chapter to serialize order allocation, inserts an
+unpublished lesson at `max(lesson_order) + 1`, and records
+`lesson_content_target.created` in `admin_logs`. `PUBLIC` and `anon` have no execute
+permission.
+
 ## 1. Mục tiêu
 
 Tài liệu này là **nguồn chuẩn duy nhất** để AI agent tạo migration, Supabase types, repository và service liên quan đến database.

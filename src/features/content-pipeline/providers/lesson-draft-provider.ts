@@ -11,6 +11,19 @@ interface ChatCompletionResponse {
   model?: string;
 }
 
+async function parseProviderResponse(response: Response): Promise<ChatCompletionResponse> {
+  const raw = await response.text();
+  try {
+    const payload: unknown = JSON.parse(raw);
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("AI_PROVIDER_RESPONSE_INVALID");
+    }
+    return payload as ChatCompletionResponse;
+  } catch {
+    throw new Error("AI_PROVIDER_RESPONSE_INVALID");
+  }
+}
+
 export interface LessonDraftProvider {
   generateLessonDraft(
     request: LessonDraftGenerationRequest
@@ -146,7 +159,7 @@ export class NineRouterLessonDraftProvider implements LessonDraftProvider {
         }),
       });
       if (!response.ok) throw new Error("AI_PROVIDER_REQUEST_FAILED");
-      const payload = (await response.json()) as ChatCompletionResponse;
+      const payload = await parseProviderResponse(response);
       const content = payload.choices?.[0]?.message?.content;
       if (!content) throw new Error("AI_RESPONSE_INVALID");
       return {
