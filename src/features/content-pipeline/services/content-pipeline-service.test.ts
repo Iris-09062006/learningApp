@@ -3,15 +3,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createContentTarget: vi.fn(),
   createContentCurriculum: vi.fn(),
+  createContentTargetInCourse: vi.fn(),
   createServerSupabaseClient: vi.fn(),
+  getSourceDocument: vi.fn(),
   listContentChapters: vi.fn(),
+  listContentCourses: vi.fn(),
   listContentTargets: vi.fn(),
 }));
 
 vi.mock("@/features/content-pipeline/repositories/content-pipeline-repository", () => ({
   createContentTarget: mocks.createContentTarget,
   createContentCurriculum: mocks.createContentCurriculum,
+  createContentTargetInCourse: mocks.createContentTargetInCourse,
+  getSourceDocument: mocks.getSourceDocument,
   listContentChapters: mocks.listContentChapters,
+  listContentCourses: mocks.listContentCourses,
   listContentTargets: mocks.listContentTargets,
 }));
 
@@ -69,24 +75,40 @@ describe("createNewContentTarget", () => {
   it("lists content targets without loading the document parser", async () => {
     mocks.listContentTargets.mockResolvedValue([]);
     mocks.listContentChapters.mockResolvedValue([]);
+    mocks.listContentCourses.mockResolvedValue([]);
 
-    await expect(getContentTargets()).resolves.toEqual({ items: [], chapters: [] });
+    await expect(getContentTargets()).resolves.toEqual({ items: [], chapters: [], courses: [] });
   });
 
-  it("creates an unpublished curriculum container with a server-generated slug", async () => {
-    mocks.createContentCurriculum.mockResolvedValue({ courseId: 3, chapterId: 4 });
+  it("creates a new course target using the source filename as chapter title", async () => {
+    mocks.getSourceDocument.mockResolvedValue({ originalFilename: "Nội suy Spline.pdf" });
+    mocks.createContentCurriculum.mockResolvedValue({ courseId: 3, chapterId: 4, lessonId: 5 });
 
-    await createNewContentCurriculum({ courseTitle: "  Đại số tuyến tính  ", chapterTitle: "  Nội suy  " });
+    await createNewContentCurriculum({ mode: "new", courseTitle: "  Đại số tuyến tính  ", sourceDocumentId: 8 });
 
     expect(mocks.createContentCurriculum).toHaveBeenCalledWith({
       courseTitle: "Đại số tuyến tính",
       courseSlug: expect.stringMatching(/^ai-so-tuyen-tinh-[a-f0-9]{8}$/),
-      chapterTitle: "Nội suy",
+      chapterTitle: "Nội suy Spline",
     });
   });
 
-  it("rejects an incomplete curriculum before repository access", async () => {
-    await expect(createNewContentCurriculum({ courseTitle: "", chapterTitle: "Nội suy" }))
+  it("adds a source-derived chapter target to an existing course", async () => {
+    mocks.getSourceDocument.mockResolvedValue({ originalFilename: "Tuần 5.md" });
+    mocks.createContentTargetInCourse.mockResolvedValue({ courseId: 3, chapterId: 4, lessonId: 5 });
+
+    await createNewContentCurriculum({ mode: "existing", courseId: 3, sourceDocumentId: 8 });
+
+    expect(mocks.createContentTargetInCourse).toHaveBeenCalledWith({
+      courseId: 3,
+      chapterTitle: "Tuần 5",
+    });
+    expect(mocks.createContentCurriculum).not.toHaveBeenCalled();
+  });
+
+  it("rejects an incomplete destination before repository access", async () => {
+    mocks.getSourceDocument.mockResolvedValue({ originalFilename: "Nội suy.pdf" });
+    await expect(createNewContentCurriculum({ mode: "new", courseTitle: "", sourceDocumentId: 8 }))
       .rejects.toMatchObject({ code: "VALIDATION_ERROR" } satisfies Partial<ContentPipelineError>);
     expect(mocks.createContentCurriculum).not.toHaveBeenCalled();
   });

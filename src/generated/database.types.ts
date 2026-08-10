@@ -997,6 +997,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_content_target_in_course: {
+        Args: { p_chapter_title: string; p_course_id: number }
+        Returns: Json
+      }
       create_lesson_content_target: {
         Args: { p_chapter_id: number; p_title: string }
         Returns: Json

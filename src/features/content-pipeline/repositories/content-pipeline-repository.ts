@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   ContentChapterTarget,
+  ContentCourseTarget,
   ContentCurriculum,
   ContentTarget,
   DocumentChunkInput,
@@ -331,6 +332,19 @@ export async function listContentChapters(): Promise<ContentChapterTarget[]> {
   }));
 }
 
+export async function listContentCourses(): Promise<ContentCourseTarget[]> {
+  const supabase = await client();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("id, title")
+    .order("id", { ascending: true });
+  if (error) throw new Error("DATABASE_ERROR");
+  return ((data ?? []) as Array<{ id: number; title: string }>).map((row) => ({
+    courseId: row.id,
+    courseTitle: row.title,
+  }));
+}
+
 export async function createContentTarget(input: {
   chapterId: number;
   title: string;
@@ -363,8 +377,27 @@ export async function createContentCurriculum(input: {
   if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
   const curriculum = data as unknown as ContentCurriculum;
   if (!Number.isSafeInteger(curriculum.courseId) || curriculum.courseId <= 0
-    || !Number.isSafeInteger(curriculum.chapterId) || curriculum.chapterId <= 0) {
+    || !Number.isSafeInteger(curriculum.chapterId) || curriculum.chapterId <= 0
+    || !Number.isSafeInteger(curriculum.lessonId) || curriculum.lessonId <= 0) {
     throw new Error("DATABASE_ERROR");
   }
   return curriculum;
+}
+
+export async function createContentTargetInCourse(input: {
+  courseId: number;
+  chapterTitle: string;
+}): Promise<ContentTarget> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("create_content_target_in_course", {
+    p_course_id: input.courseId,
+    p_chapter_title: input.chapterTitle,
+  });
+  if (error?.code === "P0002") throw new Error("COURSE_NOT_FOUND");
+  if (error || !data || typeof data !== "object") throw new Error("DATABASE_ERROR");
+  const target = data as unknown as ContentTarget;
+  if (!Number.isSafeInteger(target.lessonId) || target.lessonId <= 0) {
+    throw new Error("DATABASE_ERROR");
+  }
+  return target;
 }

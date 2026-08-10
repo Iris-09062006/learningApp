@@ -38,25 +38,16 @@ describe("content pipeline API client", () => {
       .resolves.toEqual({ lessonId: 12 });
   });
 
-  it("lets an Admin bootstrap an empty course and chapter before upload", async () => {
-    let curriculumCreated = false;
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+  it("keeps new-course and existing-course destinations separate", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url === "/api/admin/content-curriculum" && init?.method === "POST") {
-        curriculumCreated = true;
-        return new Response(JSON.stringify({
-          success: true,
-          data: { courseId: 31, courseTitle: "Toán ứng dụng", chapterId: 41, chapterTitle: "Nội suy" },
-        }), { status: 201 });
-      }
       if (url === "/api/admin/content-targets") {
         return new Response(JSON.stringify({
           success: true,
           data: {
             items: [],
-            chapters: curriculumCreated
-              ? [{ courseId: 31, courseTitle: "Toán ứng dụng", chapterId: 41, chapterTitle: "Nội suy" }]
-              : [],
+            chapters: [{ courseId: 31, courseTitle: "Phương pháp tính", chapterId: 41, chapterTitle: "Nội suy" }],
+            courses: [{ courseId: 31, courseTitle: "Phương pháp tính" }],
           },
         }));
       }
@@ -68,14 +59,23 @@ describe("content pipeline API client", () => {
 
     render(<ContentPipelineAdmin />);
 
-    expect(await screen.findByText(/Chưa có course\/chapter nào/)).toBeInTheDocument();
+    expect(await screen.findByLabelText("Tên course mới")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tạo course/chapter" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Course / chapter")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload & tạo draft" })).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Tên course"), { target: { value: "Toán ứng dụng" } });
-    fireEvent.change(screen.getByLabelText("Tên chapter đầu tiên"), { target: { value: "Nội suy" } });
-    fireEvent.click(screen.getByRole("button", { name: "Tạo course/chapter" }));
+    fireEvent.change(screen.getByLabelText("Tài liệu nguồn"), {
+      target: { files: [new File(["pdf"], "week 5. Noi suy Spline.pdf", { type: "application/pdf" })] },
+    });
+    fireEvent.change(screen.getByLabelText("Tên course mới"), { target: { value: "Toán ứng dụng" } });
 
-    await waitFor(() => expect(screen.getByLabelText("Course / chapter")).toHaveValue("41"));
+    expect(screen.getByText("week 5. Noi suy Spline")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload & tạo draft" })).toBeEnabled();
-    expect(screen.getByText(/Đã tạo và chọn chapter mới/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Thêm vào course hiện có"));
+
+    expect(screen.queryByLabelText("Tên course mới")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Course hiện có")).toHaveValue("31");
+    expect(screen.getByRole("option", { name: "Phương pháp tính" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload & tạo draft" })).toBeEnabled();
   });
 });

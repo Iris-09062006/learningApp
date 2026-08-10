@@ -11,10 +11,12 @@
 
 ## Active Task
 
-No task is currently active. Production remains out of scope.
+`TASK-050` — Separate New Course and Existing Lesson Upload Flows (`IN_PROGRESS`).
+Production remains out of scope.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+| `TASK-050` | Separate New Course and Existing Lesson Upload Flows | IN_PROGRESS | Content operations hotfix | `TASK-049` |
 | `TASK-045` | Reduce Page Navigation Latency | VERIFIED | Performance hotfix | None |
 | `TASK-046` | Stabilize AI Content Pipeline and New Lesson Targets | VERIFIED | Content operations hotfix | `TASK-043` |
 

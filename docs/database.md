@@ -1,12 +1,18 @@
 # Database
 
-## TASK-049 — Empty curriculum bootstrap RPC
+## TASK-050 — Separated content destination RPCs
 
 `create_content_curriculum(p_course_title text, p_course_slug text,
-p_chapter_title text)` creates one unpublished course and its first unpublished
-chapter in a single active-Admin-authorized transaction. The server owns slug
-generation; `PUBLIC` and `anon` have no execute permission. The operation records
-`content_curriculum.created` in `admin_logs`.
+p_chapter_title text)` creates one unpublished course, first chapter, and initial
+lesson in a single active-Admin-authorized transaction. The chapter and lesson use
+the server-derived source filename. The server owns slug generation; `PUBLIC` and
+`anon` have no execute permission.
+
+`create_content_target_in_course(p_course_id bigint, p_chapter_title text)` locks an
+existing course, appends an unpublished chapter at the next order, and creates its
+initial unpublished lesson atomically. It uses the same active-Admin check, empty
+search path, execute restrictions, and audit boundary. Existing curriculum rows are
+not modified.
 
 ## TASK-046 — New lesson content target RPC
 

@@ -1,15 +1,17 @@
 # Document-to-Lesson — Product and Technical Contract
 
-## TASK-049 extension — Empty curriculum bootstrap
+## TASK-050 extension — Separate new and existing course flows
 
-- If no chapter exists, the Admin UI must present an explicit course/chapter creation
-  action instead of an empty selector with a blocked upload button.
-- The bootstrap action creates an unpublished course and its first unpublished
-  chapter transactionally, then selects the returned chapter for target creation.
-- Clients provide only course and chapter titles; the server generates the course
-  slug. The RPC validates again, authorizes an active Admin, and writes an audit log.
-- This is not general curriculum CRUD: editing, deletion, reordering, and adding a
-  chapter to an existing course remain outside this extension.
+- The UI exposes two independent choices: `Tạo course mới` and
+  `Thêm vào course hiện có`; it never shows the former shared chapter/bootstrap block.
+- New mode asks only for a course title. After upload, the server derives the chapter
+  title from the original filename without its final extension and atomically creates
+  an unpublished course, chapter, and initial lesson.
+- Existing mode asks for an existing course. It derives the same chapter title and
+  atomically appends an unpublished chapter plus initial lesson to that course.
+- Both RPC paths validate again, authorize an active Admin, use an empty search path,
+  and write an audit log. Existing curriculum is preserved.
+- Editing, deletion, reordering, and broad curriculum CRUD remain out of scope.
 
 ## TASK-046 extension — New lesson targets and resilient responses
 

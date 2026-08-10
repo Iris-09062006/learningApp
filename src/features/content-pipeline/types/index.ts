@@ -115,4 +115,9 @@ export interface ContentChapterTarget {
   courseTitle: string;
 }
 
-export type ContentCurriculum = ContentChapterTarget;
+export interface ContentCourseTarget {
+  courseId: number;
+  courseTitle: string;
+}
+
+export type ContentCurriculum = ContentTarget;

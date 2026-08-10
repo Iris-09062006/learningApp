@@ -16,11 +16,11 @@ describe("admin content target routes", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("lists lessons and chapters", async () => {
-    serviceMocks.getContentTargets.mockResolvedValue({ items: [], chapters: [] });
+    serviceMocks.getContentTargets.mockResolvedValue({ items: [], chapters: [], courses: [] });
     const response = await GET();
     await expect(response.json()).resolves.toEqual({
       success: true,
-      data: { items: [], chapters: [] },
+      data: { items: [], chapters: [], courses: [] },
     });
   });
 

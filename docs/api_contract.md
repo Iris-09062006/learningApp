@@ -1,16 +1,27 @@
 # API Contract
 
-## Empty curriculum bootstrap (TASK-049)
+## Separated content destinations (TASK-050; supersedes TASK-049 UI flow)
 
-`POST /api/admin/content-curriculum` accepts:
+`GET /api/admin/content-targets` additionally returns `courses`, containing
+`{ courseId, courseTitle }` options for the existing-course branch.
+
+After the source document has been uploaded, `POST /api/admin/content-curriculum`
+accepts one of two explicit bodies:
 
 ```json
-{ "courseTitle": "Toán ứng dụng", "chapterTitle": "Nội suy" }
+{ "mode": "new", "courseTitle": "Toán ứng dụng", "sourceDocumentId": 42 }
 ```
 
-It returns `201` with `{ courseId, courseTitle, chapterId, chapterTitle }`. Both rows
-are unpublished. Only an active Admin may create them; validation errors return
-`400`, and unexpected persistence failures return `500` in the standard JSON
+```json
+{ "mode": "existing", "courseId": 7, "sourceDocumentId": 42 }
+```
+
+The server derives the chapter and initial lesson title from the source document's
+original filename without its final extension. New mode atomically creates an
+unpublished course/chapter/lesson. Existing mode atomically appends an unpublished
+chapter/lesson to the selected course. Both return `201` with a `ContentTarget`.
+Only an active Admin may mutate; validation errors return `400`, missing source/course
+returns `404`, and unexpected persistence failures return `500` in the standard JSON
 envelope.
 
 ## Document-to-Lesson target extension (TASK-046)

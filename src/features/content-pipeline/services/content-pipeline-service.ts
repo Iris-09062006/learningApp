@@ -6,6 +6,7 @@ import { NineRouterLessonDraftProvider, type LessonDraftProvider } from "@/featu
 import {
   createContentTarget,
   createContentCurriculum,
+  createContentTargetInCourse,
   createSourceDocument,
   downloadSourceObject,
   getGenerationContext,
@@ -13,6 +14,7 @@ import {
   getSourceDocument,
   listLessonDrafts,
   listContentChapters,
+  listContentCourses,
   listContentTargets,
   persistGeneratedDraft,
   publishLessonDraft,
@@ -29,6 +31,7 @@ import {
   type StructuredLessonDraft,
   type SupportedSourceMimeType,
 } from "@/features/content-pipeline/types";
+import { documentTitleFromFilename } from "@/features/content-pipeline/utils/document-title";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -228,11 +231,12 @@ export async function publishApprovedLessonDraft(idValue: unknown) {
 
 export async function getContentTargets() {
   await requireAdmin();
-  const [items, chapters] = await Promise.all([
+  const [items, chapters, courses] = await Promise.all([
     listContentTargets(),
     listContentChapters(),
+    listContentCourses(),
   ]);
-  return { items, chapters };
+  return { items, chapters, courses };
 }
 
 export async function createNewContentTarget(body: unknown) {
@@ -276,21 +280,37 @@ export async function createNewContentCurriculum(body: unknown) {
     throw new ContentPipelineError("VALIDATION_ERROR", "Curriculum body is invalid.");
   }
   const record = body as Record<string, unknown>;
-  if (typeof record.courseTitle !== "string" || typeof record.chapterTitle !== "string") {
-    throw new ContentPipelineError("VALIDATION_ERROR", "Course and chapter titles are required.");
+  if (record.mode !== "new" && record.mode !== "existing") {
+    throw new ContentPipelineError("VALIDATION_ERROR", "Destination mode is invalid.");
   }
-  const courseTitle = record.courseTitle.trim();
-  const chapterTitle = record.chapterTitle.trim();
-  if (!courseTitle || courseTitle.length > 150 || !chapterTitle || chapterTitle.length > 150) {
-    throw new ContentPipelineError("VALIDATION_ERROR", "Course and chapter titles must be between 1 and 150 characters.");
+  const sourceDocumentId = asPositiveId(record.sourceDocumentId, "sourceDocumentId");
+  let courseId: number | null = null;
+  let courseTitle: string | null = null;
+  if (record.mode === "existing") {
+    courseId = asPositiveId(record.courseId, "courseId");
+  } else {
+    if (typeof record.courseTitle !== "string") {
+      throw new ContentPipelineError("VALIDATION_ERROR", "Course title is required.");
+    }
+    courseTitle = record.courseTitle.trim();
+    if (!courseTitle || courseTitle.length > 150) {
+      throw new ContentPipelineError("VALIDATION_ERROR", "Course title must be between 1 and 150 characters.");
+    }
   }
+  const source = await getSourceDocument(sourceDocumentId);
+  if (!source) throw new ContentPipelineError("NOT_FOUND", "Source document not found.");
+  const chapterTitle = documentTitleFromFilename(source.originalFilename);
   try {
-    return await createContentCurriculum({
-      courseTitle,
-      courseSlug: curriculumSlug(courseTitle),
-      chapterTitle,
-    });
-  } catch {
-    throw new ContentPipelineError("DATABASE_ERROR", "Unable to create the course and chapter.");
+    if (record.mode === "existing" && courseId !== null) {
+      return await createContentTargetInCourse({ courseId, chapterTitle });
+    }
+    if (courseTitle === null) throw new ContentPipelineError("VALIDATION_ERROR", "Course title is required.");
+    return await createContentCurriculum({ courseTitle, courseSlug: curriculumSlug(courseTitle), chapterTitle });
+  } catch (error: unknown) {
+    if (error instanceof ContentPipelineError) throw error;
+    if (error instanceof Error && error.message === "COURSE_NOT_FOUND") {
+      throw new ContentPipelineError("NOT_FOUND", "Course not found.");
+    }
+    throw new ContentPipelineError("DATABASE_ERROR", "Unable to create the content destination.");
   }
 }
