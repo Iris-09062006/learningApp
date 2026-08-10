@@ -53,6 +53,17 @@ export function UserManagementView({ initialData }: UserManagementViewProps) {
   }
 
   async function mutateUser(userId: string, kind: "role" | "status", value: UserRole | boolean) {
+    const target = data.items.find((user) => user.id === userId);
+    if (
+      kind === "status"
+      && value === false
+      && target
+      && !window.confirm(
+        target.role === "learner"
+          ? `Đuổi học viên ${target.username}? Tài khoản sẽ bị vô hiệu hóa và không thể đăng nhập.`
+          : `Vô hiệu hóa tài khoản ${target.username}?`,
+      )
+    ) return;
     setMutatingId(userId);
     setMessage(null);
     try {
@@ -66,7 +77,12 @@ export function UserManagementView({ initialData }: UserManagementViewProps) {
         setMessage({ kind: "error", text: body.error?.message ?? "Không thể cập nhật người dùng." });
         return;
       }
-      setMessage({ kind: "success", text: "Đã cập nhật người dùng và ghi audit log." });
+      setMessage({
+        kind: "success",
+        text: kind === "status" && value === false && target?.role === "learner"
+          ? "Đã đuổi học viên, vô hiệu hóa tài khoản và ghi audit log."
+          : "Đã cập nhật người dùng và ghi audit log.",
+      });
       await loadUsers(data.page, false);
     } catch {
       setMessage({ kind: "error", text: "Không thể kết nối tới máy chủ." });
@@ -133,7 +149,7 @@ export function UserManagementView({ initialData }: UserManagementViewProps) {
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant={user.isActive ? "danger" : "secondary"} isLoading={mutatingId === user.id} onClick={() => void mutateUser(user.id, "status", !user.isActive)}>{user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}</Button>
+                    <Button size="sm" variant={user.isActive ? "danger" : "secondary"} isLoading={mutatingId === user.id} onClick={() => void mutateUser(user.id, "status", !user.isActive)}>{user.isActive ? (user.role === "learner" ? "Đuổi học viên" : "Vô hiệu hóa") : "Kích hoạt"}</Button>
                     <Button size="sm" variant="outline" isLoading={recoveringId === user.id} onClick={() => void requestRecovery(user.id)}>Gửi recovery</Button>
                   </div>
                 </td>

@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  archiveCourse,
   changeUserStatus,
   checkSystemHealth,
   fetchAdminUsers,
+  fetchAdminCourses,
   requireAdminActor,
   sendPasswordRecoveryEmail,
 } from "../admin-repository";
@@ -35,11 +37,12 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 function createBuilder(result: unknown) {
   const builder = {
-    select: vi.fn(), eq: vi.fn(), in: vi.fn(), limit: vi.fn(), maybeSingle: vi.fn(),
+    select: vi.fn(), eq: vi.fn(), in: vi.fn(), is: vi.fn(), order: vi.fn(), limit: vi.fn(), maybeSingle: vi.fn(),
     then(resolve: (value: unknown) => unknown) { return Promise.resolve(result).then(resolve); },
   };
   builder.select.mockReturnValue(builder); builder.eq.mockReturnValue(builder);
-  builder.in.mockReturnValue(builder); builder.limit.mockReturnValue(builder);
+  builder.in.mockReturnValue(builder); builder.is.mockReturnValue(builder);
+  builder.order.mockReturnValue(builder); builder.limit.mockReturnValue(builder);
   builder.maybeSingle.mockResolvedValue(result);
   return builder;
 }
@@ -83,6 +86,26 @@ describe("admin repository", () => {
     expect(mockRpc).toHaveBeenCalledWith("admin_change_user_status", {
       p_user_id: "admin-1", p_is_active: false,
     });
+  });
+
+  it("lists non-archived courses and archives through the authorized RPC", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
+    mockServerFrom.mockReturnValue(createBuilder({ data: { role: "admin", is_active: true }, error: null }));
+    const courseBuilder = createBuilder({ data: [{
+      id: 7, title: "Python", slug: "python", is_published: true, created_at: "2026-08-01T00:00:00Z",
+    }], error: null });
+    mockAdminFrom.mockReturnValueOnce(courseBuilder);
+    await expect(fetchAdminCourses()).resolves.toEqual([{
+      id: 7, title: "Python", slug: "python", isPublished: true, createdAt: "2026-08-01T00:00:00Z",
+    }]);
+    expect(courseBuilder.is).toHaveBeenCalledWith("archived_at", null);
+
+    mockRpc.mockResolvedValueOnce({ data: { courseId: 7, archivedAt: "now", auditLogId: 4 }, error: null });
+    await expect(archiveCourse(7)).resolves.toMatchObject({ courseId: 7 });
+    expect(mockRpc).toHaveBeenCalledWith("admin_archive_course", { p_course_id: 7 });
+
+    mockRpc.mockResolvedValueOnce({ data: null, error: { code: "P0002", message: "COURSE_NOT_FOUND" } });
+    await expect(archiveCourse(8)).rejects.toMatchObject({ code: "NOT_FOUND", message: "Course not found." });
   });
 
   it("sends recovery emails through the admin client and records audit evidence", async () => {

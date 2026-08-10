@@ -2,14 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   AdminRepositoryError,
+  archiveCourse,
   changeUserRole,
   fetchAdminUsers,
+  fetchAdminCourses,
   requireAdminActor,
   sendPasswordRecoveryEmail,
 } from "@/features/admin/repositories/admin-repository";
 import {
   listAdminUsers,
+  listAdminCourses,
+  deleteAdminCourse,
   parseAdminUserFilters,
+  parseCourseId,
   parseRoleInput,
   parseStatusInput,
   parseUserId,
@@ -23,9 +28,11 @@ vi.mock("@/features/admin/repositories/admin-repository", async (importOriginal)
   return {
     ...actual,
     changeUserRole: vi.fn(),
+    archiveCourse: vi.fn(),
     changeUserStatus: vi.fn(),
     checkSystemHealth: vi.fn(),
     fetchAdminUsers: vi.fn(),
+    fetchAdminCourses: vi.fn(),
     requireAdminActor: vi.fn(),
     sendPasswordRecoveryEmail: vi.fn(),
   };
@@ -45,9 +52,19 @@ describe("admin service", () => {
   it("rejects invalid filters, IDs, roles, statuses, and unknown fields", () => {
     expect(() => parseAdminUserFilters(new URLSearchParams("role=guest"))).toThrowError(/role filter/);
     expect(() => parseUserId("not-a-uuid")).toThrowError(/user ID/);
+    expect(() => parseCourseId("01")).toThrowError(/course ID/);
+    expect(parseCourseId("7")).toBe(7);
     expect(() => parseRoleInput({ role: "guest" })).toThrowError(/Invalid role/);
     expect(() => parseRoleInput({ role: "admin", actorId: "forged" })).toThrowError(/Only role/);
     expect(() => parseStatusInput({ isActive: "true" })).toThrowError(/boolean/);
+  });
+
+  it("lists and deletes courses through the repository boundary", async () => {
+    const items = [{ id: 7, title: "Python", slug: "python", isPublished: true, createdAt: "now" }];
+    vi.mocked(fetchAdminCourses).mockResolvedValueOnce(items);
+    await expect(listAdminCourses()).resolves.toEqual(items);
+    vi.mocked(archiveCourse).mockResolvedValueOnce({ courseId: 7, archivedAt: "now", auditLogId: 5 });
+    await expect(deleteAdminCourse(7)).resolves.toMatchObject({ courseId: 7 });
   });
 
   it("returns repository pagination results", async () => {

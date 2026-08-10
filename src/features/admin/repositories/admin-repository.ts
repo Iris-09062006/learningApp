@@ -6,6 +6,8 @@ import type {
   AdminUserFilters,
   AdminUserListResult,
   AdminUserSummary,
+  AdminCourseSummary,
+  ArchiveCourseResponse,
   ChangeUserRoleResponse,
   ChangeUserStatusResponse,
   HealthResponse,
@@ -119,6 +121,42 @@ function mapRpcError(error: { code?: string; message?: string }): never {
     throw new AdminRepositoryError("LAST_ACTIVE_ADMIN", "The final active administrator cannot be changed.");
   }
   throw new AdminRepositoryError("DATABASE_ERROR", "Unable to update user.");
+}
+
+function mapCourseRpcError(error: { code?: string; message?: string }): never {
+  if (error.code === "P0001") throw new AdminRepositoryError("UNAUTHENTICATED", "Authentication required.");
+  if (error.code === "P0003") throw new AdminRepositoryError("FORBIDDEN", "Administrator access required.");
+  if (error.code === "P0002") throw new AdminRepositoryError("NOT_FOUND", "Course not found.");
+  throw new AdminRepositoryError("DATABASE_ERROR", "Unable to delete course.");
+}
+
+export async function fetchAdminCourses(): Promise<AdminCourseSummary[]> {
+  await requireAdminActor();
+  const adminClient = createAdminSupabaseClient();
+  const { data, error } = await adminClient
+    .from("courses")
+    .select("id, title, slug, is_published, created_at")
+    .is("archived_at", null)
+    .order("created_at", { ascending: false });
+  if (error) {
+    throw new AdminRepositoryError("DATABASE_ERROR", "Unable to load courses.");
+  }
+  return (data ?? []).map((course) => ({
+    id: course.id,
+    title: course.title,
+    slug: course.slug,
+    isPublished: course.is_published,
+    createdAt: course.created_at,
+  }));
+}
+
+export async function archiveCourse(courseId: number): Promise<ArchiveCourseResponse> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("admin_archive_course", {
+    p_course_id: courseId,
+  });
+  if (error) mapCourseRpcError(error);
+  return data as unknown as ArchiveCourseResponse;
 }
 
 export async function changeUserRole(

@@ -46,6 +46,20 @@ export interface SendPasswordRecoveryResponse {
   auditLogId: number;
 }
 
+export interface AdminCourseSummary {
+  id: number;
+  title: string;
+  slug: string;
+  isPublished: boolean;
+  createdAt: string;
+}
+
+export interface ArchiveCourseResponse {
+  courseId: number;
+  archivedAt: string;
+  auditLogId: number;
+}
+
 export interface HealthResponse {
   status: "ok" | "degraded";
   database: "connected" | "unavailable";

@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   AdminServiceError,
+  deleteAdminCourse,
+  listAdminCourses,
   listAdminUsers,
   sendAdminPasswordRecovery,
   updateAdminUserRole,
@@ -12,6 +14,8 @@ vi.mock("@/features/admin/services/admin-service", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/features/admin/services/admin-service")>();
   return {
     ...actual,
+    deleteAdminCourse: vi.fn(),
+    listAdminCourses: vi.fn(),
     listAdminUsers: vi.fn(),
     sendAdminPasswordRecovery: vi.fn(),
     updateAdminUserRole: vi.fn(),
@@ -103,5 +107,32 @@ describe("admin user API routes", () => {
     });
     expect(response.status).toBe(200);
     expect(sendAdminPasswordRecovery).toHaveBeenCalledWith(userId);
+  });
+
+  it("GET courses lists manageable courses for an admin", async () => {
+    vi.mocked(listAdminCourses).mockResolvedValueOnce([{
+      id: 7, title: "Python", slug: "python", isPublished: true, createdAt: "2026-08-01T00:00:00Z",
+    }]);
+    const { GET } = await import("../courses/route");
+    const response = await GET();
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ data: { items: [{ id: 7 }] } });
+  });
+
+  it("DELETE course validates the ID and returns archival evidence", async () => {
+    vi.mocked(deleteAdminCourse).mockResolvedValueOnce({
+      courseId: 7, archivedAt: "2026-08-10T00:00:00Z", auditLogId: 15,
+    });
+    const { DELETE } = await import("../courses/[courseId]/route");
+    const response = await DELETE(new Request("http://localhost", { method: "DELETE" }), {
+      params: Promise.resolve({ courseId: "7" }),
+    });
+    expect(response.status).toBe(200);
+    expect(deleteAdminCourse).toHaveBeenCalledWith(7);
+
+    const invalid = await DELETE(new Request("http://localhost", { method: "DELETE" }), {
+      params: Promise.resolve({ courseId: "not-a-number" }),
+    });
+    expect(invalid.status).toBe(400);
   });
 });

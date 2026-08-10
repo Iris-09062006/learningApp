@@ -250,6 +250,7 @@ export async function listCourseDraftBatches(): Promise<CourseDraftBatch[]> {
     .select("*, source_documents!inner(original_filename, status), courses!inner(title, description)")
     .in("status", ["pending_review", "needs_revision"])
     .eq("source_documents.status", "ready_for_review")
+    .is("courses.archived_at", null)
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw new Error("DATABASE_ERROR");
@@ -449,6 +450,7 @@ export async function listContentCourses(): Promise<ContentCourseTarget[]> {
   const { data, error } = await supabase
     .from("courses")
     .select("id, title")
+    .is("archived_at", null)
     .order("id", { ascending: true });
   if (error) throw new Error("DATABASE_ERROR");
   return ((data ?? []) as Array<{ id: number; title: string }>).map((row) => ({

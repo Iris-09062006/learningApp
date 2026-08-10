@@ -1,5 +1,14 @@
 # UI Specification
 
+## TASK-056 Admin deletion controls
+
+- `/admin/users` labels deactivation of an active Learner as “Đuổi học viên”, explains
+  that the account will be disabled, and asks for confirmation before sending the mutation.
+- `/admin/courses` lists every non-archived Course (published or draft) for active Admins.
+  “Xóa khóa học” confirms that catalog visibility/content publication will be removed while
+  learning history remains, then removes the archived row from the table on success.
+- Success uses `role=status`; failures use `role=alert`; buttons expose loading state.
+
 ## TASK-055 Admin content states
 
 - Upload section nói rõ PDF chỉ tạo Course/Lessons, không tạo bài tập.

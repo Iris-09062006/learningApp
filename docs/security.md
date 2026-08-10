@@ -1,5 +1,16 @@
 # Security Specification
 
+## TASK-056 privileged deletion controls
+
+- Learner removal reuses the protected `admin_change_user_status` RPC; no client can
+  supply or bypass the actor identity, and last-active-admin protection is unchanged.
+- Course deletion uses `admin_archive_course`, which independently verifies an active
+  Admin in the database before mutating curriculum and recording audit evidence.
+- `anon` and `PUBLIC` have no execute privilege on the archival RPC. Regular clients
+  receive no direct curriculum delete permission.
+- Destructive controls require an explicit browser confirmation and report server errors
+  through an accessible alert; confirmation is UX protection, not the authorization boundary.
+
 ## TASK-055 authorization boundary
 
 - Chỉ active Admin được upload/extract/generate/review Course batches.

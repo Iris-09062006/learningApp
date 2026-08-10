@@ -1,5 +1,17 @@
 # Database
 
+## TASK-056 Course archival
+
+- `courses.archived_at timestamptz null` distinguishes manageable courses from courses
+  removed from the product. `courses_archived_not_published` prevents any legacy publish
+  path from making an archived Course public again.
+- `admin_archive_course(bigint)` is an authenticated-only, `SECURITY DEFINER`, empty
+  `search_path` RPC. It verifies `auth.uid()` is an active Admin, locks the Course,
+  unpublishes the Course and all descendant curriculum, stamps `archived_at`, and writes
+  `course.archived` to `admin_logs` in one transaction.
+- The RPC never deletes enrollments, progress, submissions, exercises, source documents,
+  or drafts. Referential history is preserved.
+
 ## TASK-055 Course draft batch
 
 - Một Course batch được nhận diện bởi `lesson_drafts.source_document_id`; mọi draft

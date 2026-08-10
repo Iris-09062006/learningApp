@@ -1,5 +1,16 @@
 # Product Requirements Document (PRD)
 
+## TASK-056 clarification — Admin learner removal and course deletion
+
+- Active Admin can “Đuổi học viên” by deactivating the target account. This is a
+  reversible access-removal action; Auth users and learning history are not hard-deleted.
+- Active Admin can delete a Course from the product. Deletion is implemented as an
+  atomic archive: Course, Chapters, Lessons, and Exercises are unpublished and the
+  Course is hidden from catalog/Admin lists while enrollments, progress, submissions,
+  draft/source history, and audit evidence remain intact.
+- Both actions require server/database authorization, confirmation in the UI, and an
+  `admin_logs` entry. Existing last-active-admin protection remains mandatory.
+
 ## TASK-055 clarification — PDF-to-Course and Lesson-scoped exercises
 
 - Một PDF tạo một Course draft và 2–20 Lesson draft có thứ tự/citation; bước này

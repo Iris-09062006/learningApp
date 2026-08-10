@@ -1,5 +1,18 @@
 # API Contract
 
+## TASK-056 Admin course management endpoints
+
+- `GET /api/admin/courses` requires an active Admin and returns
+  `{ success: true, data: { items: AdminCourseSummary[] } }`. Archived courses are omitted.
+- Archived courses are also omitted from Admin content-target choices and pending Course
+  draft review batches.
+- `DELETE /api/admin/courses/:courseId` requires an active Admin and atomically archives
+  the course, returning `{ success: true, data: { courseId, archivedAt, auditLogId } }`.
+- `PATCH /api/admin/users/:userId/status` with `{ isActive: false }` remains the
+  authoritative learner-removal endpoint; the Admin UI presents it as “Đuổi học viên”.
+- Invalid IDs return `400`, missing/already archived courses return `404`, unauthenticated
+  callers return `401`, and non-Admin/inactive-Admin callers return `403`.
+
 ## TASK-055 Course draft batch endpoints
 
 - `POST /api/admin/content-sources/:id/generate` với `{}` tạo Course + nhiều Lesson

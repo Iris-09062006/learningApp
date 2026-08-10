@@ -43,11 +43,32 @@ describe("UserManagementView", () => {
   });
 
   it("announces last-admin errors returned by the server", async () => {
+    vi.stubGlobal("confirm", vi.fn(() => true));
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
       success: false, error: { message: "The final active administrator cannot be changed." },
     }), { status: 409 })));
     render(<UserManagementView initialData={initialData} />);
     fireEvent.click(screen.getByRole("button", { name: "Vô hiệu hóa" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("final active administrator");
+  });
+
+  it("labels learner deactivation as kicking and requires confirmation", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, data: { auditLogId: 8 } }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, data: {
+        ...initialData,
+        items: [{ ...initialData.items[0], role: "learner", isActive: false }],
+      } }), { status: 200 }));
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<UserManagementView initialData={{
+      ...initialData,
+      items: [{ ...initialData.items[0], role: "learner", username: "Student" }],
+    }} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Đuổi học viên" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ body: JSON.stringify({ isActive: false }) });
+    expect(await screen.findByRole("status")).toHaveTextContent("Đã đuổi học viên");
   });
 });

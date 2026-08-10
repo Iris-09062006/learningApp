@@ -33,6 +33,7 @@ function orderedQuery(data: unknown[]) {
   return {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
     order: vi.fn().mockResolvedValue({ data, error: null }),
   };
 }
@@ -121,6 +122,7 @@ describe("getGenerationContext", () => {
     await expect(listContentCourses()).resolves.toEqual([
       { courseId: 2, courseTitle: "Draft course" },
     ]);
+    expect(queries.get("courses")?.is).toHaveBeenCalledWith("archived_at", null);
     expect(mocks.createAdminSupabaseClient).toHaveBeenCalledTimes(3);
     expect(mocks.createServerSupabaseClient).not.toHaveBeenCalled();
   });
@@ -151,6 +153,7 @@ describe("getGenerationContext", () => {
       select: vi.fn().mockReturnThis(),
       in: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockResolvedValue({ data: rows, error: null }),
     };
@@ -162,5 +165,6 @@ describe("getGenerationContext", () => {
       courseTitle: "Python",
       lessons: [{ id: 71 }, { id: 72 }],
     }]);
+    expect(query.is).toHaveBeenCalledWith("courses.archived_at", null);
   });
 });

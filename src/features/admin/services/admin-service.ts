@@ -1,15 +1,19 @@
 import {
   AdminRepositoryError,
+  archiveCourse,
   changeUserRole,
   changeUserStatus,
   checkSystemHealth,
   fetchAdminUsers,
+  fetchAdminCourses,
   requireAdminActor,
   sendPasswordRecoveryEmail,
 } from "@/features/admin/repositories/admin-repository";
 import type {
   AdminUserFilters,
+  AdminCourseSummary,
   AdminUserListResult,
+  ArchiveCourseResponse,
   ChangeUserRoleResponse,
   ChangeUserStatusResponse,
   HealthResponse,
@@ -75,6 +79,14 @@ export function parseUserId(value: string): string {
   return value;
 }
 
+export function parseCourseId(value: string): number {
+  const courseId = Number(value);
+  if (!Number.isSafeInteger(courseId) || courseId <= 0 || String(courseId) !== value) {
+    throw new AdminServiceError("VALIDATION_ERROR", "Invalid course ID.");
+  }
+  return courseId;
+}
+
 export function parseRoleInput(value: unknown): UserRole {
   const role = value && typeof value === "object" ? (value as Record<string, unknown>).role : undefined;
   if (Object.keys((value && typeof value === "object" ? value : {}) as object).some((key) => key !== "role")) {
@@ -99,6 +111,14 @@ export function parseStatusInput(value: unknown): boolean {
 
 export async function listAdminUsers(filters: AdminUserFilters): Promise<AdminUserListResult> {
   try { return await fetchAdminUsers(filters); } catch (error) { mapRepositoryError(error); }
+}
+
+export async function listAdminCourses(): Promise<AdminCourseSummary[]> {
+  try { return await fetchAdminCourses(); } catch (error) { mapRepositoryError(error); }
+}
+
+export async function deleteAdminCourse(courseId: number): Promise<ArchiveCourseResponse> {
+  try { return await archiveCourse(courseId); } catch (error) { mapRepositoryError(error); }
 }
 
 export async function updateAdminUserRole(userId: string, role: UserRole): Promise<ChangeUserRoleResponse> {

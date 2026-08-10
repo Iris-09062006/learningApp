@@ -26,7 +26,8 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { href: "/moderation", label: "Duyệt bài tập", shortLabel: "Bài tập", marker: "04", roles: ["moderator", "admin"] },
   { href: "/admin/users", label: "Quản trị", shortLabel: "Quản trị", marker: "05", roles: ["admin"] },
   { href: "/admin/content", label: "Tạo & duyệt bài học", shortLabel: "Bài học", marker: "06", roles: ["admin"] },
-  { href: "/admin/system", label: "Hệ thống", shortLabel: "Hệ thống", marker: "07", roles: ["admin"] },
+  { href: "/admin/courses", label: "Quản lý khóa học", shortLabel: "QL khóa học", marker: "07", roles: ["admin"] },
+  { href: "/admin/system", label: "Hệ thống", shortLabel: "Hệ thống", marker: "08", roles: ["admin"] },
 ];
 
 function canSeeItem(item: NavigationItem, user: AppNavigationProps["user"]) {

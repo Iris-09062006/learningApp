@@ -1,5 +1,14 @@
 # Features Specification
 
+## F-ADMIN-06 — Đuổi học viên và xóa khóa học an toàn
+
+**Actor:** Active Admin
+
+- Admin can remove a Learner's access by deactivating the account after confirmation.
+- Admin can remove a Course from the product after confirmation.
+- Course removal archives/unpublishes curriculum rather than destroying learning history.
+- Both operations are authorized at the server/database boundary and audited.
+
 ## F-CONTENT-02 — PDF-to-Course batch generation
 
 Active Admin tải một PDF, hệ thống trích xuất/chunk, AI chọn chủ đề cốt lõi và tạo một

@@ -181,6 +181,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          archived_at: string | null
           created_at: string
           description: string | null
           id: number
@@ -192,6 +193,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           description?: string | null
           id?: number
@@ -203,6 +205,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           description?: string | null
           id?: number
@@ -989,6 +992,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_archive_course: {
+        Args: { p_course_id: number }
+        Returns: Json
+      }
       create_course_lesson_drafts: {
         Args: {
           p_course_description: string
