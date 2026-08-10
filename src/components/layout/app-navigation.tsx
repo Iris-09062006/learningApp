@@ -23,9 +23,9 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { href: "/dashboard", label: "Tổng quan", shortLabel: "Tổng quan", marker: "01", authenticated: true },
   { href: "/courses", label: "Khóa học", shortLabel: "Khóa học", marker: "02" },
   { href: "/profile", label: "Hồ sơ", shortLabel: "Hồ sơ", marker: "03", authenticated: true },
-  { href: "/moderation", label: "Kiểm duyệt", shortLabel: "Duyệt", marker: "04", roles: ["moderator", "admin"] },
+  { href: "/moderation", label: "Duyệt bài tập", shortLabel: "Bài tập", marker: "04", roles: ["moderator", "admin"] },
   { href: "/admin/users", label: "Quản trị", shortLabel: "Quản trị", marker: "05", roles: ["admin"] },
-  { href: "/admin/content", label: "Nội dung AI", shortLabel: "Nội dung", marker: "06", roles: ["admin"] },
+  { href: "/admin/content", label: "Tạo & duyệt bài học", shortLabel: "Bài học", marker: "06", roles: ["admin"] },
   { href: "/admin/system", label: "Hệ thống", shortLabel: "Hệ thống", marker: "07", roles: ["admin"] },
 ];
 

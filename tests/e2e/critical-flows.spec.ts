@@ -120,3 +120,90 @@ test("provides role-route smoke coverage for moderator and admin", async ({ brow
   await expectNoSeriousA11yViolations(adminPage);
   await adminContext.close();
 });
+
+test("creates, reviews, and publishes a lesson draft with learner destination links", async ({ page }) => {
+  let draftGenerated = false;
+  let draftStatus: "pending_review" | "approved" | "published" = "pending_review";
+  const draft = () => ({
+    id: 71,
+    sourceDocumentId: 9,
+    courseId: 31,
+    chapterId: 41,
+    targetLessonId: 51,
+    title: "Nội suy Lagrange",
+    summary: "Bài học được tạo từ tài liệu nguồn.",
+    estimatedMinutes: 12,
+    sections: [{ heading: "Mở đầu", bodyMarkdown: "Nội dung bài học", citationChunkIndexes: [0] }],
+    status: draftStatus,
+    revision: 1,
+    approvedRevision: draftStatus === "pending_review" ? null : 1,
+    provider: "9router",
+    model: "e2e-model",
+    publishedAt: draftStatus === "published" ? "2026-08-10T01:00:00.000Z" : null,
+    createdAt: "2026-08-10T00:00:00.000Z",
+    updatedAt: "2026-08-10T00:00:00.000Z",
+    citations: [{ sectionIndex: 0, chunkIndex: 0, quote: "Nguồn kiểm thử" }],
+  });
+
+  await page.route("**/api/admin/**", async (route) => {
+    const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+    const respond = (data: unknown, status = 200) => route.fulfill({
+      status,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data }),
+    });
+
+    if (pathname === "/api/admin/content-targets") return respond({ items: [], chapters: [], courses: [] });
+    if (pathname === "/api/admin/lesson-drafts") return respond({ items: draftGenerated ? [draft()] : [] });
+    if (pathname === "/api/admin/content-sources") return respond({ id: 9 }, 201);
+    if (pathname === "/api/admin/content-sources/9/extract") return respond({ status: "extracted" });
+    if (pathname === "/api/admin/content-curriculum") return respond({ courseId: 31, chapterId: 41, lessonId: 51 }, 201);
+    if (pathname === "/api/admin/content-sources/9/generate") {
+      draftGenerated = true;
+      return respond({ lessonDraftId: 71, status: "pending_review" });
+    }
+    if (pathname === "/api/admin/lesson-drafts/71/reviews") {
+      draftStatus = "approved";
+      return respond({ status: "approved" });
+    }
+    if (pathname === "/api/admin/lesson-drafts/71/publish") {
+      draftStatus = "published";
+      return respond({
+        lessonDraftId: 71,
+        lessonId: 51,
+        courseId: 31,
+        status: "published",
+        coursePublished: true,
+        publishedAt: "2026-08-10T01:00:00.000Z",
+      });
+    }
+    if (pathname === "/api/admin/lesson-drafts/71") return respond(draft());
+    return route.fallback();
+  });
+
+  await loginAs(page, "admin");
+  await page.goto("/admin/content");
+  await expect(page.getByRole("link", { name: "Duyệt bài tập" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tạo & duyệt bài học" })).toBeVisible();
+
+  await page.getByLabel("Tài liệu nguồn").setInputFiles({
+    name: "lagrange.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Nội suy Lagrange"),
+  });
+  await page.getByLabel("Tên course mới").fill("Phương pháp tính");
+  await page.getByRole("button", { name: "Upload & tạo draft" }).click();
+
+  await expect(page.getByLabel("Tiêu đề", { exact: true })).toHaveValue("Nội suy Lagrange");
+  await page.getByRole("button", { name: "Duyệt", exact: true }).click();
+  const publishButton = page.getByRole("button", { name: "Xuất bản bài học (transaction)" });
+  await expect(publishButton).toBeEnabled();
+  await publishButton.click();
+
+  await expect(page.getByText("Bài học đã hiển thị cho người học.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Mở khóa học" })).toHaveAttribute("href", "/courses/31");
+  await expect(page.getByRole("link", { name: "Mở lộ trình" })).toHaveAttribute("href", "/courses/31/roadmap");
+  await expect(page.getByRole("link", { name: "Mở bài học" })).toHaveAttribute("href", "/lessons/51");
+  await expectNoSeriousA11yViolations(page);
+});

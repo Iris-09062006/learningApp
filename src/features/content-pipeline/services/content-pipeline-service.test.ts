@@ -3,22 +3,26 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createContentTarget: vi.fn(),
   createContentCurriculum: vi.fn(),
-  createContentTargetInCourse: vi.fn(),
   createServerSupabaseClient: vi.fn(),
+  getGenerationContext: vi.fn(),
   getSourceDocument: vi.fn(),
   listContentChapters: vi.fn(),
   listContentCourses: vi.fn(),
   listContentTargets: vi.fn(),
+  persistGeneratedDraft: vi.fn(),
+  updateSourceStatus: vi.fn(),
 }));
 
 vi.mock("@/features/content-pipeline/repositories/content-pipeline-repository", () => ({
   createContentTarget: mocks.createContentTarget,
   createContentCurriculum: mocks.createContentCurriculum,
-  createContentTargetInCourse: mocks.createContentTargetInCourse,
+  getGenerationContext: mocks.getGenerationContext,
   getSourceDocument: mocks.getSourceDocument,
   listContentChapters: mocks.listContentChapters,
   listContentCourses: mocks.listContentCourses,
   listContentTargets: mocks.listContentTargets,
+  persistGeneratedDraft: mocks.persistGeneratedDraft,
+  updateSourceStatus: mocks.updateSourceStatus,
 }));
 
 vi.mock("@/features/content-pipeline/extraction/document-extractor", () => {
@@ -33,6 +37,7 @@ import {
   ContentPipelineError,
   createNewContentCurriculum,
   createNewContentTarget,
+  generateLessonDraft,
   getContentTargets,
 } from "./content-pipeline-service";
 
@@ -93,16 +98,11 @@ describe("createNewContentTarget", () => {
     });
   });
 
-  it("adds a source-derived chapter target to an existing course", async () => {
-    mocks.getSourceDocument.mockResolvedValue({ originalFilename: "Tuần 5.md" });
-    mocks.createContentTargetInCourse.mockResolvedValue({ courseId: 3, chapterId: 4, lessonId: 5 });
+  it("rejects existing mode because it must target an existing lesson without curriculum writes", async () => {
+    await expect(createNewContentCurriculum({ mode: "existing", courseId: 3, sourceDocumentId: 8 }))
+      .rejects.toMatchObject({ code: "VALIDATION_ERROR" } satisfies Partial<ContentPipelineError>);
 
-    await createNewContentCurriculum({ mode: "existing", courseId: 3, sourceDocumentId: 8 });
-
-    expect(mocks.createContentTargetInCourse).toHaveBeenCalledWith({
-      courseId: 3,
-      chapterTitle: "Tuần 5",
-    });
+    expect(mocks.getSourceDocument).not.toHaveBeenCalled();
     expect(mocks.createContentCurriculum).not.toHaveBeenCalled();
   });
 
@@ -111,5 +111,56 @@ describe("createNewContentTarget", () => {
     await expect(createNewContentCurriculum({ mode: "new", courseTitle: "", sourceDocumentId: 8 }))
       .rejects.toMatchObject({ code: "VALIDATION_ERROR" } satisfies Partial<ContentPipelineError>);
     expect(mocks.createContentCurriculum).not.toHaveBeenCalled();
+  });
+});
+
+describe("generateLessonDraft retry", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-1" } } }) },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { role: "admin", is_active: true }, error: null }) }) }),
+      }),
+    });
+    mocks.getGenerationContext.mockResolvedValue({
+      document: { status: "failed", error_code: "GENERATION_FAILED", original_filename: "Lagrange.txt" },
+      chunks: [{ id: 1, chunk_index: 0, content: "Nguồn" }],
+      lesson: { id: 51, title: "Lagrange", chapter_id: 41, chapters: { course_id: 31 } },
+    });
+    mocks.persistGeneratedDraft.mockResolvedValue(71);
+    mocks.updateSourceStatus.mockResolvedValue(undefined);
+  });
+
+  it("retries a source whose previous AI generation failed", async () => {
+    const provider = {
+      generateLessonDraft: vi.fn().mockResolvedValue({
+        draft: {
+          title: "Lagrange",
+          summary: "Tóm tắt",
+          estimatedMinutes: 12,
+          sections: [{ heading: "Mở đầu", bodyMarkdown: "Nội dung", citationChunkIndexes: [0] }],
+        },
+        provider: "9router",
+        model: "model",
+      }),
+    };
+
+    await expect(generateLessonDraft(9, 51, provider)).resolves.toEqual({
+      lessonDraftId: 71,
+      status: "pending_review",
+    });
+    expect(mocks.updateSourceStatus).toHaveBeenCalledWith(9, "generating");
+  });
+
+  it("does not retry an extraction failure as generation", async () => {
+    mocks.getGenerationContext.mockResolvedValueOnce({
+      document: { status: "failed", error_code: "EXTRACTION_FAILED", original_filename: "Lagrange.txt" },
+      chunks: [],
+      lesson: { id: 51, title: "Lagrange", chapter_id: 41, chapters: { course_id: 31 } },
+    });
+
+    await expect(generateLessonDraft(9, 51, { generateLessonDraft: vi.fn() }))
+      .rejects.toMatchObject({ code: "INVALID_STATE" } satisfies Partial<ContentPipelineError>);
   });
 });

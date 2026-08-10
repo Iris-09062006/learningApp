@@ -32,7 +32,9 @@ describe("AppNavigation", () => {
   it("shows role-aware destinations to an admin", () => {
     render(<AppNavigation user={{ username: "Admin", role: "admin" }} />);
 
-    expect(screen.getAllByRole("link", { name: "Kiểm duyệt" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Duyệt bài tập" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Tạo & duyệt bài học" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Tạo & duyệt bài học" })[0]).toHaveAttribute("href", "/admin/content");
     expect(screen.getAllByRole("link", { name: "Quản trị" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Hệ thống" }).length).toBeGreaterThan(0);
   });

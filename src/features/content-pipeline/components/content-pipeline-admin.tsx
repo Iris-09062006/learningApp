@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type {
-  ContentCourseTarget,
+  ContentTarget,
   LessonDraftRecord,
+  PublishLessonDraftResult,
   StructuredLessonDraft,
 } from "@/features/content-pipeline/types";
 import { documentTitleFromFilename } from "@/features/content-pipeline/utils/document-title";
@@ -55,14 +57,46 @@ const statusLabel: Record<LessonDraftRecord["status"], string> = {
   published: "Đã xuất bản",
 };
 
+const PENDING_GENERATION_KEY = "learningapp:pending-lesson-draft-generation";
+
+interface PendingGeneration {
+  sourceDocumentId: number;
+  targetLessonId: number;
+}
+
+function readPendingGeneration(): PendingGeneration | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_GENERATION_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const record = parsed as Record<string, unknown>;
+    if (!Number.isSafeInteger(record.sourceDocumentId) || Number(record.sourceDocumentId) <= 0
+      || !Number.isSafeInteger(record.targetLessonId) || Number(record.targetLessonId) <= 0) return null;
+    return {
+      sourceDocumentId: Number(record.sourceDocumentId),
+      targetLessonId: Number(record.targetLessonId),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistPendingGeneration(value: PendingGeneration | null) {
+  if (value) sessionStorage.setItem(PENDING_GENERATION_KEY, JSON.stringify(value));
+  else sessionStorage.removeItem(PENDING_GENERATION_KEY);
+}
+
 export function ContentPipelineAdmin() {
-  const [courses, setCourses] = useState<ContentCourseTarget[]>([]);
+  const [targets, setTargets] = useState<ContentTarget[]>([]);
   const [drafts, setDrafts] = useState<LessonDraftRecord[]>([]);
   const [selected, setSelected] = useState<LessonDraftRecord | null>(null);
   const [targetMode, setTargetMode] = useState<"existing" | "new">("new");
-  const [targetCourseId, setTargetCourseId] = useState("");
+  const [targetLessonId, setTargetLessonId] = useState("");
   const [newCourseTitle, setNewCourseTitle] = useState("");
   const [sourceFilename, setSourceFilename] = useState("");
+  const [pendingGeneration, setPendingGeneration] = useState<PendingGeneration | null>(null);
+  const [publishedDestination, setPublishedDestination] = useState<PublishLessonDraftResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("Đang tải dữ liệu...");
   const [error, setError] = useState<string | null>(null);
@@ -70,14 +104,14 @@ export function ContentPipelineAdmin() {
   const refresh = useCallback(async () => {
     try {
       const [targetData, draftData] = await Promise.all([
-        requestPipelineApi<{ courses: ContentCourseTarget[] }>("/api/admin/content-targets"),
+        requestPipelineApi<{ items: ContentTarget[] }>("/api/admin/content-targets"),
         requestPipelineApi<{ items: LessonDraftRecord[] }>("/api/admin/lesson-drafts"),
       ]);
-      setCourses(targetData.courses);
+      setTargets(targetData.items);
       setDrafts(draftData.items);
-      setTargetCourseId((current) => targetData.courses.some((course) => String(course.courseId) === current)
+      setTargetLessonId((current) => targetData.items.some((target) => String(target.lessonId) === current)
         ? current
-        : String(targetData.courses[0]?.courseId ?? ""));
+        : String(targetData.items[0]?.lessonId ?? ""));
       setError(null);
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Không thể tải pipeline.");
@@ -87,13 +121,39 @@ export function ContentPipelineAdmin() {
   }, []);
 
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { setPendingGeneration(readPendingGeneration()); }, []);
+  useEffect(() => {
+    if (pendingGeneration && drafts.some((draft) =>
+      draft.sourceDocumentId === pendingGeneration.sourceDocumentId
+      && draft.targetLessonId === pendingGeneration.targetLessonId)) {
+      persistPendingGeneration(null);
+      setPendingGeneration(null);
+    }
+  }, [drafts, pendingGeneration]);
+
+  function checkpointGeneration(value: PendingGeneration | null) {
+    persistPendingGeneration(value);
+    setPendingGeneration(value);
+  }
+
+  async function generateDraft(checkpoint: PendingGeneration) {
+    setMessage("9Router đang tạo lesson draft có citation...");
+    const generated = await requestPipelineApi<{ lessonDraftId: number }>(
+      `/api/admin/content-sources/${checkpoint.sourceDocumentId}/generate`,
+      { method: "POST", body: JSON.stringify({ targetLessonId: checkpoint.targetLessonId }) },
+    );
+    checkpointGeneration(null);
+    await refresh();
+    await openDraft(generated.lessonDraftId);
+    setMessage("Draft đã xuất hiện trong hàng chờ kiểm duyệt.");
+  }
 
   async function submitSource(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    if (targetMode === "existing" && !targetCourseId) {
-      setError("Hãy chọn course hiện có.");
+    if (targetMode === "existing" && !targetLessonId) {
+      setError("Hãy chọn bài học hiện có.");
       return;
     }
     if (targetMode === "new" && !newCourseTitle.trim()) {
@@ -108,29 +168,38 @@ export function ContentPipelineAdmin() {
       setMessage("Đang trích xuất và chia đoạn nguồn...");
       await requestPipelineApi(`/api/admin/content-sources/${source.id}/extract`, { method: "POST" });
 
-      setMessage(targetMode === "new"
-        ? "Đang tạo course mới và chapter từ tên tài liệu..."
-        : "Đang thêm chapter từ tên tài liệu vào course đã chọn...");
-      const target = await requestPipelineApi<{ lessonId: number }>("/api/admin/content-curriculum", {
-        method: "POST",
-        body: JSON.stringify(targetMode === "new"
-          ? { mode: "new", courseTitle: newCourseTitle.trim(), sourceDocumentId: source.id }
-          : { mode: "existing", courseId: Number(targetCourseId), sourceDocumentId: source.id }),
-      });
+      let resolvedTargetLessonId = Number(targetLessonId);
+      if (targetMode === "new") {
+        setMessage("Đang tạo course mới và chapter từ tên tài liệu...");
+        const target = await requestPipelineApi<{ lessonId: number }>("/api/admin/content-curriculum", {
+          method: "POST",
+          body: JSON.stringify({ mode: "new", courseTitle: newCourseTitle.trim(), sourceDocumentId: source.id }),
+        });
+        resolvedTargetLessonId = target.lessonId;
+      }
 
-      setMessage("9Router đang tạo lesson draft có citation...");
-      const generated = await requestPipelineApi<{ lessonDraftId: number }>(
-        `/api/admin/content-sources/${source.id}/generate`,
-        { method: "POST", body: JSON.stringify({ targetLessonId: target.lessonId }) },
-      );
+      const checkpoint = { sourceDocumentId: source.id, targetLessonId: resolvedTargetLessonId };
+      checkpointGeneration(checkpoint);
+      await generateDraft(checkpoint);
       form.reset();
       setSourceFilename("");
       if (targetMode === "new") setNewCourseTitle("");
-      await refresh();
-      await openDraft(generated.lessonDraftId);
-      setMessage("Draft đã sẵn sàng để kiểm duyệt.");
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Pipeline không thể hoàn tất.");
+      setMessage("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function retryGeneration() {
+    if (!pendingGeneration) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await generateDraft(pendingGeneration);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "Không thể tạo lại draft.");
       setMessage("");
     } finally {
       setBusy(false);
@@ -141,6 +210,7 @@ export function ContentPipelineAdmin() {
     setBusy(true);
     setError(null);
     try {
+      setPublishedDestination(null);
       setSelected(await requestPipelineApi<LessonDraftRecord>(`/api/admin/lesson-drafts/${id}`));
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Không thể tải draft.");
@@ -201,12 +271,13 @@ export function ContentPipelineAdmin() {
     setBusy(true);
     setError(null);
     try {
-      const result = await requestPipelineApi<{ coursePublished: boolean }>(
+      const result = await requestPipelineApi<PublishLessonDraftResult>(
         `/api/admin/lesson-drafts/${selected.id}/publish`,
         { method: "POST" },
       );
       await openDraft(selected.id);
       await refresh();
+      setPublishedDestination(result);
       setMessage(result.coursePublished
         ? "Đã publish lesson và course ra catalog."
         : "Đã publish lesson; course vẫn ẩn cho đến khi mọi nội dung hoàn tất.");
@@ -227,6 +298,15 @@ export function ContentPipelineAdmin() {
       <div aria-live="polite" aria-atomic="true" className="min-h-6 text-sm text-slate-600">{message}</div>
       {error ? <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div> : null}
 
+      {pendingGeneration ? (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+          <span>Đích bài học đã được tạo/chọn nhưng draft chưa hoàn tất. Hãy thử lại mà không upload hay tạo curriculum lần nữa.</span>
+          <Button type="button" onClick={() => void retryGeneration()} isLoading={busy} disabled={busy}>
+            Thử tạo lại draft
+          </Button>
+        </div>
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>1. Tạo draft từ tài liệu</CardTitle>
@@ -244,9 +324,9 @@ export function ContentPipelineAdmin() {
                 <label className="flex items-center gap-2 text-sm"><input type="radio" name="target-mode" checked={targetMode === "new"} onChange={() => setTargetMode("new")} />Tạo course mới</label>
                 <label className="flex items-center gap-2 text-sm"><input type="radio" name="target-mode" checked={targetMode === "existing"} onChange={() => setTargetMode("existing")} />Thêm vào course hiện có</label>
               </div>
-              {targetMode === "existing" && !courses.length ? (
+              {targetMode === "existing" && !targets.length ? (
                 <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                  Chưa có course nào để thêm nội dung. Hãy chọn “Tạo course mới”.
+                  Chưa có bài học nào để gắn draft. Hãy chọn “Tạo course mới”.
                 </div>
               ) : null}
               {targetMode === "new" ? (
@@ -260,17 +340,17 @@ export function ContentPipelineAdmin() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label htmlFor="target-course" className="mb-1 block text-sm font-medium">Course hiện có</label>
-                    <select id="target-course" value={targetCourseId} onChange={(event) => setTargetCourseId(event.target.value)} required className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-                      <option value="">Chọn course</option>
-                      {courses.map((course) => <option key={course.courseId} value={course.courseId}>{course.courseTitle}</option>)}
+                    <label htmlFor="target-lesson" className="mb-1 block text-sm font-medium">Bài học hiện có</label>
+                    <select id="target-lesson" value={targetLessonId} onChange={(event) => setTargetLessonId(event.target.value)} required className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                      <option value="">Chọn bài học</option>
+                      {targets.map((target) => <option key={target.lessonId} value={target.lessonId}>{target.courseTitle} / {target.chapterTitle} / {target.lessonTitle}</option>)}
                     </select>
                   </div>
-                  <p className="self-end rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">Chapter mới trong course này: <strong>{sourceFilename ? documentTitleFromFilename(sourceFilename) : "chọn tài liệu ở trên"}</strong></p>
+                  <p className="self-end rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">Draft sẽ cập nhật đúng bài học đã chọn; không tạo thêm course, chapter hay lesson.</p>
                 </div>
               )}
             </fieldset>
-            <Button type="submit" isLoading={busy} disabled={busy || !sourceFilename || (targetMode === "new" ? !newCourseTitle.trim() : !targetCourseId)}>Upload & tạo draft</Button>
+            <Button type="submit" isLoading={busy} disabled={busy || !sourceFilename || (targetMode === "new" ? !newCourseTitle.trim() : !targetLessonId)}>Upload & tạo draft</Button>
           </form>
         </CardContent>
       </Card>
@@ -290,7 +370,17 @@ export function ContentPipelineAdmin() {
             <div className="grid gap-4 sm:grid-cols-[1fr_140px]"><div><label htmlFor="draft-title" className="mb-1 block text-sm font-medium">Tiêu đề</label><input id="draft-title" value={selected.title} onChange={(event) => setSelected({ ...selected, title: event.target.value })} className="h-10 w-full rounded-lg border border-slate-300 px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" /></div><div><label htmlFor="draft-minutes" className="mb-1 block text-sm font-medium">Số phút</label><input id="draft-minutes" type="number" min="1" max="180" value={selected.estimatedMinutes} onChange={(event) => setSelected({ ...selected, estimatedMinutes: Number(event.target.value) })} className="h-10 w-full rounded-lg border border-slate-300 px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" /></div></div>
             <div><label htmlFor="draft-summary" className="mb-1 block text-sm font-medium">Tóm tắt</label><textarea id="draft-summary" value={selected.summary} onChange={(event) => setSelected({ ...selected, summary: event.target.value })} rows={3} className="w-full rounded-lg border border-slate-300 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" /></div>
             {selected.sections.map((section, index) => <fieldset key={index} className="rounded-xl border border-slate-200 p-4"><legend className="px-2 text-sm font-semibold">Phần {index + 1}</legend><label htmlFor={`heading-${index}`} className="mb-1 block text-sm font-medium">Tiêu đề phần</label><input id={`heading-${index}`} value={section.heading} onChange={(event) => updateSection(index, "heading", event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" /><label htmlFor={`body-${index}`} className="mb-1 mt-3 block text-sm font-medium">Nội dung Markdown</label><textarea id={`body-${index}`} value={section.bodyMarkdown} onChange={(event) => updateSection(index, "bodyMarkdown", event.target.value)} rows={8} className="w-full rounded-lg border border-slate-300 p-3 font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" /><div className="mt-3 space-y-2">{selected.citations?.filter((citation) => citation.sectionIndex === index).map((citation) => <blockquote key={`${citation.sectionIndex}-${citation.chunkIndex}`} className="rounded-lg border-l-4 border-cyan-500 bg-cyan-50 p-3 text-sm text-slate-700"><span className="mb-1 block font-semibold text-cyan-800">Nguồn #{citation.chunkIndex}</span>{citation.quote}</blockquote>)}</div></fieldset>)}
-            <div className="flex flex-wrap gap-2"><Button onClick={() => void saveDraft()} isLoading={busy} variant="outline">Lưu revision</Button><Button onClick={() => void review("needs_revision")} disabled={busy} variant="secondary">Yêu cầu chỉnh sửa</Button><Button onClick={() => void review("rejected")} disabled={busy} variant="danger">Từ chối</Button><Button onClick={() => void review("approved")} disabled={busy}>Duyệt</Button><Button onClick={() => void publish()} disabled={busy || selected.status !== "approved"} className="bg-emerald-600 hover:bg-emerald-700">Publish transaction</Button></div>
+            <div className="flex flex-wrap gap-2"><Button onClick={() => void saveDraft()} isLoading={busy} variant="outline">Lưu revision</Button><Button onClick={() => void review("needs_revision")} disabled={busy} variant="secondary">Yêu cầu chỉnh sửa</Button><Button onClick={() => void review("rejected")} disabled={busy} variant="danger">Từ chối</Button><Button onClick={() => void review("approved")} disabled={busy}>Duyệt</Button><Button type="button" onClick={() => void publish()} disabled={busy || selected.status !== "approved"} className="bg-emerald-600 hover:bg-emerald-700">Xuất bản bài học (transaction)</Button></div>
+            {publishedDestination?.coursePublished ? (
+              <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-950">
+                <p className="font-semibold">Bài học đã hiển thị cho người học.</p>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <Link href={`/courses/${publishedDestination.courseId}`} className="font-semibold text-emerald-800 underline">Mở khóa học</Link>
+                  <Link href={`/courses/${publishedDestination.courseId}/roadmap`} className="font-semibold text-emerald-800 underline">Mở lộ trình</Link>
+                  <Link href={`/lessons/${publishedDestination.lessonId}`} className="font-semibold text-emerald-800 underline">Mở bài học</Link>
+                </div>
+              </div>
+            ) : null}
           </div> : <p className="text-sm text-slate-500">Chọn một draft trong hàng chờ để kiểm duyệt.</p>}</CardContent>
         </Card>
       </div>
