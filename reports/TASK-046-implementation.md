@@ -25,3 +25,7 @@ and defaults to creating a new unpublished target lesson in an existing chapter.
 
 Migration 018 has not been applied to Supabase Cloud and the app has not been deployed;
 those external mutations were outside the user-authorized scope.
+
+## Commit
+
+- Implementation commit: `d6f12f2` (`fix: speed navigation and stabilize AI content`).

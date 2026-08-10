@@ -26,3 +26,7 @@ shows an accessible loading skeleton immediately during server navigation.
 
 No production latency benchmark or deployment was performed. If the Supabase project
 still uses symmetric JWT signing, `getClaims()` may still require an Auth server call.
+
+## Commit
+
+- Implementation commit: `d6f12f2` (`fix: speed navigation and stabilize AI content`).
