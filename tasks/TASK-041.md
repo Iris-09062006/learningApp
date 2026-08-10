@@ -47,7 +47,7 @@ Release candidate được khóa tại commit `a4880d8`; working tree bẩn khô
 - `reports/TASK-041-implementation.md`, `reports/TASK-041-test.md`, `reports/TASK-041-review.md`
 
 ## Verification outcome
-- Remote branch `preview/task-041` is confirmed at `a4880d8c0f2b548b344f461c91fd079b33477ff7`.
+- Remote branch `preview/task-041` contains release candidate `a4880d8c0f2b548b344f461c91fd079b33477ff7`; the final verification-report commit advances that branch without changing the deployed application tree.
 - Replacement Vercel project `learning-app` (`prj_KgoCcMGlZVBZzZjsDUKu2egbX0QZ`) was created by the user. Its Git integration is still connected to repository `learning_app`, not this repository's `learningApp`, so the release branch push cannot deploy automatically.
 - The latest exact-tree Preview `dpl_DzH7cr8iR8pKqXdk7dLJcmXhRome` is `Ready` at `https://learning-ki1nbg4xw-iris-projects-bcfa9d19.vercel.app`.
 - Vercel's Windows PowerShell wrapper was found to append CRLF to stdin values. Calling the Vercel Node entrypoint directly repaired all eight Preview values; a pull-back audit confirmed they are non-empty and newline-free.
