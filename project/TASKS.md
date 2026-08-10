@@ -13,6 +13,8 @@
 
 No task is currently active.
 
+Recently verified supporting hotfixes:
+
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
 | `TASK-045` | Reduce Page Navigation Latency | VERIFIED | Performance hotfix | None |
@@ -28,6 +30,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-052` | Fix Production PDF Extraction Runtime | VERIFIED | Content operations hotfix | `reports/TASK-052-implementation.md`, `reports/TASK-052-review.md`, `reports/TASK-052-test.md` |
 | `TASK-051` | Publish Verified Release to GitHub and Vercel Production | VERIFIED | Production release | `reports/TASK-051-implementation.md`, `reports/TASK-051-review.md`, `reports/TASK-051-test.md` |
 | `TASK-050` | Separate New Course and Existing Lesson Upload Flows | VERIFIED | Content operations hotfix | `reports/TASK-050-implementation.md`, `reports/TASK-050-review.md`, `reports/TASK-050-test.md` |
 | `TASK-049` | Bootstrap Empty Content Curriculum | VERIFIED | Content operations hotfix | `reports/TASK-049-implementation.md`, `reports/TASK-049-review.md`, `reports/TASK-049-test.md` |

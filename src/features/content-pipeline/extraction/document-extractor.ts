@@ -1,8 +1,8 @@
 import "server-only";
 
+import { DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
 import { createHash } from "node:crypto";
 import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse";
 
 import type {
   DocumentChunkInput,
@@ -38,6 +38,20 @@ function normalizeText(value: string): string {
 }
 
 async function extractPdf(buffer: Buffer): Promise<string> {
+  // pdfjs-dist attempts to resolve these globals through a runtime-computed
+  // require("@napi-rs/canvas"). Import the native package explicitly so Next's
+  // file tracer includes it, then install the globals before pdf-parse loads.
+  if (typeof globalThis.DOMMatrix === "undefined") {
+    Object.defineProperty(globalThis, "DOMMatrix", { value: DOMMatrix, configurable: true });
+  }
+  if (typeof globalThis.ImageData === "undefined") {
+    Object.defineProperty(globalThis, "ImageData", { value: ImageData, configurable: true });
+  }
+  if (typeof globalThis.Path2D === "undefined") {
+    Object.defineProperty(globalThis, "Path2D", { value: Path2D, configurable: true });
+  }
+
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   try {
     const result = await parser.getText();
