@@ -8,6 +8,9 @@
 
 ## Current objective
 
+TASK-059 is verified. Provider schemas now use the Gemini-compatible structural subset while
+strict server-side validation continues to enforce every business constraint.
+
 TASK-058 is verified locally. The Lesson-specific flow now generates strict pending Exercise
 drafts, preserves immutable atomic review history, and publishes approved drafts idempotently.
 Migrations `024`, `025`, and `026` were applied through Supabase MCP to project

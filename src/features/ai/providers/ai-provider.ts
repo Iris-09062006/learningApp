@@ -126,6 +126,8 @@ function parseGeneratedExerciseContent(value: string): GeneratedExerciseContent 
   catch { throw new Error("AI_RESPONSE_INVALID"); }
 }
 
+// Provider schema stays structural for Gemini OpenAI compatibility; the strict validator below
+// remains the source of truth for lengths, option cardinality/uniqueness, and correctAnswer.
 const EXERCISE_SCHEMA = {
   name: "lesson_exercise_draft",
   strict: true,
@@ -134,12 +136,12 @@ const EXERCISE_SCHEMA = {
     additionalProperties: false,
     required: ["title", "description", "codeSnippet", "options", "correctAnswer", "explanation"],
     properties: {
-      title: { type: "string", minLength: 1, maxLength: 150 },
-      description: { type: "string", minLength: 1, maxLength: 2000 },
-      codeSnippet: { type: "string", maxLength: 10000 },
-      options: { type: "array", minItems: 2, maxItems: 6, uniqueItems: true, items: { type: "string", minLength: 1, maxLength: 500 } },
-      correctAnswer: { type: "string", minLength: 1, maxLength: 500 },
-      explanation: { type: "string", minLength: 1, maxLength: 5000 },
+      title: { type: "string" },
+      description: { type: "string" },
+      codeSnippet: { type: "string" },
+      options: { type: "array", items: { type: "string" } },
+      correctAnswer: { type: "string" },
+      explanation: { type: "string" },
     },
   },
 } as const;

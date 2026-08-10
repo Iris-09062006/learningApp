@@ -271,7 +271,7 @@ describe("ai provider", () => {
         explanation: "Từ khóa let cho phép gán lại giá trị.",
       };
 
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           choices: [
@@ -300,6 +300,12 @@ describe("ai provider", () => {
 
       expect(result.content).toEqual(mockResult);
       expect(result.provider).toBe("openai-compatible");
+      const request = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body)) as {
+        response_format: unknown;
+      };
+      expect(JSON.stringify(request.response_format)).not.toMatch(
+        /minLength|maxLength|minItems|maxItems|uniqueItems|minimum|maximum/
+      );
     });
   });
 });

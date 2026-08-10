@@ -128,9 +128,15 @@ describe("NineRouterLessonDraftProvider", () => {
     });
     expect(result.outline.lessons.map((lesson) => lesson.clientKey)).toEqual(["variables", "functions"]);
     expect(result.outline).not.toHaveProperty("sections");
-    const request = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as { messages: Array<{ content: string }> };
+    const request = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as {
+      messages: Array<{ content: string }>;
+      response_format: unknown;
+    };
     expect(request.messages[0].content).toContain("only a Vietnamese Course outline");
     expect(request.messages[0].content).toContain("Do not include Lesson body content");
+    expect(JSON.stringify(request.response_format)).not.toMatch(
+      /minLength|maxLength|minItems|maxItems|uniqueItems|minimum|maximum/
+    );
   });
 
   it("rejects unknown Exercise fields in an outline", async () => {

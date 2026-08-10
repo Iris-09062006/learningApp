@@ -40,6 +40,8 @@ export interface LessonDraftProvider {
   ): Promise<CourseOutlineGenerationResponse>;
 }
 
+// Gemini's OpenAI-compatible endpoint accepts the structural JSON Schema subset only.
+// Length, cardinality, uniqueness, ranges, and citation ownership remain enforced by parsers below.
 const COURSE_OUTLINE_SCHEMA = {
   name: "course_outline",
   strict: true,
@@ -48,29 +50,29 @@ const COURSE_OUTLINE_SCHEMA = {
     additionalProperties: false,
     required: ["title", "description", "learningObjectives", "lessons"],
     properties: {
-      title: { type: "string", minLength: 1, maxLength: 150 },
-      description: { type: "string", minLength: 1 },
+      title: { type: "string" },
+      description: { type: "string" },
       learningObjectives: {
-        type: "array", minItems: 1, maxItems: 20, uniqueItems: true,
-        items: { type: "string", minLength: 1, maxLength: 300 },
+        type: "array",
+        items: { type: "string" },
       },
       lessons: {
-        type: "array", minItems: 2, maxItems: 20,
+        type: "array",
         items: {
           type: "object",
           additionalProperties: false,
           required: ["clientKey", "title", "summary", "learningObjectives", "sourceChunkIndexes"],
           properties: {
-            clientKey: { type: "string", minLength: 1, maxLength: 80 },
-            title: { type: "string", minLength: 1, maxLength: 150 },
-            summary: { type: "string", minLength: 1 },
+            clientKey: { type: "string" },
+            title: { type: "string" },
+            summary: { type: "string" },
             learningObjectives: {
-              type: "array", minItems: 1, maxItems: 12, uniqueItems: true,
-              items: { type: "string", minLength: 1, maxLength: 300 },
+              type: "array",
+              items: { type: "string" },
             },
             sourceChunkIndexes: {
-              type: "array", minItems: 1, uniqueItems: true,
-              items: { type: "integer", minimum: 0 },
+              type: "array",
+              items: { type: "integer" },
             },
           },
         },
@@ -87,25 +89,21 @@ const LESSON_DRAFT_SCHEMA = {
     additionalProperties: false,
     required: ["title", "summary", "estimatedMinutes", "sections"],
     properties: {
-      title: { type: "string", minLength: 1, maxLength: 150 },
-      summary: { type: "string", minLength: 1 },
-      estimatedMinutes: { type: "integer", minimum: 1, maximum: 180 },
+      title: { type: "string" },
+      summary: { type: "string" },
+      estimatedMinutes: { type: "integer" },
       sections: {
         type: "array",
-        minItems: 1,
-        maxItems: 12,
         items: {
           type: "object",
           additionalProperties: false,
           required: ["heading", "bodyMarkdown", "citationChunkIndexes"],
           properties: {
-            heading: { type: "string", minLength: 1 },
-            bodyMarkdown: { type: "string", minLength: 1 },
+            heading: { type: "string" },
+            bodyMarkdown: { type: "string" },
             citationChunkIndexes: {
               type: "array",
-              minItems: 1,
-              uniqueItems: true,
-              items: { type: "integer", minimum: 0 },
+              items: { type: "integer" },
             },
           },
         },
@@ -122,12 +120,10 @@ const COURSE_DRAFT_SCHEMA = {
     additionalProperties: false,
     required: ["title", "description", "lessons"],
     properties: {
-      title: { type: "string", minLength: 1, maxLength: 150 },
-      description: { type: "string", minLength: 1 },
+      title: { type: "string" },
+      description: { type: "string" },
       lessons: {
         type: "array",
-        minItems: 2,
-        maxItems: 20,
         items: LESSON_DRAFT_SCHEMA.schema,
       },
     },
