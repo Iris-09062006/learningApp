@@ -11,7 +11,9 @@
 
 ## Active Task
 
-No task is currently active. Production remains out of scope.
+| Task ID | Title | Status | Phase | Dependency |
+|---|---|---|---|---|
+| `TASK-051` | Publish Verified Release to GitHub and Vercel Production | FIXED_FOR_REVIEW | Production release | `TASK-050` |
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
