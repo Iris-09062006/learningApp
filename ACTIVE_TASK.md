@@ -8,6 +8,12 @@
 
 ## Current objective
 
+TASK-062 is verified. A successful Lesson start now updates local progress state, reveals and
+focuses the learning content immediately, renders published Markdown safely as structured React
+content, and presents a responsive redesigned Lesson experience.
+
+## Previous verified work
+
 TASK-061 is verified locally and on hosted Supabase. `POST /api/lessons/:lessonId/start` now writes
 through a hardened, authenticated `start_lesson` RPC instead of a forbidden direct
 `user_progress` upsert. Hosted migration `20260811133320` is applied; transactional smoke testing
