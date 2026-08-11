@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { chunkDocumentText, extractDocumentText } from "./document-extractor";
 
@@ -57,6 +57,25 @@ describe("document extraction", () => {
 
     expect(text).toContain("LearningApp PDF extraction works");
     expect(text).toContain("This document contains a real text layer.");
+  });
+
+  it("logs sanitized parser diagnostics while preserving the generic extraction error", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(
+      extractDocumentText(Buffer.from("not a PDF"), "application/pdf")
+    ).rejects.toMatchObject({ code: "EXTRACTION_FAILED" });
+
+    expect(log).toHaveBeenCalledWith(
+      "[content-pipeline] Document extraction failed.",
+      {
+        mimeType: "application/pdf",
+        errorName: expect.any(String),
+        errorMessage: expect.any(String),
+      }
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain("not a PDF");
+    log.mockRestore();
   });
 
   it("splits oversized paragraphs without losing text", () => {

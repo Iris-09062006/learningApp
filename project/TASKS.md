@@ -11,7 +11,8 @@
 
 ## Active Task
 
-No task is currently active.
+`TASK-064` — Repair Vercel PDF Extraction Packaging (`IN_PROGRESS`). Production deployment is
+healthy, but documents 20–22 fail during native PDF parsing while the same PDF succeeds locally.
 
 Recently verified supporting hotfixes:
 
@@ -86,6 +87,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
+| `TASK-064` | Repair Vercel PDF Extraction Packaging | IN_PROGRESS | Content operations hotfix | `TASK-052`, production diagnosis |
 
 ## Active Epic
 

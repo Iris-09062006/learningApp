@@ -11,6 +11,7 @@ import type {
 
 const MAX_EXTRACTED_CHARACTERS = 200_000;
 const MAX_CHUNK_CHARACTERS = 4_000;
+const MAX_LOGGED_ERROR_CHARACTERS = 500;
 
 export class DocumentExtractionError extends Error {
   constructor(
@@ -35,6 +36,16 @@ function normalizeText(value: string): string {
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function summarizeExtractionError(error: unknown) {
+  const normalize = (value: string) => value
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .slice(0, MAX_LOGGED_ERROR_CHARACTERS);
+
+  return error instanceof Error
+    ? { errorName: normalize(error.name), errorMessage: normalize(error.message) }
+    : { errorName: "NonErrorThrown", errorMessage: "No Error object was provided." };
 }
 
 async function extractPdf(buffer: Buffer): Promise<string> {
@@ -87,6 +98,10 @@ export async function extractDocumentText(
     if (error instanceof DocumentExtractionError) {
       throw error;
     }
+    console.error("[content-pipeline] Document extraction failed.", {
+      mimeType,
+      ...summarizeExtractionError(error),
+    });
     throw new DocumentExtractionError(
       "EXTRACTION_FAILED",
       "The document could not be parsed safely."
