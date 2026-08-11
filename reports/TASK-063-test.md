@@ -20,3 +20,10 @@
 
 The test suite emitted expected stderr from negative-path tests that intentionally exercise 4xx/5xx
 handling; the suite exit code was 0.
+
+## Hosted Supabase verification
+
+- Remote migration catalog contains `20260811153651_allow_sequential_lesson_advance`.
+- `public.start_lesson(bigint)` is `SECURITY DEFINER` with an empty `search_path`.
+- `authenticated` can execute the RPC; `anon` cannot.
+- The installed function contains the immediate-predecessor guard and does not write completion.

@@ -25,5 +25,6 @@ No open Critical, High, or Medium findings.
 
 ## Residual limitation
 
-Migration 029 requires a separate authorized Supabase deployment before the new server behavior is
-available in a hosted environment.
+The code commit has not been deployed to the web application. Migration 029 is installed on hosted
+Supabase, so the server behavior will be available to the UI after the application commit is
+deployed.

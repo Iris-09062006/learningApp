@@ -9,7 +9,8 @@
 ## Current objective
 
 TASK-063 is verified. Learners can use “Tiếp theo” to start the immediately following published
-Lesson without waiting for completion, while exercise-based completion remains truthful.
+Lesson without waiting for completion, while exercise-based completion remains truthful. Migration
+029 is applied and verified on hosted Supabase as version `20260811153651`.
 
 ## Previous verified work
 

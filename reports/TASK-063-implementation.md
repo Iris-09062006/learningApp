@@ -19,4 +19,6 @@ only when its immediate published predecessor is already accessible to the same 
 
 ## Deployment
 
-No deployment was requested. Migration 029 has not been applied to hosted Supabase.
+Migration 029 was applied through Supabase MCP to project `yzucdzlgaucmduoghjft` on 2026-08-11.
+The remote migration catalog recorded version `20260811153651` with name
+`allow_sequential_lesson_advance`.
