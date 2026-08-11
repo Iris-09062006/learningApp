@@ -549,7 +549,7 @@ begin
     where outline_lesson_id = v_outline_lesson.id and status = 'ready'
     order by revision desc limit 1;
     if not found then raise exception 'LESSON_CONTENT_MISSING' using errcode = 'P0006'; end if;
-    select string_agg('## ' || section->>'heading' || E'\n\n' || section->>'bodyMarkdown', E'\n\n' order by ordinality)
+    select string_agg('## ' || (section->>'heading') || E'\n\n' || (section->>'bodyMarkdown'), E'\n\n' order by ordinality)
     into v_content_text from jsonb_array_elements(v_content.sections) with ordinality as item(section, ordinality);
     insert into public.lessons (chapter_id, title, content, lesson_order, estimated_minutes, is_published)
     values (v_chapter.id, v_content.title, v_content_text, v_outline_lesson.lesson_order,

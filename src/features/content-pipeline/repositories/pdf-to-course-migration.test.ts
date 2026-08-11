@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const sql = readFileSync(join(process.cwd(), "supabase/migrations/025_pdf_to_course_pipeline.sql"), "utf8");
+const publishHotfixSql = readFileSync(join(process.cwd(), "supabase/migrations/027_fix_course_publish_markdown_json_precedence.sql"), "utf8");
 
 describe("PDF-to-Course migration", () => {
   it("creates normalized import, outline, Lesson content, review, and publication records", () => {
@@ -30,6 +31,14 @@ describe("PDF-to-Course migration", () => {
   it("never creates Exercises during Course import", () => {
     expect(sql).not.toMatch(/insert\s+into\s+public\.(generated_exercises|exercises|exercise_options|exercise_solutions)/i);
     expect(sql).not.toMatch(/update\s+public\.(generated_exercises|exercises)/i);
+  });
+
+  it("extracts JSON section fields before concatenating Markdown", () => {
+    const safeMarkdownExpression = "'## ' || (section->>'heading') || E'\\n\\n' || (section->>'bodyMarkdown')";
+
+    expect(sql).toContain(safeMarkdownExpression);
+    expect(publishHotfixSql).toContain(safeMarkdownExpression);
+    expect(publishHotfixSql).not.toContain("'## ' || section->>'heading'");
   });
 
   it("authorizes active Admins and hardens every state-changing function", () => {

@@ -8,6 +8,9 @@
 
 ## Current objective
 
+TASK-060 is verified. Hosted migration `20260811102054` fixes Markdown/JSON operator
+precedence; Course import job #5 published Course 17 and six visible Lessons atomically.
+
 TASK-059 is verified. Provider schemas now use the Gemini-compatible structural subset while
 strict server-side validation continues to enforce every business constraint.
 
