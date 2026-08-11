@@ -29,7 +29,7 @@ Implemented Option A locally. `POST /api/lessons/:lessonId/start` no longer atte
 - `src/features/lessons/services/__tests__/lesson-service.test.ts`
 - Task state and TASK-061 reports.
 
-## Deployment Note
+## Hosted Supabase
 
-The migration was not applied to the hosted Supabase project and the app was not deployed. The
-endpoint requires migration `028` to be applied before this code is released.
+Migration `20260811133320_create_start_lesson_rpc` was applied through Supabase MCP. The application
+was not pushed or deployed.

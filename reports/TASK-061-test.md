@@ -15,8 +15,16 @@ The first focused Vitest attempt failed before loading the test config because t
 the esbuild child process with `spawn EPERM`. Re-running outside the sandbox passed. This was an
 execution-environment restriction, not a product or test failure.
 
-## Database Verification Scope
+## Hosted Supabase Verification
 
-Static migration regression tests verify the RPC boundary, ACL hardening, authorization checks,
-locking, state transition, timestamp behavior, and absence of direct progress grants/inserts.
-No hosted database migration or live RPC smoke test was performed in this task.
+- Migration `20260811133320_create_start_lesson_rpc` — applied successfully.
+- Catalog inspection — PASS: `SECURITY DEFINER`, empty `search_path`, authenticated execute only.
+- Direct table privileges — PASS: authenticated INSERT/UPDATE remain false.
+- Generated hosted types — PASS: `start_lesson({ p_lesson_id: number }): Json` is present.
+- Transactional learner smoke test — PASS: first start and repeat start both returned `in_progress`,
+  recorded `started_at`, and preserved the timestamp.
+- Rollback verification — PASS: hosted progress remained 2 unlocked rows, 0 in-progress rows, and
+  0 rows with `started_at`.
+- Security Advisor reports the expected generic warning for an authenticated-callable
+  `SECURITY DEFINER` function. This exposure is intentional; the function derives `auth.uid()` and
+  enforces active learner, enrollment, publication, and progress-state checks internally.

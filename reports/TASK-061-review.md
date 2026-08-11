@@ -18,7 +18,8 @@ PASS — no open Critical, High, or Medium finding.
   details or turning expected authorization failures into 500 responses.
 - Focused and full gates pass; no secrets were introduced.
 
-## Remaining Operational Requirement
+## Hosted Verification
 
-Apply migration `028_create_start_lesson_rpc.sql` to the target Supabase project before deploying
-the application change, then smoke-test the learner start flow against the hosted database.
+Hosted migration `20260811133320_create_start_lesson_rpc` is applied. Function definition, ACL,
+direct table grants, generated types, transactional behavior, idempotency, and rollback state were
+verified through Supabase MCP. The application code remains undeployed.
