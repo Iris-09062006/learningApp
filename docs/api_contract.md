@@ -943,6 +943,10 @@ interface LessonDetail {
   estimatedMinutes: number | null;
   status: ProgressStatus;
   exercises: ExerciseSummary[];
+  nextLesson: {
+    id: number;
+    title: string;
+  } | null;
 }
 
 interface ExerciseSummary {
@@ -985,7 +989,10 @@ Nghiệp vụ:
 
 - Nếu `unlocked`, chuyển thành `inProgress`.
 - Nếu đã `inProgress` hoặc `completed`, trả trạng thái hiện tại.
-- Nếu `locked`, từ chối.
+- Nếu `locked` nhưng là bài published liền sau một bài mà learner đã có quyền truy cập trong
+  cùng course, cho phép chuyển thẳng thành `inProgress`. Đây là thao tác “Tiếp theo”; bài trước
+  không bị đánh dấu `completed`.
+- Nếu `locked` và không thỏa điều kiện liền sau, từ chối để không cho phép nhảy cóc tùy ý.
 
 Response:
 

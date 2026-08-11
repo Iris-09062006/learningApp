@@ -57,6 +57,7 @@ export async function getLessonById(lessonId: number): Promise<LessonResponse> {
     estimatedMinutes: lesson.estimatedMinutes,
     status: lesson.status,
     exercises: lesson.exercises,
+    nextLesson: lesson.nextLesson,
   };
 }
 
@@ -85,8 +86,8 @@ export async function startLesson(
     );
   }
 
-  if (!result.lesson || result.lesson.status === "locked") {
-    throw new ServiceError("LESSON_LOCKED", "Cannot start a locked lesson.", 403);
+  if (!result.lesson) {
+    throw new ServiceError("NOT_FOUND", "Lesson not found or not published.", 404);
   }
 
   try {

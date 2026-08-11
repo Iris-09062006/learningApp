@@ -105,19 +105,27 @@ describe("lesson repository", () => {
         .mockResolvedValueOnce({ data: { id: 5 }, error: null }) // course_enrollments
         .mockResolvedValueOnce({ data: { status: "unlocked" }, error: null }); // user_progress
 
-      mockOrder.mockResolvedValueOnce({ // exercises
-        data: [
-          {
-            id: 100,
-            title: "Exercise 1",
-            exercise_type: "quiz",
-            difficulty: "easy",
-            exercise_order: 1,
-            is_published: true,
-          }
-        ],
-        error: null,
-      });
+      mockOrder
+        .mockResolvedValueOnce({ // exercises
+          data: [
+            {
+              id: 100,
+              title: "Exercise 1",
+              exercise_type: "quiz",
+              difficulty: "easy",
+              exercise_order: 1,
+              is_published: true,
+            }
+          ],
+          error: null,
+        })
+        .mockResolvedValueOnce({ // ordered published course lessons
+          data: [
+            { id: 1, title: "Lesson 1", lesson_order: 1, chapters: { chapter_order: 1 } },
+            { id: 2, title: "Lesson 2", lesson_order: 2, chapters: { chapter_order: 1 } },
+          ],
+          error: null,
+        });
 
       mockGetUser.mockResolvedValueOnce({ data: { user: { id: "user-1" } } });
 
@@ -133,6 +141,7 @@ describe("lesson repository", () => {
         exercises: [
           { id: 100, type: "quiz", difficulty: "easy" }
         ],
+        nextLesson: { id: 2, title: "Lesson 2" },
       });
     });
   });

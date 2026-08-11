@@ -934,10 +934,14 @@ Không dùng lazy progress creation trong MVP vì roadmap cần trạng thái x�
 1. Xác thực `auth.uid()`.
 2. Kiểm tra learner đã enroll course chứa lesson.
 3. Kiểm tra progress thuộc user hiện tại.
-4. Nếu `locked`, từ chối.
-5. Nếu `unlocked`, chuyển `in_progress`, set `started_at` và `last_accessed_at`.
+4. Nếu `locked`, chỉ cho phép khi lesson là bài published liền sau một lesson mà learner đã có
+   progress khác `locked` trong cùng course; mọi trường hợp nhảy cóc khác đều bị từ chối.
+5. Nếu `locked` hợp lệ hoặc `unlocked`, chuyển `in_progress`, set `started_at` và
+   `last_accessed_at`.
 6. Nếu đã `in_progress` hoặc `completed`, giữ status và cập nhật `last_accessed_at` khi phù hợp.
-7. Client không update progress trực tiếp.
+7. Việc bắt đầu bài liền sau không cập nhật bài trước thành `completed`; completion vẫn chỉ do
+   `submit_exercise` quyết định.
+8. Client không update progress trực tiếp.
 
 ## 10.5 submit_exercise RPC hoặc transaction service
 

@@ -406,10 +406,15 @@ GET /api/lessons/:lessonId
 2. Client gửi request thông báo bắt đầu bài học.
 3. Server cập nhật `user_progress.status = 'in_progress'` và ghi nhận `started_at`, `last_accessed_at`.
 4. Trả về trạng thái mới.
+5. Khi nội dung đã hiển thị và còn bài published liền sau, Learner có thể nhấn “Tiếp theo” để
+   bắt đầu và chuyển ngay sang bài đó mà không phải chờ đủ thời lượng ước tính.
 
 ### Quy tắc nghiệp vụ
 
 - Nếu bài học đã ở trạng thái `in_progress` hoặc `completed`, giữ nguyên status và chỉ cập nhật `last_accessed_at`.
+- “Tiếp theo” chỉ mở đúng bài published liền sau; không cho phép nhảy cóc qua nhiều bài bằng API.
+- Thao tác này không đánh dấu bài hiện tại `completed`; completion vẫn phản ánh kết quả các bài
+  tập bắt buộc.
 
 ### API liên quan
 
@@ -554,6 +559,8 @@ POST /api/exercises/:exerciseId/submissions
 ### Quy tắc nghiệp vụ
 
 - Trạng thái bài học gồm: `locked` -> `unlocked` -> `in_progress` -> `completed`.
+- Bài published liền sau có thể chuyển trực tiếp từ `locked` sang `in_progress` khi Learner chủ
+  động chọn “Tiếp theo” từ bài hiện tại.
 - Bài học chuyển sang `completed` khi và chỉ khi Learner nộp đúng tất cả các bài tập có `is_required = true` trong bài học đó.
 - Bài học đã `completed` sẽ không bị hạ xuống trạng thái khác dù Learner có làm lại bài tập và sai.
 

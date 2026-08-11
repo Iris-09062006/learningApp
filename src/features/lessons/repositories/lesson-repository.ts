@@ -1,6 +1,10 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ProgressStatus } from "@/features/courses/types";
-import type { LessonDetail, StartLessonResponse } from "@/features/lessons/types";
+import type {
+  LessonDetail,
+  LessonNextRef,
+  StartLessonResponse,
+} from "@/features/lessons/types";
 
 function toProgressStatus(status: string | null | undefined): ProgressStatus {
   if (status === "unlocked") return "unlocked";
@@ -96,6 +100,31 @@ export async function fetchLessonDetail(lessonId: number): Promise<{
     isPublished: e.is_published,
   }));
 
+  let nextLesson: LessonNextRef | null = null;
+  const { data: courseLessons, error: courseLessonsError } = await supabase
+    .from("lessons")
+    .select("id, title, lesson_order, chapters!inner(chapter_order)")
+    .eq("chapters.course_id", courseId)
+    .eq("chapters.is_published", true)
+    .eq("is_published", true)
+    .order("lesson_order", { ascending: true });
+
+  if (courseLessonsError) {
+    throw new Error(`Failed to fetch course lessons: ${courseLessonsError.message}`);
+  }
+
+  const ordered = (courseLessons || []).sort((a, b) => {
+    const chapterA = (a.chapters as unknown as { chapter_order: number })?.chapter_order ?? 0;
+    const chapterB = (b.chapters as unknown as { chapter_order: number })?.chapter_order ?? 0;
+    return chapterA - chapterB || a.lesson_order - b.lesson_order;
+  });
+  const currentIndex = ordered.findIndex((item) => item.id === lessonId);
+  const next = currentIndex >= 0 ? ordered[currentIndex + 1] : undefined;
+
+  if (next) {
+    nextLesson = { id: next.id, title: next.title };
+  }
+
   return {
     lessonExists: true,
     isPublished: lesson.is_published,
@@ -112,6 +141,7 @@ export async function fetchLessonDetail(lessonId: number): Promise<{
       status,
       isPublished: lesson.is_published,
       exercises,
+      nextLesson,
     },
   };
 }

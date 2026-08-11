@@ -13,6 +13,11 @@ export interface LessonExerciseSummary {
   isPublished: boolean;
 }
 
+export interface LessonNextRef {
+  id: number;
+  title: string;
+}
+
 export interface LessonDetail {
   id: number;
   chapterId: number;
@@ -24,6 +29,7 @@ export interface LessonDetail {
   status: ProgressStatus;
   isPublished: boolean;
   exercises: LessonExerciseSummary[];
+  nextLesson: LessonNextRef | null;
 }
 
 export type LessonResponse = Omit<LessonDetail, "isPublished" | "courseId">;

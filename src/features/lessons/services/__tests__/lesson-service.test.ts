@@ -90,6 +90,7 @@ describe("lesson service", () => {
           status: "locked",
           isPublished: true,
           exercises: [],
+          nextLesson: null,
         },
       });
 
@@ -116,6 +117,7 @@ describe("lesson service", () => {
           status: "unlocked",
           isPublished: true,
           exercises: [],
+          nextLesson: null,
         },
       });
 
@@ -129,6 +131,7 @@ describe("lesson service", () => {
         estimatedMinutes: 30,
         status: "unlocked",
         exercises: [],
+        nextLesson: null,
       });
     });
   });
@@ -141,7 +144,7 @@ describe("lesson service", () => {
       });
     });
 
-    it("enforces fetch checks before starting (e.g. locks)", async () => {
+    it("lets the authoritative RPC start an immediate next lesson that is currently locked", async () => {
       vi.mocked(fetchLessonDetail).mockResolvedValueOnce({
         lessonExists: true,
         isPublished: true,
@@ -158,14 +161,21 @@ describe("lesson service", () => {
           status: "locked",
           isPublished: true,
           exercises: [],
+          nextLesson: null,
         },
       });
 
-      await expect(startLesson(10)).rejects.toMatchObject({
-        code: "LESSON_LOCKED",
-        statusCode: 403,
+      vi.mocked(startLessonProgress).mockResolvedValueOnce({
+        lessonId: 10,
+        status: "inProgress",
+        startedAt: "2026-08-11T00:00:00.000Z",
       });
-      expect(startLessonProgress).not.toHaveBeenCalled();
+
+      await expect(startLesson(10)).resolves.toMatchObject({
+        lessonId: 10,
+        status: "inProgress",
+      });
+      expect(startLessonProgress).toHaveBeenCalledWith(10);
     });
 
     it("starts lesson and returns payload", async () => {
@@ -185,6 +195,7 @@ describe("lesson service", () => {
           status: "unlocked",
           isPublished: true,
           exercises: [],
+          nextLesson: null,
         },
       });
       vi.mocked(startLessonProgress).mockResolvedValueOnce({
@@ -218,6 +229,7 @@ describe("lesson service", () => {
           status: "unlocked",
           isPublished: true,
           exercises: [],
+          nextLesson: null,
         },
       });
       vi.mocked(startLessonProgress).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
@@ -252,6 +264,8 @@ describe("lesson service", () => {
             status: "unlocked",
             isPublished: true,
             exercises: [],
+            nextLesson: null,
+
           },
         });
         vi.mocked(startLessonProgress).mockRejectedValueOnce(new Error(repositoryMessage));

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 import { LessonMarkdown } from "@/features/lessons/components/lesson-markdown";
@@ -28,9 +29,12 @@ function formatDifficulty(difficulty: string): string {
 }
 
 export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) => {
+  const router = useRouter();
   const [status, setStatus] = useState<ProgressStatus>(lesson.status);
   const [isStarting, setIsStarting] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [advanceErrorMessage, setAdvanceErrorMessage] = useState<string | null>(null);
   const [shouldFocusContent, setShouldFocusContent] = useState(false);
   const contentRef = useRef<HTMLElement>(null);
   const isContentVisible = status === "inProgress" || status === "completed";
@@ -72,6 +76,34 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
       setErrorMessage(error instanceof Error ? error.message : "Không thể bắt đầu bài học.");
     } finally {
       setIsStarting(false);
+    }
+  }
+
+  async function handleNextLesson(): Promise<void> {
+    if (!lesson.nextLesson || isAdvancing) return;
+
+    setIsAdvancing(true);
+    setAdvanceErrorMessage(null);
+
+    try {
+      const response = await fetch(`/api/lessons/${lesson.nextLesson.id}/start`, {
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        success?: boolean;
+        error?: { message?: string };
+      };
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error?.message || "Không thể mở bài học tiếp theo.");
+      }
+
+      router.push(`/lessons/${lesson.nextLesson.id}`);
+    } catch (error: unknown) {
+      setAdvanceErrorMessage(
+        error instanceof Error ? error.message : "Không thể mở bài học tiếp theo.",
+      );
+      setIsAdvancing(false);
     }
   }
 
@@ -166,6 +198,32 @@ export const LessonContentView: React.FC<LessonContentViewProps> = ({ lesson }) 
                 </div>
               )}
             </section>
+
+            {isContentVisible && lesson.nextLesson ? (
+              <nav aria-label="Bài tiếp theo" className="rounded-2xl border border-primary/20 bg-primary-soft/50 p-5">
+                <div className="sm:flex sm:items-center sm:justify-between sm:gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Bài tiếp theo</p>
+                    <p className="mt-1 font-bold text-text-primary">{lesson.nextLesson.title}</p>
+                    <p className="mt-1 text-sm text-text-secondary">Bạn có thể tiếp tục ngay; bài hiện tại vẫn giữ đúng tiến độ đã đạt.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleNextLesson}
+                    disabled={isAdvancing}
+                    aria-describedby={advanceErrorMessage ? "lesson-next-error" : undefined}
+                    className="mt-3 inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-text-inverse transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-0"
+                  >
+                    {isAdvancing ? "Đang mở..." : "Tiếp theo"} <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+                {advanceErrorMessage ? (
+                  <p id="lesson-next-error" role="alert" className="mt-3 text-sm font-medium text-danger">
+                    {advanceErrorMessage}
+                  </p>
+                ) : null}
+              </nav>
+            ) : null}
           </div>
 
           <aside aria-label="Thông tin bài học" className="space-y-4 lg:sticky lg:top-6">

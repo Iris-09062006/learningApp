@@ -8,9 +8,8 @@
 
 ## Current objective
 
-TASK-062 is verified. A successful Lesson start now updates local progress state, reveals and
-focuses the learning content immediately, renders published Markdown safely as structured React
-content, and presents a responsive redesigned Lesson experience.
+TASK-063 is verified. Learners can use “Tiếp theo” to start the immediately following published
+Lesson without waiting for completion, while exercise-based completion remains truthful.
 
 ## Previous verified work
 

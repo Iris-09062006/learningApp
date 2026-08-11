@@ -54,6 +54,7 @@ describe("lesson API routes", () => {
         estimatedMinutes: 20,
         status: "unlocked" as const,
         exercises: [],
+        nextLesson: null,
       };
       vi.mocked(getLessonById).mockResolvedValueOnce(mockLesson);
 
