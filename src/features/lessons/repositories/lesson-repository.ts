@@ -127,48 +127,43 @@ export async function startLessonProgress(lessonId: number): Promise<StartLesson
     throw new Error("UNAUTHENTICATED");
   }
 
-  const { data: currentProgress } = await supabase
-    .from("user_progress")
-    .select("status, started_at")
-    .eq("user_id", user.id)
-    .eq("lesson_id", lessonId)
-    .maybeSingle();
-
-  const currentStatus = toProgressStatus(currentProgress?.status);
-
-  if (currentStatus === "locked") {
-    throw new Error("LESSON_LOCKED");
-  }
-
-  if (currentStatus === "inProgress" || currentStatus === "completed") {
-    return {
-      lessonId,
-      status: currentStatus,
-      startedAt: currentProgress?.started_at ?? null,
-    };
-  }
-
-  const now = new Date().toISOString();
-
-  const { data: updatedProgress, error } = await supabase
-    .from("user_progress")
-    .upsert({
-      user_id: user.id,
-      lesson_id: lessonId,
-      status: "in_progress",
-      started_at: now,
-      updated_at: now,
-    }, { onConflict: "user_id,lesson_id" })
-    .select("status, started_at")
-    .single();
+  const { data, error } = await supabase.rpc("start_lesson", {
+    p_lesson_id: lessonId,
+  });
 
   if (error) {
-    throw new Error(`Failed to update lesson progress: ${error.message}`);
+    if (error.message === "Authentication required") {
+      throw new Error("UNAUTHENTICATED");
+    }
+
+    if (error.message === "Published lesson not found") {
+      throw new Error("LESSON_NOT_FOUND");
+    }
+
+    if (error.message === "Active learner profile required") {
+      throw new Error("ACTIVE_LEARNER_REQUIRED");
+    }
+
+    if (error.message === "Course enrollment required") {
+      throw new Error("COURSE_NOT_ENROLLED");
+    }
+
+    if (error.message === "Lesson access required" || error.message === "Lesson is locked") {
+      throw new Error("LESSON_LOCKED");
+    }
+
+    throw new Error(`Failed to start lesson: ${error.message}`);
   }
 
+  const progress = data as unknown as {
+    lesson_id: number;
+    status: string;
+    started_at: string | null;
+  };
+
   return {
-    lessonId,
-    status: toProgressStatus(updatedProgress.status),
-    startedAt: updatedProgress.started_at,
+    lessonId: progress.lesson_id,
+    status: toProgressStatus(progress.status),
+    startedAt: progress.started_at,
   };
 }

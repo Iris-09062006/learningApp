@@ -5,23 +5,19 @@ import { fetchLessonDetail, startLessonProgress } from "../lesson-repository";
 const mockSelect = vi.fn();
 const mockEq = vi.fn();
 const mockMaybeSingle = vi.fn();
-const mockSingle = vi.fn();
 const mockOrder = vi.fn();
-const mockUpsert = vi.fn();
+const mockRpc = vi.fn();
 
 const mockQueryBuilder = {
   select: mockSelect,
   eq: mockEq,
   maybeSingle: mockMaybeSingle,
-  single: mockSingle,
   order: mockOrder,
-  upsert: mockUpsert,
 };
 
 mockSelect.mockReturnValue(mockQueryBuilder);
 mockEq.mockReturnValue(mockQueryBuilder);
 mockOrder.mockReturnValue(mockQueryBuilder);
-mockUpsert.mockReturnValue(mockQueryBuilder);
 
 const mockGetUser = vi.fn();
 
@@ -33,6 +29,7 @@ vi.mock("@/lib/supabase/server", async (importOriginal) => {
       Promise.resolve({
         auth: { getUser: mockGetUser },
         from: vi.fn(() => mockQueryBuilder),
+        rpc: mockRpc,
       })
     ),
   };
@@ -146,44 +143,71 @@ describe("lesson repository", () => {
       await expect(startLessonProgress(1)).rejects.toThrow("UNAUTHENTICATED");
     });
 
-    it("throws LESSON_LOCKED if status is locked", async () => {
+    it("calls start_lesson and maps unlocked progress to the API contract", async () => {
       mockGetUser.mockResolvedValueOnce({ data: { user: { id: "u-1" } } });
-      mockMaybeSingle.mockResolvedValueOnce({ data: { status: "locked" }, error: null });
+      mockRpc.mockResolvedValueOnce({
+        data: {
+          lesson_id: 1,
+          status: "in_progress",
+          started_at: "2026-08-01T00:00:00Z",
+        },
+        error: null,
+      });
 
-      await expect(startLessonProgress(1)).rejects.toThrow("LESSON_LOCKED");
+      await expect(startLessonProgress(1)).resolves.toEqual({
+        lessonId: 1,
+        status: "inProgress",
+        startedAt: "2026-08-01T00:00:00Z",
+      });
+      expect(mockRpc).toHaveBeenCalledWith("start_lesson", { p_lesson_id: 1 });
     });
 
-    it("returns early if already inProgress or completed", async () => {
+    it("preserves completed progress returned by an idempotent repeat start", async () => {
       mockGetUser.mockResolvedValueOnce({ data: { user: { id: "u-1" } } });
-      mockMaybeSingle.mockResolvedValueOnce({
-        data: { status: "in_progress", started_at: "2026-08-01T00:00:00Z" },
+      mockRpc.mockResolvedValueOnce({
+        data: {
+          lesson_id: 1,
+          status: "completed",
+          started_at: "2026-08-01T00:00:00Z",
+        },
         error: null,
       });
 
       const result = await startLessonProgress(1);
       expect(result).toEqual({
         lessonId: 1,
-        status: "inProgress",
+        status: "completed",
         startedAt: "2026-08-01T00:00:00Z",
       });
-      expect(mockUpsert).not.toHaveBeenCalled();
     });
 
-    it("upserts user_progress to in_progress if currently unlocked", async () => {
+    it.each([
+      ["Authentication required", "UNAUTHENTICATED"],
+      ["Published lesson not found", "LESSON_NOT_FOUND"],
+      ["Active learner profile required", "ACTIVE_LEARNER_REQUIRED"],
+      ["Course enrollment required", "COURSE_NOT_ENROLLED"],
+      ["Lesson access required", "LESSON_LOCKED"],
+      ["Lesson is locked", "LESSON_LOCKED"],
+    ])("maps the RPC error %s to %s", async (rpcMessage, expectedMessage) => {
       mockGetUser.mockResolvedValueOnce({ data: { user: { id: "u-1" } } });
-      mockMaybeSingle.mockResolvedValueOnce({ data: { status: "unlocked" }, error: null });
-      mockSingle.mockResolvedValueOnce({
-        data: { status: "in_progress", started_at: "2026-08-01T00:00:00Z" },
-        error: null,
+      mockRpc.mockResolvedValueOnce({
+        data: null,
+        error: { message: rpcMessage },
       });
 
-      const result = await startLessonProgress(1);
-      expect(mockUpsert).toHaveBeenCalled();
-      expect(result).toEqual({
-        lessonId: 1,
-        status: "inProgress",
-        startedAt: "2026-08-01T00:00:00Z",
+      await expect(startLessonProgress(1)).rejects.toThrow(expectedMessage);
+    });
+
+    it("preserves unexpected RPC error details", async () => {
+      mockGetUser.mockResolvedValueOnce({ data: { user: { id: "u-1" } } });
+      mockRpc.mockResolvedValueOnce({
+        data: null,
+        error: { message: "database unavailable" },
       });
+
+      await expect(startLessonProgress(1)).rejects.toThrow(
+        "Failed to start lesson: database unavailable",
+      );
     });
   });
 });

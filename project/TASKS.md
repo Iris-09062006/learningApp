@@ -30,6 +30,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-061` | Start Lesson Through a Security-Definer RPC | VERIFIED | Phase 4 hotfix | `reports/TASK-061-implementation.md`, `reports/TASK-061-review.md`, `reports/TASK-061-test.md` |
 | `TASK-060` | Fix Course Publish Markdown JSON Precedence | VERIFIED | Content operations hotfix | `reports/TASK-060-implementation.md`, `reports/TASK-060-review.md`, `reports/TASK-060-test.md` |
 | `TASK-059` | Fix Gemini Structured-output Compatibility | VERIFIED | Content operations hotfix | `reports/TASK-059-implementation.md`, `reports/TASK-059-review.md`, `reports/TASK-059-test.md` |
 | `TASK-058` | Lesson-to-Exercise Pipeline | VERIFIED | Content operations | `reports/TASK-058-implementation.md`, `reports/TASK-058-review.md`, `reports/TASK-058-test.md` |

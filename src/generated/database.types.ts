@@ -1221,6 +1221,7 @@ export type Database = {
         Args: { p_answer: Json; p_exercise_id: number }
         Returns: Json
       }
+      start_lesson: { Args: { p_lesson_id: number }; Returns: Json }
     }
     Enums: {
       ai_response_status: "success" | "failed"

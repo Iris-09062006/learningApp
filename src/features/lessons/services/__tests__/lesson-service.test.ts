@@ -227,5 +227,40 @@ describe("lesson service", () => {
         statusCode: 401,
       });
     });
+
+    it.each([
+      ["LESSON_NOT_FOUND", "NOT_FOUND", 404],
+      ["ACTIVE_LEARNER_REQUIRED", "FORBIDDEN", 403],
+      ["COURSE_NOT_ENROLLED", "COURSE_NOT_ENROLLED", 403],
+      ["LESSON_LOCKED", "LESSON_LOCKED", 403],
+    ])(
+      "maps authoritative RPC rejection %s to %s",
+      async (repositoryMessage, serviceCode, statusCode) => {
+        vi.mocked(fetchLessonDetail).mockResolvedValueOnce({
+          lessonExists: true,
+          isPublished: true,
+          isAuthenticated: true,
+          isEnrolled: true,
+          lesson: {
+            id: 10,
+            chapterId: 2,
+            courseId: 1,
+            title: "Unlocked",
+            content: "C",
+            order: 1,
+            estimatedMinutes: 10,
+            status: "unlocked",
+            isPublished: true,
+            exercises: [],
+          },
+        });
+        vi.mocked(startLessonProgress).mockRejectedValueOnce(new Error(repositoryMessage));
+
+        await expect(startLesson(10)).rejects.toMatchObject({
+          code: serviceCode,
+          statusCode,
+        });
+      },
+    );
   });
 });

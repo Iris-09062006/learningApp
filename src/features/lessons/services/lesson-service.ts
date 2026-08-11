@@ -102,6 +102,22 @@ export async function startLesson(
       throw new ServiceError("LESSON_LOCKED", "Cannot start a locked lesson.", 403);
     }
 
+    if (message === "LESSON_NOT_FOUND") {
+      throw new ServiceError("NOT_FOUND", "Lesson not found or not published.", 404);
+    }
+
+    if (message === "ACTIVE_LEARNER_REQUIRED") {
+      throw new ServiceError("FORBIDDEN", "An active learner profile is required.", 403);
+    }
+
+    if (message === "COURSE_NOT_ENROLLED") {
+      throw new ServiceError(
+        "COURSE_NOT_ENROLLED",
+        "You must be enrolled in the course to start this lesson.",
+        403,
+      );
+    }
+
     throw error;
   }
 }

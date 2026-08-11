@@ -8,6 +8,10 @@
 
 ## Current objective
 
+TASK-061 is verified locally. `POST /api/lessons/:lessonId/start` now writes through a hardened,
+authenticated `start_lesson` RPC instead of a forbidden direct `user_progress` upsert. Migration
+`028` still needs to be applied to the target Supabase project before deployment.
+
 TASK-060 is verified. Hosted migration `20260811102054` fixes Markdown/JSON operator
 precedence; Course import job #5 published Course 17 and six visible Lessons atomically.
 
