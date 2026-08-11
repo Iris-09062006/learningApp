@@ -22,3 +22,11 @@ canvas binary, 20 `pdf-parse` files, and 1 `pdfjs-dist` runtime file. The Linux 
 declared in the lockfile and explicitly included for the corresponding Vercel Linux build.
 
 Expected stderr from negative-path tests remained present; the full suite exit code was 0.
+
+## Vercel production build
+
+- PASS: clean build skipped the previous cache, installed 558 packages, compiled Next.js, checked
+  types, generated 29 static pages, traced server files, and deployed successfully.
+- PASS: deployment `dpl_3C4gB57Thpo2xu1TTFCDmv6r4kKe` reports target `production`, status `Ready`.
+- Pending: authenticated source-22 extraction retry; no new request reached the deployment during
+  the runtime-log observation window.

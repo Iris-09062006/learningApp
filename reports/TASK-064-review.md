@@ -24,5 +24,6 @@ No open Critical, High, or Medium findings.
 
 ## Deployment checkpoint
 
-The task stays `IN_PROGRESS` until Vercel reports a successful Node.js 22.x production build and
-the previously failing PDF is verified against that deployment.
+Vercel clean production build and deployment are `Ready`. The task stays `IN_PROGRESS` only until
+the previously failing PDF is retried through an authenticated Admin session and its hosted status
+confirms the extraction result.

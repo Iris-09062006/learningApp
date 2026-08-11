@@ -37,11 +37,11 @@ Handler ships the native Linux canvas runtime and runs on a stable supported Nod
 - Disabling Vercel deployment protection.
 
 ## Acceptance Criteria
-- [ ] Extraction route trace includes `pdf-parse`, `pdfjs-dist`, `@napi-rs/canvas`, and the Linux
+- [x] Extraction route trace includes `pdf-parse`, `pdfjs-dist`, `@napi-rs/canvas`, and the Linux
   x64 GNU canvas binary package.
-- [ ] Vercel selects Node.js 22.x rather than the latest available major.
-- [ ] Runtime failures produce sanitized server logs while the API retains its generic response.
-- [ ] Focused and full quality gates pass with review `PASS`.
+- [x] Vercel selects Node.js 22.x rather than the latest available major.
+- [x] Runtime failures produce sanitized server logs while the API retains its generic response.
+- [x] Focused and full quality gates pass with review `PASS`.
 - [ ] Fix is committed, pushed, deployed to production, and the source-22 PDF extraction succeeds.
 
 ## Required Commands

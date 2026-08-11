@@ -20,4 +20,9 @@ credentials, and the client response are unchanged and are not logged.
 
 ## Deployment
 
-Pending production deployment and source-22 verification after the reviewed commit is pushed.
+- Commit `4e1defa` was pushed to `origin/main`.
+- Vercel clean production deployment `dpl_3C4gB57Thpo2xu1TTFCDmv6r4kKe` completed with status
+  `Ready`; build cache was explicitly skipped and dependencies were reinstalled on Linux.
+- Production URL: `https://learning-7fxeuiyn0-iris-projects-bcfa9d19.vercel.app`.
+- Source-22 verification is pending an authenticated Admin retry. Its hosted timestamp still
+  reflects the pre-fix failure, so no post-deployment result has been claimed.
