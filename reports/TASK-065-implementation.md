@@ -25,4 +25,7 @@ Course-outline quota unit so the existing 20 provider-calls/Admin/hour contract 
 
 ## Deployment
 
-Pending push and production deployment after the reviewed commit.
+- Commit `ea98bb4` was pushed to `origin/main`.
+- Vercel production deployment `dpl_HebK3MAWR9dsYTA9MZnoRi4CmM4K` completed with status `Ready`.
+- Production URL: `https://learning-cvero0ew0-iris-projects-bcfa9d19.vercel.app`.
+- Authenticated retry of the affected production source remains the final verification checkpoint.

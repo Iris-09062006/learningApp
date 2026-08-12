@@ -25,3 +25,9 @@
 - `git diff --check` — PASS; only existing Windows line-ending conversion warnings were printed.
 
 Expected stderr from negative-path tests remained present; the full suite exit code was 0.
+
+## Production deployment
+
+- PASS: Vercel compiled, checked types, generated pages, traced server functions, and deployed.
+- PASS: deployment `dpl_HebK3MAWR9dsYTA9MZnoRi4CmM4K` reports target `production`, status `Ready`.
+- Pending: authenticated regeneration of source 23 or 24 to verify the content-dependent retry.

@@ -2,8 +2,8 @@
 
 ## Verdict
 
-`PASS`. No open Critical, High, or Medium findings. Production deployment remains the final task
-checkpoint.
+`PASS`. No open Critical, High, or Medium findings. Production deployment is `Ready`; authenticated
+regeneration of the affected source remains the final task checkpoint.
 
 ## Review evidence
 
