@@ -41,3 +41,4 @@ Expected stderr from negative-path tests remained present; the full suite exit c
 - `npm run build` — PASS: Next.js 15.5.22 production build, 29 static pages.
 - Regression coverage proves one-chunk `[1]` and `[1, 1]` citations become `[0]`, while an
   out-of-range citation remains rejected for multi-chunk sources.
+- Vercel deployment `dpl_i5Mt1fysN5JdPCeuTH4DSoKvX7oP` — PASS: target `production`, status `Ready`.

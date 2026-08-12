@@ -36,7 +36,7 @@ first structured response violates server-side business invariants.
 - [x] A valid retry is accepted; a second invalid response remains a generic `AI_PROVIDER_ERROR`.
 - [x] No PDF/source text, generated output, filename, credential, or token is logged.
 - [x] Required quality gates and review pass.
-- [ ] Follow-up citation normalization is pushed and deployed for production verification.
+- [x] Follow-up citation normalization is pushed and deployed for production verification.
 
 ## Required Commands
 - `npm run lint`

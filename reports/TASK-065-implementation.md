@@ -37,3 +37,6 @@ still extracted 2,392 characters and contained one server-owned chunk. The provi
 canonicalizes non-empty integer citations to that sole chunk, covering provider 1-based and
 duplicate indexes without broadening citation ownership. Multi-chunk documents still reject every
 out-of-range citation. The correction prompt now also states the exact sole-chunk `[0]` convention.
+
+Follow-up commit `708678a` was pushed to `origin/main` and deployed as Vercel production
+deployment `dpl_i5Mt1fysN5JdPCeuTH4DSoKvX7oP`. The deployment and primary alias both report `Ready`.
