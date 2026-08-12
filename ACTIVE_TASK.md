@@ -1,7 +1,7 @@
 # Active Task Queue
 
 - **Active task:** `TASK-066` — Normalize Single-Chunk Lesson Citations
-- **Status:** `BLOCKED`
+- **Status:** `IN_PROGRESS`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
@@ -14,6 +14,10 @@ while preserving strict multi-chunk ownership validation and generic client erro
 Commit `6d6b03c` is pushed, but three Vercel production deployments remain `UNKNOWN` before build
 initialization. The production alias therefore still serves the previous deployment and final
 Playwright verification cannot yet test the hotfix.
+
+GitHub Actions identified the upstream release blocker: its build job lacked the public Supabase
+variables required by Next.js at build time. A Context7-verified workflow fix is now being pushed
+and rechecked before another production verification attempt.
 
 ## Previous verified objective
 

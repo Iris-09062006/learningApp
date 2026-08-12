@@ -27,3 +27,16 @@
 - Vercel production initialization — BLOCKED: three deployments remain `UNKNOWN` without build
   logs; primary alias still serves `dpl_i5Mt1fysN5JdPCeuTH4DSoKvX7oP`.
 - Final Playwright retry — not run against the unchanged alias because it would test old code.
+
+## GitHub Actions diagnosis and fix verification
+
+- Run `31617541601`, job `94184008368`: lint, typecheck, and 535 tests PASS; `next build` failed
+  while prerendering because public Supabase environment variables were absent.
+- Deterministic Chromium E2E was skipped because it depends on the failed quality-gates job.
+- Context7 confirmed `NEXT_PUBLIC_*` variables are captured during `next build` and GitHub Actions
+  supports job-level `env` values.
+- Workflow fix uses CI-only placeholders and Node `22.x`, matching `package.json`.
+- `npm run lint` — PASS.
+- `npm run typecheck` — PASS.
+- `npm run test` — PASS: 96 files, 535 tests.
+- `npm run build` with the exact workflow placeholders — PASS: 29 static pages.

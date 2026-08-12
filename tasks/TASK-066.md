@@ -1,7 +1,7 @@
 # TASK-066 — Normalize Single-Chunk Lesson Citations
 
 ## Status
-`BLOCKED`
+`IN_PROGRESS`
 
 ## Owner / Reviewer
 Codex / Codex
@@ -47,6 +47,14 @@ running the final Playwright retry would only retest the old code.
 The alternative prebuilt route completed the Next.js build but Windows denied the symlink creation
 required while packaging Vercel functions (`EPERM`). The temporary worktree and copied environment
 file were removed after diagnosis.
+
+## CI recovery
+
+GitHub Actions run `31617541601` showed lint, typecheck, and all 535 tests passing. The build alone
+failed because the workflow did not provide the public Supabase variables that Next.js snapshots
+during `next build`; the dependent E2E job was consequently skipped. The workflow now uses safe
+CI-only placeholders during quality gates and Node 22 to match `package.json`. Local reproduction
+with those exact placeholders builds all 29 pages successfully.
 
 ## Required Commands
 - `npm run lint`

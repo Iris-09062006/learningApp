@@ -15,6 +15,11 @@ jobs:
   quality-gates:
     name: Lint, typecheck, test, and build
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-public-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-server-placeholder
 
     steps:
       - name: Check out repository
@@ -23,7 +28,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -53,7 +58,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies

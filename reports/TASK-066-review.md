@@ -2,9 +2,12 @@
 
 ## Verdict
 
-`PASS` locally. No open Critical, High, or Medium findings. Task status is `BLOCKED` because Vercel
-did not initialize a usable production deployment, so the final Playwright retry cannot yet test
-the hotfix.
+`PASS` locally. No open Critical, High, or Medium findings. Task status is `IN_PROGRESS` while the
+CI workflow fix, production deployment, and final Playwright retry are verified.
+
+Follow-up CI review: `PASS`. The workflow uses non-secret local placeholder endpoints/keys only for
+quality-gate builds, aligns both jobs with the repository's Node 22 engine, and leaves deterministic
+E2E runtime configuration unchanged.
 
 ## Review evidence
 
