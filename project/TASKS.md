@@ -11,8 +11,8 @@
 
 ## Active Task
 
-`TASK-066` — Normalize Single-Chunk Lesson Citations (`IN_PROGRESS`). Playwright reproduced a
-production Lesson-content batch failure after the Course outline completed successfully.
+`TASK-066` — Normalize Single-Chunk Lesson Citations (`BLOCKED`). The verified fix is pushed, but
+three Vercel production deployments remain `UNKNOWN` before build initialization.
 
 Recently verified supporting hotfixes:
 
@@ -88,7 +88,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-066` | Normalize Single-Chunk Lesson Citations | IN_PROGRESS | Content operations hotfix | `TASK-065`, production diagnosis |
+| `TASK-066` | Normalize Single-Chunk Lesson Citations | BLOCKED | Content operations hotfix | Vercel deployment initialization |
 
 ## Active Epic
 

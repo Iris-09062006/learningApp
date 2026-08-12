@@ -1,7 +1,7 @@
 # Active Task Queue
 
 - **Active task:** `TASK-066` — Normalize Single-Chunk Lesson Citations
-- **Status:** `IN_PROGRESS`
+- **Status:** `BLOCKED`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
 - **Previous blocked task:** `TASK-044` — external Supabase Redirect URL verification
@@ -10,6 +10,10 @@
 
 Normalize provider Lesson-section citations when the server has exactly one possible source chunk,
 while preserving strict multi-chunk ownership validation and generic client errors.
+
+Commit `6d6b03c` is pushed, but three Vercel production deployments remain `UNKNOWN` before build
+initialization. The production alias therefore still serves the previous deployment and final
+Playwright verification cannot yet test the hotfix.
 
 ## Previous verified objective
 

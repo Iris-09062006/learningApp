@@ -19,4 +19,11 @@
 - `npm run typecheck` — PASS.
 - `npm run test` — PASS.
 - `npm run build` — PASS, Next.js 15.5.22 production build and 29 static pages.
-- `git diff --check` — pending final pre-commit check.
+- `git diff --check` — PASS; only existing Windows line-ending conversion warnings were printed.
+
+## Deployment verification
+
+- `git push origin main` — PASS for commit `6d6b03c`.
+- Vercel production initialization — BLOCKED: three deployments remain `UNKNOWN` without build
+  logs; primary alias still serves `dpl_i5Mt1fysN5JdPCeuTH4DSoKvX7oP`.
+- Final Playwright retry — not run against the unchanged alias because it would test old code.

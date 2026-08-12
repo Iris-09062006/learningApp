@@ -2,8 +2,9 @@
 
 ## Verdict
 
-`PASS` locally. No open Critical, High, or Medium findings. Production deployment and retry remain
-the final verification checkpoints.
+`PASS` locally. No open Critical, High, or Medium findings. Task status is `BLOCKED` because Vercel
+did not initialize a usable production deployment, so the final Playwright retry cannot yet test
+the hotfix.
 
 ## Review evidence
 

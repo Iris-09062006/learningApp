@@ -1,7 +1,7 @@
 # TASK-066 — Normalize Single-Chunk Lesson Citations
 
 ## Status
-`IN_PROGRESS`
+`BLOCKED`
 
 ## Owner / Reviewer
 Codex / Codex
@@ -34,6 +34,19 @@ citations for a document with exactly one server-owned source chunk.
 - [x] No source text, output, filename, credential, or token is logged.
 - [x] Required quality gates and review pass.
 - [ ] The fix is deployed and the failed production batch completes.
+
+## Blocker
+
+Commit `6d6b03c` is pushed to `origin/main`, but Vercel did not start a usable build. Three
+production deployments (`dpl_93veKpyqD3GydZio82e1ygHafNEG` and the deployments at
+`learning-eussf1pw1-iris-projects-bcfa9d19.vercel.app` and
+`learning-nol35djms-iris-projects-bcfa9d19.vercel.app`) remain `UNKNOWN` with no duration or build
+logs. The primary alias still points to ready deployment `dpl_i5Mt1fysN5JdPCeuTH4DSoKvX7oP`, so
+running the final Playwright retry would only retest the old code.
+
+The alternative prebuilt route completed the Next.js build but Windows denied the symlink creation
+required while packaging Vercel functions (`EPERM`). The temporary worktree and copied environment
+file were removed after diagnosis.
 
 ## Required Commands
 - `npm run lint`
