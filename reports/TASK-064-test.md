@@ -28,5 +28,6 @@ Expected stderr from negative-path tests remained present; the full suite exit c
 - PASS: clean build skipped the previous cache, installed 558 packages, compiled Next.js, checked
   types, generated 29 static pages, traced server files, and deployed successfully.
 - PASS: deployment `dpl_3C4gB57Thpo2xu1TTFCDmv6r4kKe` reports target `production`, status `Ready`.
-- Pending: authenticated source-22 extraction retry; no new request reached the deployment during
-  the runtime-log observation window.
+- PASS: subsequent authenticated production uploads (sources 23 and 24) each persisted 2,392
+  extracted characters. Their later `OUTLINE_GENERATION_FAILED` state belongs to TASK-065 and
+  confirms extraction itself completed.

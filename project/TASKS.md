@@ -11,8 +11,9 @@
 
 ## Active Task
 
-`TASK-064` — Repair Vercel PDF Extraction Packaging (`IN_PROGRESS`). Production deployment is
-healthy, but documents 20–22 fail during native PDF parsing while the same PDF succeeds locally.
+`TASK-065` — Retry Invalid Course Outline Generation (`IN_PROGRESS`). Production PDF extraction is
+verified; the provider returns HTTP 200 but exercise-oriented source content can fail outline
+business validation on its single current attempt.
 
 Recently verified supporting hotfixes:
 
@@ -31,6 +32,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Evidence |
 |---|---|---|---|---|
+| `TASK-064` | Repair Vercel PDF Extraction Packaging | VERIFIED | Content operations hotfix | `reports/TASK-064-implementation.md`, `reports/TASK-064-review.md`, `reports/TASK-064-test.md` |
 | `TASK-063` | Allow Learners to Advance to the Next Lesson | VERIFIED | Phase 4 UX hotfix | `reports/TASK-063-implementation.md`, `reports/TASK-063-review.md`, `reports/TASK-063-test.md` |
 | `TASK-062` | Reveal and Redesign the Lesson Learning Experience | VERIFIED | Phase 4 UI hotfix | `reports/TASK-062-implementation.md`, `reports/TASK-062-review.md`, `reports/TASK-062-test.md` |
 | `TASK-061` | Start Lesson Through a Security-Definer RPC | VERIFIED | Phase 4 hotfix | `reports/TASK-061-implementation.md`, `reports/TASK-061-review.md`, `reports/TASK-061-test.md` |
@@ -87,7 +89,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-064` | Repair Vercel PDF Extraction Packaging | IN_PROGRESS | Content operations hotfix | `TASK-052`, production diagnosis |
+| `TASK-065` | Retry Invalid Course Outline Generation | IN_PROGRESS | Content operations hotfix | `TASK-064`, production diagnosis |
 
 ## Active Epic
 

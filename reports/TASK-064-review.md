@@ -24,6 +24,6 @@ No open Critical, High, or Medium findings.
 
 ## Deployment checkpoint
 
-Vercel clean production build and deployment are `Ready`. The task stays `IN_PROGRESS` only until
-the previously failing PDF is retried through an authenticated Admin session and its hosted status
-confirms the extraction result.
+Vercel clean production build and deployment are `Ready`. Subsequent production PDFs (sources 23
+and 24) each persisted 2,392 extracted characters before reaching the separate Course-outline
+generation stage. This verifies the PDF runtime fix end-to-end; TASK-064 is `VERIFIED`.

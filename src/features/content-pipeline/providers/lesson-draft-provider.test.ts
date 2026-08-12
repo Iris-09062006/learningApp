@@ -134,13 +134,71 @@ describe("NineRouterLessonDraftProvider", () => {
     };
     expect(request.messages[0].content).toContain("only a Vietnamese Course outline");
     expect(request.messages[0].content).toContain("Do not include Lesson body content");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(request.response_format)).not.toMatch(
       /minLength|maxLength|minItems|maxItems|uniqueItems|minimum|maximum/
     );
   });
 
+  it("retries one invalid Course outline response with explicit correction constraints", async () => {
+    const invalid = {
+      title: "Spline",
+      description: "Nội suy",
+      learningObjectives: ["Hiểu spline"],
+      lessons: [
+        { clientKey: "spline", title: "Spline", summary: "Spline", learningObjectives: ["Hiểu spline"], sourceChunkIndexes: [0] },
+      ],
+    };
+    const corrected = {
+      title: "Nội suy Spline",
+      description: "Khóa học spline",
+      learningObjectives: ["Hiểu và xây dựng spline"],
+      lessons: [
+        { clientKey: "foundations", title: "Nền tảng", summary: "Nền tảng spline", learningObjectives: ["Hiểu khái niệm"], sourceChunkIndexes: [0] },
+        { clientKey: "construction", title: "Xây dựng", summary: "Xây dựng spline", learningObjectives: ["Xây dựng spline"], sourceChunkIndexes: [0] },
+      ],
+    };
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(invalid) } }] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(corrected) } }] }), { status: 200 }));
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const beforeRetry = vi.fn().mockResolvedValue(undefined);
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+
+    const result = await provider.generateCourseOutline({
+      documentTitle: "spline.pdf",
+      chunks: [{ chunkIndex: 0, content: "Bài tập spline" }],
+    }, beforeRetry);
+
+    expect(result.outline.lessons).toHaveLength(2);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(beforeRetry).toHaveBeenCalledTimes(1);
+    const retryRequest = JSON.parse(String(fetchMock.mock.calls[1][1]?.body)) as {
+      messages: Array<{ content: string }>;
+    };
+    expect(retryRequest.messages[0].content).toContain("correction attempt");
+    expect(retryRequest.messages[0].content).toContain("exercise-oriented");
+    expect(warning).toHaveBeenCalledWith(
+      "[content-pipeline] Retrying invalid Course outline response.",
+      { attempt: 1, errorCode: "AI_RESPONSE_INVALID" }
+    );
+  });
+
+  it("does not retry an HTTP provider failure", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: { code: "RATE_LIMITED" } }), { status: 429 })
+    );
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+
+    await expect(provider.generateCourseOutline({
+      documentTitle: "spline.pdf",
+      chunks: [{ chunkIndex: 0, content: "Spline" }],
+    })).rejects.toThrow("AI_PROVIDER_REQUEST_FAILED");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("rejects unknown Exercise fields in an outline", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+    const invalidPayload = JSON.stringify({
       choices: [{ message: { content: JSON.stringify({
         title: "Python", description: "Nhập môn", learningObjectives: ["Hiểu Python"], exercises: [],
         lessons: [
@@ -148,10 +206,15 @@ describe("NineRouterLessonDraftProvider", () => {
           { clientKey: "b", title: "B", summary: "B", learningObjectives: ["B"], sourceChunkIndexes: [0] },
         ],
       }) } }],
-    }), { status: 200 }));
+    });
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () => new Response(invalidPayload, { status: 200 })
+    );
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
     await expect(provider.generateCourseOutline({
       documentTitle: "python.pdf", chunks: [{ chunkIndex: 0, content: "Nguồn" }],
     })).rejects.toThrow("AI_RESPONSE_INVALID");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

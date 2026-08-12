@@ -1,7 +1,7 @@
 # TASK-064 — Repair Vercel PDF Extraction Packaging
 
 ## Status
-`IN_PROGRESS`
+`VERIFIED`
 
 ## Owner / Reviewer
 Codex / Codex
@@ -42,7 +42,8 @@ Handler ships the native Linux canvas runtime and runs on a stable supported Nod
 - [x] Vercel selects Node.js 22.x rather than the latest available major.
 - [x] Runtime failures produce sanitized server logs while the API retains its generic response.
 - [x] Focused and full quality gates pass with review `PASS`.
-- [ ] Fix is committed, pushed, deployed to production, and the source-22 PDF extraction succeeds.
+- [x] Fix is committed, pushed, deployed to production, and subsequent production PDFs extract
+  successfully (sources 23 and 24 each persisted 2,392 extracted characters).
 
 ## Required Commands
 - `npm run lint`

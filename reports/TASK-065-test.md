@@ -1,0 +1,27 @@
+# TASK-065 Test Report
+
+## Diagnosis
+
+- Hosted sources 23 and 24 each persisted 2,392 extracted characters before failing at Course
+  outline generation.
+- A non-private synthetic request to the configured provider returned HTTP 200 and passed the same
+  schema/parser, confirming the provider configuration and structured-output feature are active.
+- No private PDF content was sent during diagnosis outside the application's already authorized
+  production workflow.
+
+## Focused regression
+
+- `npx vitest run src/features/content-pipeline/providers/lesson-draft-provider.test.ts src/features/content-pipeline/services/content-pipeline-service.test.ts --reporter=verbose`
+  - PASS: 2 files, 26 tests.
+  - Covers one-request success, invalid-response correction, successful retry, second-invalid
+    rejection, no retry for HTTP failure, and service wiring for second-call quota consumption.
+
+## Required quality gates
+
+- `npm run lint` — PASS, zero warnings.
+- `npm run typecheck` — PASS.
+- `npm run test` — PASS.
+- `npm run build` — PASS, Next.js 15.5.22 production build.
+- `git diff --check` — PASS; only existing Windows line-ending conversion warnings were printed.
+
+Expected stderr from negative-path tests remained present; the full suite exit code was 0.

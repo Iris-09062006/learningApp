@@ -333,7 +333,7 @@ export async function generateCourseOutline(
     const generated = await provider.generateCourseOutline({
       documentTitle: context.document.original_filename,
       chunks: chunks.map((chunk) => ({ chunkIndex: chunk.chunk_index, content: chunk.content })),
-    });
+    }, () => requireAiCapacity("ai:course-outline", adminId));
     return await persistCourseOutline({
       sourceDocumentId,
       outline: validateCourseOutline(generated.outline),

@@ -1,6 +1,6 @@
 # Active Task Queue
 
-- **Active task:** `TASK-064` — Repair Vercel PDF Extraction Packaging
+- **Active task:** `TASK-065` — Retry Invalid Course Outline Generation
 - **Status:** `IN_PROGRESS`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
@@ -8,11 +8,13 @@
 
 ## Current objective
 
-Restore production PDF extraction by packaging the runtime-selected native Linux canvas binding,
-pinning Vercel to Node.js 22.x, preserving the generic client error contract, and verifying the
-previously failing production PDF after redeployment.
+Retry an invalid first Course-outline response once with explicit business constraints, preserving
+strict server validation, generic client errors, source-reference ownership, and safe diagnostics.
 
 ## Previous verified objective
+
+TASK-064 is verified in production. Sources 23 and 24 each persisted 2,392 extracted characters,
+confirming the Vercel Node 22/native Linux PDF packaging fix before the separate outline failure.
 
 TASK-063 is verified. Learners can use “Tiếp theo” to start the immediately following published
 Lesson without waiting for completion, while exercise-based completion remains truthful. Migration

@@ -299,6 +299,10 @@ describe("two-stage Course imports", () => {
       }),
     };
     await expect(generateCourseOutline(9, provider)).resolves.toMatchObject({ status: "outline_review" });
+    expect(provider.generateCourseOutline).toHaveBeenCalledWith(
+      expect.objectContaining({ documentTitle: "python.pdf" }),
+      expect.any(Function)
+    );
     expect(mocks.persistCourseOutline).toHaveBeenCalledWith(expect.objectContaining({
       sourceDocumentId: 9,
       outline: expect.objectContaining({ lessons: expect.arrayContaining([expect.objectContaining({ clientKey: "variables" })]) }),
