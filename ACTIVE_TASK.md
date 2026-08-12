@@ -1,6 +1,6 @@
 # Active Task Queue
 
-- **Active task:** `TASK-065` — Retry Invalid Course Outline Generation
+- **Active task:** `TASK-066` — Normalize Single-Chunk Lesson Citations
 - **Status:** `IN_PROGRESS`
 - **Owner / Reviewer:** Codex
 - **Deferred design task:** `TASK-047` (`DRAFT`)
@@ -8,12 +8,13 @@
 
 ## Current objective
 
-Retry an invalid first Course-outline response once with explicit business constraints, preserving
-strict server validation, generic client errors, source-reference ownership, and safe diagnostics.
-Production sources 25 and 26 reproduced the failure after the first deploy; the current fix
-canonicalizes provider citation numbering only when the server has exactly one possible chunk.
+Normalize provider Lesson-section citations when the server has exactly one possible source chunk,
+while preserving strict multi-chunk ownership validation and generic client errors.
 
 ## Previous verified objective
+
+TASK-065 is verified in production. Course import job 7 persisted an approved three-Lesson outline
+using the sole source chunk after the retry and citation-normalization deployments.
 
 TASK-064 is verified in production. Sources 23 and 24 each persisted 2,392 extracted characters,
 confirming the Vercel Node 22/native Linux PDF packaging fix before the separate outline failure.

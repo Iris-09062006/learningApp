@@ -11,9 +11,8 @@
 
 ## Active Task
 
-`TASK-065` — Retry Invalid Course Outline Generation (`IN_PROGRESS`). Production PDF extraction is
-verified; the provider returns HTTP 200 but exercise-oriented source content can fail outline
-business validation on its single current attempt.
+`TASK-066` — Normalize Single-Chunk Lesson Citations (`IN_PROGRESS`). Playwright reproduced a
+production Lesson-content batch failure after the Course outline completed successfully.
 
 Recently verified supporting hotfixes:
 
@@ -89,7 +88,7 @@ Supabase Auth Redirect URLs wildcard and a fresh confirmation email.
 
 | Task ID | Title | Status | Phase | Dependency |
 |---|---|---|---|---|
-| `TASK-065` | Retry Invalid Course Outline Generation | IN_PROGRESS | Content operations hotfix | `TASK-064`, production diagnosis |
+| `TASK-066` | Normalize Single-Chunk Lesson Citations | IN_PROGRESS | Content operations hotfix | `TASK-065`, production diagnosis |
 
 ## Active Epic
 

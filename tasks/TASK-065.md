@@ -1,7 +1,7 @@
 # TASK-065 — Retry Invalid Course Outline Generation
 
 ## Status
-`IN_PROGRESS`
+`VERIFIED`
 
 ## Owner / Reviewer
 Codex / Codex
@@ -37,6 +37,12 @@ first structured response violates server-side business invariants.
 - [x] No PDF/source text, generated output, filename, credential, or token is logged.
 - [x] Required quality gates and review pass.
 - [x] Follow-up citation normalization is pushed and deployed for production verification.
+
+## Production verification
+
+Course import job 7 persisted an approved three-Lesson outline using the sole source chunk after
+the retry and citation-normalization deployments. Its subsequent Lesson-content failure is a
+separate parser issue tracked by TASK-066.
 
 ## Required Commands
 - `npm run lint`

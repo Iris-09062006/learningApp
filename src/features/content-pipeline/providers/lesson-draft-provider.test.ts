@@ -29,6 +29,34 @@ describe("NineRouterLessonDraftProvider", () => {
     expect(result.draft.sections[0].citationChunkIndexes).toEqual([0]);
   });
 
+  it("canonicalizes 1-based and duplicate citations for a one-chunk Lesson", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({
+        title: "Biến Python",
+        summary: "Giới thiệu biến.",
+        estimatedMinutes: 10,
+        sections: [{
+          heading: "Khái niệm",
+          bodyMarkdown: "Biến lưu dữ liệu.",
+          citationChunkIndexes: [1, 1],
+        }],
+      }) } }],
+    }), { status: 200 }));
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+
+    const result = await provider.generateLessonDraft({
+      documentTitle: "Nguồn",
+      lessonTitle: "Biến",
+      chunks: [{ chunkIndex: 0, content: "Biến lưu dữ liệu." }],
+    });
+
+    expect(result.draft.sections[0].citationChunkIndexes).toEqual([0]);
+    const request = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as {
+      messages: Array<{ content: string }>;
+    };
+    expect(request.messages[0].content).toContain("must use exactly [0]");
+  });
+
   it("rejects citations outside supplied context", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
       choices: [{ message: { content: JSON.stringify({
@@ -42,7 +70,10 @@ describe("NineRouterLessonDraftProvider", () => {
     await expect(provider.generateLessonDraft({
       documentTitle: "Nguồn",
       lessonTitle: "Bài",
-      chunks: [{ chunkIndex: 0, content: "Nguồn hợp lệ" }],
+      chunks: [
+        { chunkIndex: 0, content: "Nguồn hợp lệ" },
+        { chunkIndex: 1, content: "Nguồn hợp lệ khác" },
+      ],
     })).rejects.toThrow("AI_RESPONSE_INVALID");
   });
 
