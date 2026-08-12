@@ -5,6 +5,11 @@
 `PASS`. No open Critical, High, or Medium findings. Production deployment is `Ready`; authenticated
 regeneration of the affected source remains the final task checkpoint.
 
+Follow-up review after sources 25 and 26: `PASS`. Citation normalization is limited to documents
+with exactly one server-owned chunk, so it cannot select or fabricate another source. Non-empty
+integer input remains required, strict output validation remains in place, and multi-chunk
+ownership rules are unchanged. No open Critical, High, or Medium findings.
+
 ## Review evidence
 
 - Scope: limited to Course-outline retry reliability, tests, and workflow evidence.

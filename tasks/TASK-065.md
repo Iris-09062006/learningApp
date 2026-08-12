@@ -12,6 +12,7 @@ first structured response violates server-side business invariants.
 
 ## Evidence
 - Production sources 23 and 24 extract successfully, then fail with `OUTLINE_GENERATION_FAILED`.
+- Production sources 25 and 26 reproduced the same outline failure after the first retry hotfix.
 - The configured provider returns HTTP 200 and a valid Course outline for synthetic source data.
 - The affected source is an exercise sheet; outline generation currently makes one attempt and
   maps all provider/schema/business-validation failures to one generic client response.
@@ -25,6 +26,8 @@ first structured response violates server-side business invariants.
 - Preserve provider HTTP failures, timeouts, authentication, rate limits, generic client errors,
   strict validation, and source-reference ownership.
 - Emit bounded metadata-only diagnostics without source text or generated content.
+- Canonicalize integer citations to the sole server-owned chunk for one-chunk documents; preserve
+  rejection of out-of-range citations when more than one chunk exists.
 - Add regression tests, run all gates, review, commit, push, and deploy production.
 
 ## Acceptance Criteria
@@ -33,7 +36,7 @@ first structured response violates server-side business invariants.
 - [x] A valid retry is accepted; a second invalid response remains a generic `AI_PROVIDER_ERROR`.
 - [x] No PDF/source text, generated output, filename, credential, or token is logged.
 - [x] Required quality gates and review pass.
-- [x] Fix is pushed and deployed; production outline retry is ready for user verification.
+- [ ] Follow-up citation normalization is pushed and deployed for production verification.
 
 ## Required Commands
 - `npm run lint`

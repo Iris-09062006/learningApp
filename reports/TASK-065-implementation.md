@@ -29,3 +29,11 @@ Course-outline quota unit so the existing 20 provider-calls/Admin/hour contract 
 - Vercel production deployment `dpl_HebK3MAWR9dsYTA9MZnoRi4CmM4K` completed with status `Ready`.
 - Production URL: `https://learning-cvero0ew0-iris-projects-bcfa9d19.vercel.app`.
 - Authenticated retry of the affected production source remains the final verification checkpoint.
+
+## Production follow-up
+
+Sources 25 and 26 reproduced the outline failure after the initial retry deployment. Both sources
+still extracted 2,392 characters and contained one server-owned chunk. The provider parser now
+canonicalizes non-empty integer citations to that sole chunk, covering provider 1-based and
+duplicate indexes without broadening citation ownership. Multi-chunk documents still reject every
+out-of-range citation. The correction prompt now also states the exact sole-chunk `[0]` convention.

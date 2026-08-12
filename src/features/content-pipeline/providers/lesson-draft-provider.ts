@@ -236,6 +236,9 @@ function parseCourseOutline(value: string, allowedChunkIndexes: Set<number>) {
     throw new Error("AI_RESPONSE_INVALID");
   }
   const keys = new Set<string>();
+  const soleAllowedChunkIndex = allowedChunkIndexes.size === 1
+    ? allowedChunkIndexes.values().next().value
+    : undefined;
   const lessons = outline.lessons.map((lesson) => {
     if (!lesson || typeof lesson !== "object" || Array.isArray(lesson)) throw new Error("AI_RESPONSE_INVALID");
     const item = lesson as Record<string, unknown>;
@@ -247,14 +250,25 @@ function parseCourseOutline(value: string, allowedChunkIndexes: Set<number>) {
       !Array.isArray(item.learningObjectives) || item.learningObjectives.length < 1 ||
       !item.learningObjectives.every((objective) => typeof objective === "string" && objective.trim()) ||
       !Array.isArray(item.sourceChunkIndexes) || item.sourceChunkIndexes.length < 1 ||
-      !item.sourceChunkIndexes.every((index) => Number.isInteger(index) && allowedChunkIndexes.has(Number(index)))
+      !item.sourceChunkIndexes.every((index) => Number.isInteger(index))
     ) {
       throw new Error("AI_RESPONSE_INVALID");
     }
     const clientKey = item.clientKey.trim();
     keys.add(clientKey);
-    const sourceChunkIndexes = [...new Set(item.sourceChunkIndexes.map(Number))];
-    if (sourceChunkIndexes.length !== item.sourceChunkIndexes.length) throw new Error("AI_RESPONSE_INVALID");
+    const suppliedChunkIndexes = [...new Set(item.sourceChunkIndexes.map(Number))];
+    // A one-chunk document has only one possible citation owner. Some compatible providers still
+    // emit a 1-based index (or repeat it) despite the schema/prompt. Canonicalizing that citation
+    // to the sole server-owned chunk is deterministic and cannot broaden source ownership.
+    const sourceChunkIndexes = soleAllowedChunkIndex === undefined
+      ? suppliedChunkIndexes
+      : [soleAllowedChunkIndex];
+    if (
+      soleAllowedChunkIndex === undefined &&
+      !sourceChunkIndexes.every((index) => allowedChunkIndexes.has(index))
+    ) {
+      throw new Error("AI_RESPONSE_INVALID");
+    }
     return {
       clientKey,
       title: item.title.trim(),
@@ -415,7 +429,7 @@ export class NineRouterLessonDraftProvider implements LessonDraftProvider {
       .map((chunk) => `<source_chunk index="${chunk.chunkIndex}">\n${chunk.content}\n</source_chunk>`)
       .join("\n\n");
     const correction = correctionAttempt
-      ? " This is a correction attempt after an invalid response. Return 2 to 20 Lessons with unique non-empty clientKey values. Course and every Lesson must contain at least one learning objective. Every Lesson must reference at least one supplied integer chunk index. When the source is exercise-oriented, infer the underlying teachable concepts and prerequisite knowledge without reproducing questions, tasks, answers, or solutions."
+      ? " This is a correction attempt after an invalid response. Return 2 to 20 Lessons with unique non-empty clientKey values. Course and every Lesson must contain at least one learning objective. Every Lesson must reference at least one supplied integer chunk index, copying the exact index attribute from source_chunk (for a sole chunk indexed 0, use exactly [0]). When the source is exercise-oriented, infer the underlying teachable concepts and prerequisite knowledge without reproducing questions, tasks, answers, or solutions."
       : "";
     try {
       const response = await fetch(this.endpoint, {

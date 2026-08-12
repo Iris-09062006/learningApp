@@ -10,6 +10,8 @@
 
 Retry an invalid first Course-outline response once with explicit business constraints, preserving
 strict server validation, generic client errors, source-reference ownership, and safe diagnostics.
+Production sources 25 and 26 reproduced the failure after the first deploy; the current fix
+canonicalizes provider citation numbering only when the server has exactly one possible chunk.
 
 ## Previous verified objective
 

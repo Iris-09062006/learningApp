@@ -184,6 +184,52 @@ describe("NineRouterLessonDraftProvider", () => {
     );
   });
 
+  it("canonicalizes 1-based and duplicate citations for a one-chunk outline", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({
+        title: "Nội suy Spline",
+        description: "Khóa học spline",
+        learningObjectives: ["Hiểu spline"],
+        lessons: [
+          { clientKey: "foundations", title: "Nền tảng", summary: "Nền tảng spline", learningObjectives: ["Hiểu khái niệm"], sourceChunkIndexes: [1] },
+          { clientKey: "construction", title: "Xây dựng", summary: "Xây dựng spline", learningObjectives: ["Xây dựng spline"], sourceChunkIndexes: [1, 1] },
+        ],
+      }) } }],
+    }), { status: 200 }));
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+
+    const result = await provider.generateCourseOutline({
+      documentTitle: "spline.pdf",
+      chunks: [{ chunkIndex: 0, content: "Bài tập spline" }],
+    });
+
+    expect(result.outline.lessons.map((lesson) => lesson.sourceChunkIndexes)).toEqual([[0], [0]]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("still rejects an out-of-range citation when multiple chunks are available", async () => {
+    const invalidPayload = JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({
+        title: "Python", description: "Nhập môn", learningObjectives: ["Hiểu Python"],
+        lessons: [
+          { clientKey: "a", title: "A", summary: "A", learningObjectives: ["A"], sourceChunkIndexes: [2] },
+          { clientKey: "b", title: "B", summary: "B", learningObjectives: ["B"], sourceChunkIndexes: [1] },
+        ],
+      }) } }],
+    });
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () => new Response(invalidPayload, { status: 200 })
+    );
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const provider = new NineRouterLessonDraftProvider("secret", "https://router.test", "model");
+
+    await expect(provider.generateCourseOutline({
+      documentTitle: "python.pdf",
+      chunks: [{ chunkIndex: 0, content: "A" }, { chunkIndex: 1, content: "B" }],
+    })).rejects.toThrow("AI_RESPONSE_INVALID");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("does not retry an HTTP provider failure", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ error: { code: "RATE_LIMITED" } }), { status: 429 })
