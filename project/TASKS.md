@@ -11,8 +11,8 @@
 
 ## Active Task
 
-`TASK-066` — Normalize Single-Chunk Lesson Citations (`IN_PROGRESS`). The verified application fix
-is pushed and the missing Next.js build-time CI environment is being repaired.
+`TASK-066` — Normalize Single-Chunk Lesson Citations (`IN_PROGRESS`). The application and CI build
+fixes are pushed; a deterministic Lesson-start E2E fixture fix passes locally and awaits CI rerun.
 
 Recently verified supporting hotfixes:
 

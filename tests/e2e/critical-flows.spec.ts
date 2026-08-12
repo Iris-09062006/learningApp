@@ -70,6 +70,7 @@ test("enrolls, completes the first lesson exercise, and unlocks the next lesson"
   await page.getByRole("link", { name: "Học tiếp" }).click();
   await expect(page).toHaveURL(/\/lessons\/101$/u);
   await expect(page.getByRole("heading", { name: "Biến và phép gán" })).toBeVisible();
+  await page.getByRole("button", { name: "Bắt đầu bài học" }).click();
   await page.getByRole("link", { name: "Làm bài" }).click();
 
   await expect(page).toHaveURL(/\/exercises\/1001$/u);
@@ -87,6 +88,7 @@ test("shows mock AI loading and explanation after a wrong submission", async ({ 
   await loginAs(page);
   await enrollInSeedCourse(page);
   await page.getByRole("link", { name: "Học tiếp" }).click();
+  await page.getByRole("button", { name: "Bắt đầu bài học" }).click();
   await page.getByRole("link", { name: "Làm bài" }).click();
 
   await page.getByRole("button", { name: "4" }).click();

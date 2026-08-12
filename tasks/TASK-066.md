@@ -56,6 +56,12 @@ during `next build`; the dependent E2E job was consequently skipped. The workflo
 CI-only placeholders during quality gates and Node 22 to match `package.json`. Local reproduction
 with those exact placeholders builds all 29 pages successfully.
 
+Run `31620540388` confirmed the quality-gates job passes. Its newly unblocked Chromium job exposed
+a separate latent E2E fixture gap: the learner tests expected Lesson exercises before calling the
+required `start_lesson` RPC, and the mock server did not implement that RPC. The tests now start the
+Lesson through the UI and the mock mirrors the `unlocked` to `in_progress` transition. All 10 local
+Chromium tests pass; the pushed workflow rerun remains to be confirmed.
+
 ## Required Commands
 - `npm run lint`
 - `npm run typecheck`

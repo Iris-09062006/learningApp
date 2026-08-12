@@ -40,3 +40,16 @@
 - `npm run typecheck` — PASS.
 - `npm run test` — PASS: 96 files, 535 tests.
 - `npm run build` with the exact workflow placeholders — PASS: 29 static pages.
+
+## Deterministic Chromium follow-up
+
+- Run `31620540388`, quality-gates job `94193985912` — PASS, including production build.
+- Run `31620540388`, E2E job `94194552561` — FAIL: 8 passed, two learner tests timed out waiting
+  for “Làm bài” while the Lesson was still `unlocked`.
+- Local reproduction confirmed the mock returned `Unknown RPC start_lesson` after the required
+  “Bắt đầu bài học” action.
+- `npm run test:e2e` after updating the learner flow and mock RPC — PASS: 10/10 tests.
+- Follow-up `npm run lint` — PASS.
+- Follow-up `npm run typecheck` — PASS.
+- Follow-up `npm run test` — PASS: 96 files, 535 tests.
+- Follow-up `npm run build` with CI placeholders — PASS: 29 static pages.

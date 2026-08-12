@@ -16,8 +16,9 @@ initialization. The production alias therefore still serves the previous deploym
 Playwright verification cannot yet test the hotfix.
 
 GitHub Actions identified the upstream release blocker: its build job lacked the public Supabase
-variables required by Next.js at build time. A Context7-verified workflow fix is now being pushed
-and rechecked before another production verification attempt.
+variables required by Next.js at build time. A Context7-verified workflow fix now passes the
+quality-gates job. The newly unblocked E2E job exposed an outdated learner flow; the deterministic
+mock and test now perform the required `start_lesson` transition and pass locally.
 
 ## Previous verified objective
 

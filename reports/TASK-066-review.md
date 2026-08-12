@@ -9,9 +9,13 @@ Follow-up CI review: `PASS`. The workflow uses non-secret local placeholder endp
 quality-gate builds, aligns both jobs with the repository's Node 22 engine, and leaves deterministic
 E2E runtime configuration unchanged.
 
+Follow-up E2E review: `PASS` locally. The tests now exercise the product's required Lesson-start
+state transition instead of bypassing it, and the mock implements the same authenticated RPC shape
+without weakening the completion, next-Lesson unlock, AI explanation, or accessibility assertions.
+
 ## Review evidence
 
-- Scope: provider parser/prompt, regression tests, and workflow evidence only.
+- Scope: provider parser/prompt, regression tests, CI workflow, and deterministic E2E fixtures only.
 - Correctness: normalization occurs only when the server has exactly one allowed chunk; it cannot
   select or fabricate another source owner.
 - Validation: citation arrays must remain non-empty and integer-only. Multi-chunk out-of-range and

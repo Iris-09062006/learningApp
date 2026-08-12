@@ -341,6 +341,27 @@ async function handleRpc(request, response, name) {
     });
   }
 
+  if (name === "start_lesson") {
+    const progress = state.progress.find(
+      (item) => item.user_id === user.id && item.lesson_id === body.p_lesson_id,
+    );
+    if (!progress) {
+      return sendJson(response, 400, { code: "P0001", message: "Lesson access required" });
+    }
+
+    if (progress.status === "unlocked") {
+      progress.status = "in_progress";
+      progress.started_at ??= new Date().toISOString();
+    }
+    progress.last_accessed_at = new Date().toISOString();
+
+    return sendJson(response, 200, {
+      lesson_id: progress.lesson_id,
+      status: progress.status,
+      started_at: progress.started_at,
+    });
+  }
+
   if (name === "submit_exercise") {
     const isCorrect = body.p_answer?.selectedOptionId === 2002;
     const submission = {
